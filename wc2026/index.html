@@ -1,0 +1,523 @@
+<!DOCTYPE html>
+<html lang="fi">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>World Cup 2026 · The story of the pool</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Anton&family=Space+Grotesk:wght@400;500;700&display=swap" rel="stylesheet">
+<style>
+:root{
+  --pitch:#0A382A; --pitch2:#0D4634; --pitch3:#0F5540;
+  --chalk:#F4EFE1; --chalk-dim:#C9C3AE; --line:rgba(244,239,225,.16);
+  --gold:#F2C14E; --goldhi:#FFD97A; --silver:#C7CCD8; --bronze:#CE8D5A;
+  --slat:#0C1F18; --slat2:#123527;
+  --rowH:34px;
+}
+*{box-sizing:border-box;margin:0;padding:0}
+body{
+  background:
+    repeating-linear-gradient(90deg, transparent 0 119px, rgba(255,255,255,.022) 119px 238px),
+    radial-gradient(1200px 500px at 50% -100px, var(--pitch3), transparent 70%),
+    var(--pitch);
+  color:var(--chalk);
+  font-family:"Space Grotesk",system-ui,sans-serif;
+  min-height:100vh;
+}
+.wrap{max-width:1120px;margin:0 auto;padding:0 20px 80px}
+
+/* ---------- HERO ---------- */
+header{padding:48px 0 16px}
+.kicker{font-size:12px;letter-spacing:.28em;color:var(--chalk-dim);text-transform:uppercase;margin-bottom:10px}
+h1{font-family:"Anton",Impact,sans-serif;font-weight:400;font-size:clamp(42px,7.5vw,80px);
+   line-height:.98;letter-spacing:.01em;text-transform:uppercase;color:var(--chalk)}
+h1 .gold{color:var(--gold)}
+.scoreline{display:inline-flex;align-items:center;gap:14px;margin-top:18px;background:var(--slat);
+  border:1px solid var(--line);border-radius:6px;padding:10px 18px;font-size:15px}
+.scoreline b{font-family:"Anton",sans-serif;font-weight:400;letter-spacing:.06em;font-size:17px}
+.scoreline .num{color:var(--gold);font-variant-numeric:tabular-nums;font-weight:700}
+.scoreline .et{font-size:11px;color:var(--chalk-dim);letter-spacing:.1em}
+.lede{max-width:640px;margin-top:16px;color:var(--chalk-dim);font-size:15.5px;line-height:1.55}
+
+/* ---------- MAIN ---------- */
+.main{display:grid;grid-template-columns:330px 1fr;gap:22px;margin-top:26px;align-items:start}
+@media(max-width:860px){.main{grid-template-columns:1fr}}
+
+/* story card */
+.story{background:var(--slat);border:1px solid var(--line);border-radius:10px;padding:20px;position:sticky;top:16px}
+@media(max-width:860px){.story{position:static}}
+.story .rnd{font-size:11px;letter-spacing:.24em;color:var(--gold);text-transform:uppercase}
+.story h2{font-family:"Anton",sans-serif;font-weight:400;font-size:28px;letter-spacing:.02em;text-transform:uppercase;margin:6px 0 2px}
+.story .dates{font-size:12.5px;color:var(--chalk-dim);margin-bottom:12px}
+.story p{font-size:14px;line-height:1.6;margin-bottom:9px}
+.story p b{color:var(--goldhi)}
+.chips{display:flex;flex-wrap:wrap;gap:7px;margin-top:10px}
+.chip{background:var(--slat2);border:1px solid var(--line);border-radius:6px;padding:6px 10px;font-size:12px;color:var(--chalk-dim)}
+.chip b{color:var(--chalk);font-variant-numeric:tabular-nums}
+details.res{margin-top:12px;border-top:1px dashed var(--line);padding-top:10px}
+details.res summary{cursor:pointer;font-size:12px;letter-spacing:.16em;text-transform:uppercase;color:var(--chalk-dim);list-style:none}
+details.res summary::after{content:" ▾"}
+details.res[open] summary::after{content:" ▴"}
+.resbody{margin-top:10px;font-size:12.5px;line-height:1.7;color:var(--chalk-dim);max-height:340px;overflow:auto;padding-right:12px;scrollbar-gutter:stable}
+.resbody .m{display:flex;justify-content:space-between;gap:8px}
+.resbody .m span:first-child{white-space:nowrap;overflow:hidden;text-overflow:ellipsis}
+.resbody .sc{color:var(--chalk);font-variant-numeric:tabular-nums;font-weight:700;white-space:nowrap}
+.resbody .w{color:var(--goldhi);font-weight:700}
+.resbody .grp{color:var(--gold);letter-spacing:.14em;font-size:10.5px;text-transform:uppercase;margin-top:6px}
+.resbody .ok{color:#4CCB82;font-weight:700}
+.resbody .mid{color:#F2C14E;font-weight:700}
+.resbody .no{color:rgba(244,239,225,.35);font-weight:700}
+.resbody .m3{display:grid;grid-template-columns:1fr auto auto;gap:8px;align-items:baseline}
+.resbody .own{white-space:nowrap;color:var(--chalk-dim);font-variant-numeric:tabular-nums}
+.resbody .own b{color:var(--chalk)}
+.resbody .pk{display:inline-block;background:var(--slat2);border:1px solid var(--line);border-radius:5px;
+  padding:2px 7px;margin:3px 3px 0 0;font-size:11px;font-variant-numeric:tabular-nums}
+.resbody .pk.y{border-color:rgba(76,203,130,.55)}
+.resbody .pk.y b{color:#4CCB82}
+.resbody .pk.n{opacity:.45}
+.resbody .minehl span{color:var(--goldhi)}
+.rsum{font-size:12px;margin-bottom:8px;color:var(--chalk-dim);border:1px solid var(--line);
+  border-radius:6px;padding:6px 9px;background:var(--slat2)}
+.rsum b{color:var(--goldhi);font-variant-numeric:tabular-nums}
+.me{margin-top:12px;border-top:1px dashed var(--line);padding-top:11px;font-size:13.5px;line-height:1.55;color:var(--chalk-dim)}
+.me b{color:var(--goldhi);font-variant-numeric:tabular-nums}
+.follow{margin-top:12px}
+.follow label{display:block;font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--chalk-dim);margin-bottom:6px}
+.follow select{width:100%;background:var(--pitch);border:1px solid var(--line);color:var(--chalk);
+  font:500 14px "Space Grotesk",sans-serif;padding:9px 10px;border-radius:7px;cursor:pointer}
+
+/* board */
+.board{position:relative}
+.controls{display:flex;justify-content:space-between;align-items:baseline;padding:0 2px 8px;
+  border-bottom:1px solid var(--line);margin-bottom:8px}
+.controls .ttl{font-size:11px;letter-spacing:.2em;text-transform:uppercase;color:var(--chalk-dim)}
+.hint{font-size:11px;color:var(--chalk-dim);letter-spacing:.04em}
+.trackhead{position:relative;height:30px;margin-bottom:2px}
+.pill{position:absolute;top:0;transform:translateX(-50%);width:30px;height:26px;border-radius:7px;
+  border:1px solid var(--line);background:var(--slat);color:var(--chalk-dim);
+  font:700 10px/1 "Space Grotesk",sans-serif;cursor:pointer;transition:all .16s}
+.pill:hover{border-color:var(--chalk-dim);color:var(--chalk)}
+.pill.done{color:var(--chalk);border-color:rgba(244,239,225,.35)}
+.pill.on{background:var(--gold);border-color:var(--gold);color:#241a05}
+.bgrid{display:flex;gap:10px;align-items:flex-start}
+.bump{flex:0 0 auto;display:block;overflow:visible}
+.bump .col{stroke:var(--line);stroke-width:1;stroke-dasharray:2 4}
+.bump .col.cur{stroke:var(--gold);stroke-dasharray:none;opacity:.5}
+.bgrid .rows{flex:1 1 auto}
+.rows{position:relative;height:calc(23 * var(--rowH) + 4px)}
+.row{position:absolute;left:0;right:0;height:calc(var(--rowH) - 5px);
+  display:grid;grid-template-columns:30px 20px minmax(105px,150px) 1fr 42px 42px;
+  align-items:center;gap:7px;padding:0 9px;
+  background:var(--slat);border:1px solid var(--line);border-radius:6px;
+  transition:top .65s cubic-bezier(.22,.9,.3,1), border-color .3s, box-shadow .3s;
+  font-size:13px;cursor:pointer}
+.row .rk{font-family:"Anton",sans-serif;font-size:15px;color:var(--chalk-dim);font-variant-numeric:tabular-nums}
+.row .mv{font-size:10px;font-weight:700;font-variant-numeric:tabular-nums}
+.mv.up{color:#4CCB82} .mv.dn{color:#F0565C} .mv.eq{color:transparent}
+.row .nm{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;font-weight:500}
+.row .barc{height:9px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.row .bar{height:100%;border-radius:4px;transition:width .65s cubic-bezier(.22,.9,.3,1);opacity:.9}
+.row .dl{font-size:11.5px;font-weight:700;color:#4CCB82;text-align:right;font-variant-numeric:tabular-nums;opacity:0;transition:opacity .3s}
+.row .dl.show{opacity:1}
+.row .pt{font-family:"Anton",sans-serif;font-size:16px;text-align:right;font-variant-numeric:tabular-nums;letter-spacing:.03em}
+.row.lead{border-color:rgba(242,193,78,.55)}
+.row.lead .rk{color:var(--gold)}
+.row.pin{box-shadow:0 0 0 2px var(--chalk);z-index:5}
+.row.champ{border-color:var(--gold);background:linear-gradient(90deg, rgba(242,193,78,.18), var(--slat) 55%)}
+.row.champ .pt,.row.champ .rk{color:var(--goldhi)}
+.row .cup{display:none;font-size:13px}
+.row.champ .cup{display:inline}
+@media(max-width:640px){
+  .row{grid-template-columns:22px 15px minmax(80px,1fr) 34px 34px;font-size:11.5px;gap:5px;padding:0 7px}
+  .row .barc{display:none}
+  .row .pt{font-size:14px}
+  .row .rk{font-size:13px}
+  .pill{width:22px;height:20px;font-size:8.5px;border-radius:5px;padding:0}
+  .trackscroll{overflow-x:auto;margin:0 -4px;padding:0 4px}
+  .trackscroll .bgrid{min-width:340px}
+}
+
+/* ---------- CATEGORY SECTION ---------- */
+.cats{margin-top:44px}
+.cats h3{font-family:"Anton",sans-serif;font-weight:400;font-size:26px;letter-spacing:.02em;text-transform:uppercase}
+.cats .sub{color:var(--chalk-dim);font-size:13.5px;margin:6px 0 18px;max-width:640px;line-height:1.55}
+.catgrid{display:grid;grid-template-columns:repeat(auto-fill,minmax(240px,1fr));gap:14px}
+.cat{background:var(--slat);border:1px solid var(--line);border-radius:10px;padding:14px 15px}
+.cat h4{font-size:11px;letter-spacing:.18em;text-transform:uppercase;color:var(--gold);margin-bottom:3px}
+.cat .max{font-size:10.5px;color:var(--chalk-dim);margin-bottom:10px}
+.cbar{display:grid;grid-template-columns:minmax(86px,116px) 1fr 30px;gap:7px;align-items:center;margin-bottom:6px;font-size:12px}
+.cbar .n{white-space:nowrap;overflow:hidden;text-overflow:ellipsis;color:var(--chalk-dim)}
+.cbar.pinned .n{color:var(--chalk);font-weight:700}
+.cbar .tr{height:8px;background:rgba(255,255,255,.06);border-radius:4px;overflow:hidden}
+.cbar .f{height:100%;border-radius:4px}
+.cbar .v{text-align:right;font-weight:700;font-variant-numeric:tabular-nums;color:var(--chalk)}
+.cbar .rkk{color:var(--chalk-dim);font-weight:400;font-size:10px}
+
+.note{margin-top:30px;font-size:12.5px;color:var(--chalk-dim);line-height:1.6;max-width:720px}
+.note b{color:var(--chalk)}
+@media (prefers-reduced-motion: reduce){.row,.row .bar{transition:none}}
+</style>
+</head>
+<body>
+<div class="wrap">
+
+<header>
+  <div class="kicker">FIFA World Cup 2026 &middot; 23 entrants &middot; Jun 11 &ndash; Jul 19, 2026</div>
+  <h1>How the pool<br><span class="gold">was won</span></h1>
+  <div class="scoreline"><b>SPAIN</b><span class="num">1</span>&ndash;<span class="num">0</span><b>ARGENTINA</b><span class="et">AFTER EXTRA TIME &middot; JUL 19, 2026</span></div>
+  <p class="lede">Six weeks, 104 matches, eight scoring rounds. The title was decided on the very last day &mdash; and ultimately by a single pick. Step through the rounds and watch the table live through the tournament.</p>
+</header>
+
+<div class="main">
+  <aside class="story" id="story"></aside>
+  <section class="board">
+    <div class="controls">
+      <span class="ttl" id="hdrR"></span>
+      <span class="hint">Click the rounds or use arrow keys</span>
+    </div>
+    <div class="trackscroll">
+    <div class="trackhead" id="trackhead"></div>
+    <div class="bgrid">
+      <svg class="bump" id="bump" aria-hidden="true"></svg>
+      <div class="rows" id="rows"></div>
+    </div>
+    </div>
+  </section>
+</div>
+
+<section class="cats">
+  <h3>Who nailed what</h3>
+  <p class="sub">The nine parts of the game, separately: top five in each &mdash; plus the followed entrant if outside the top five. Medal colours by the final top three.</p>
+  <div class="catgrid" id="catgrid"></div>
+</section>
+
+<p class="note"><b>How points are timed:</b> group games are credited per matchday (bottom picks with matchday 3) and bracket picks as each round is settled. Top-scorer and card points accrue as the goals and cards actually happened, each logged to the round whose matches produced it &mdash; timings verified against official match data. The final round covers the third-place match and the final. Totals reconcile exactly with the official leaderboard. Names anonymized.</p>
+
+</div>
+
+<script>
+const DATA=[{"n":"Entrant 06","d":[66,71,94,64,66,50,60,56],"lp":27,"champ":"Spain","silver":"Argentina","ts":"Harry Kane","tsp":36,"bk":"Cristian Romero","bkp":6,"finp":30,"chb":20,"gp":[[3,1],[1,1],[2,1],[0,3],[2,1],[0,3],[1,0],[0,2],[5,0],[0,2],[3,1],[2,1],[3,1],[1,1],[4,0],[1,2],[3,1],[1,3],[3,1],[2,0],[3,0],[1,3],[2,1],[2,0],[2,0],[2,1],[2,1],[3,0],[1,2],[5,0],[2,1],[2,0],[3,0],[3,0],[1,2],[3,1],[3,0],[0,1],[3,0],[4,0],[4,0],[2,1],[2,0],[0,1],[4,0],[2,0],[3,0],[0,3],[1,2],[1,2],[2,1],[3,1],[1,3],[3,0],[1,1],[1,1],[1,3],[1,2],[0,4],[2,1],[0,3],[1,0],[1,2],[1,3],[2,0],[1,2],[0,1],[0,3],[1,2],[1,1],[0,4],[2,1]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","South Korea","France","Scotland","Czechia","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","Türkiye","Bosnia and Herzegovina","Belgium","Algeria","Brazil","Japan","Ecuador","Norway","Mexico","Senegal","England","Saudi Arabia","Argentina","Uruguay","United States","Egypt","Switzerland","Sweden","Portugal","Ghana"],"kp16":["Germany","France","Canada","Netherlands","Croatia","Spain","Türkiye","Belgium","Brazil","Norway","Mexico","England","Argentina","United States","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Argentina"],"od":[54,71,88,52,60,50,60,50]},{"n":"Entrant 07","d":[54,78,98,70,71,56,45,53],"lp":33,"champ":"Spain","silver":"Portugal","ts":"Kylian Mbappé","tsp":60,"bk":"Cristian Romero","bkp":6,"finp":15,"chb":20,"gp":[[1,1],[0,0],[1,1],[0,2],[3,1],[0,1],[1,1],[2,2],[3,0],[1,1],[2,1],[2,0],[2,1],[1,0],[4,0],[0,1],[2,1],[0,2],[2,0],[0,0],[2,0],[0,2],[2,0],[1,1],[1,2],[3,1],[2,1],[2,0],[1,1],[6,0],[1,2],[1,0],[2,1],[4,0],[1,1],[1,0],[1,1],[0,1],[2,0],[3,0],[3,0],[2,2],[1,0],[0,1],[3,1],[1,1],[2,0],[0,1],[0,2],[2,1],[1,1],[2,0],[1,2],[3,0],[1,1],[1,2],[1,2],[0,3],[0,3],[1,1],[0,2],[1,1],[0,1],[1,1],[2,0],[1,1],[1,2],[0,3],[1,2],[1,0],[0,3],[1,0]],"jp":["Czechia","Qatar","Haiti","Türkiye","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Australia","France","Scotland","South Africa","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","United States","Bosnia and Herzegovina","Belgium","Algeria","Brazil","Sweden","Ecuador","Norway","Mexico","Senegal","England","Ivory Coast","Argentina","Uruguay","Paraguay","Iran","Switzerland","Egypt","Portugal","DR Congo"],"kp16":["Germany","France","Canada","Netherlands","Croatia","Spain","United States","Belgium","Brazil","Norway","Mexico","England","Argentina","Paraguay","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Portugal"],"od":[42,66,98,58,65,50,45,35]},{"n":"Entrant 16","d":[57,84,92,66,56,56,45,12],"lp":24,"champ":"France","silver":"Portugal","ts":"Kylian Mbappé","tsp":60,"bk":"Nicolás Otamendi","bkp":0,"finp":0,"chb":0,"gp":[[2,0],[1,1],[1,0],[0,3],[2,0],[0,2],[1,1],[1,2],[4,0],[0,1],[2,1],[1,1],[2,1],[2,1],[5,0],[0,1],[2,1],[1,3],[3,0],[3,0],[3,0],[0,1],[1,1],[2,0],[1,0],[2,1],[2,0],[2,0],[1,2],[4,0],[2,1],[1,0],[3,1],[3,0],[0,2],[2,1],[2,0],[0,1],[3,0],[2,0],[3,0],[2,2],[2,0],[0,1],[2,0],[1,0],[3,1],[0,3],[0,1],[0,2],[1,0],[3,1],[0,2],[3,0],[2,1],[1,2],[1,3],[1,2],[1,3],[2,1],[1,3],[3,1],[1,2],[0,0],[2,0],[0,2],[1,1],[0,2],[2,2],[0,0],[0,4],[1,0]],"jp":["South Africa","Qatar","Haiti","Paraguay","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","DR Congo","Panama"],"kp32":["Germany","Scotland","France","Australia","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","Türkiye","Bosnia and Herzegovina","Belgium","Czechia","Brazil","Japan","Ecuador","Senegal","Mexico","Ivory Coast","England","Norway","Argentina","Uruguay","United States","Egypt","Switzerland","Algeria","Portugal","Ghana"],"kp16":["Germany","France","South Korea","Netherlands","Croatia","Spain","Türkiye","Belgium","Brazil","Senegal","Mexico","England","Argentina","Egypt","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Portugal"],"od":[45,72,92,54,50,50,45,0]},{"n":"Entrant 08","d":[64,66,98,64,61,50,60,50],"lp":27,"champ":"Spain","silver":"Argentina","ts":"Harry Kane","tsp":36,"bk":"Denzel Dumfries","bkp":0,"finp":30,"chb":20,"gp":[[2,1],[1,0],[1,0],[0,3],[2,1],[0,2],[2,0],[0,2],[6,0],[1,1],[3,2],[1,1],[2,1],[1,1],[6,0],[0,3],[2,0],[0,1],[3,1],[3,0],[3,1],[0,1],[3,1],[2,0],[2,0],[2,1],[2,0],[2,0],[1,1],[5,0],[2,1],[2,1],[3,1],[4,0],[0,1],[3,1],[3,0],[0,2],[4,0],[3,0],[3,0],[1,1],[2,1],[0,2],[3,0],[2,1],[3,1],[0,3],[1,2],[0,1],[3,1],[3,1],[1,3],[4,0],[1,0],[1,1],[1,4],[0,3],[1,4],[2,2],[1,4],[3,1],[1,3],[0,1],[3,1],[1,2],[2,3],[0,2],[2,4],[0,0],[0,4],[2,0]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Scotland","France","Saudi Arabia","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","Türkiye","Bosnia and Herzegovina","Belgium","Czechia","Brazil","Japan","Ecuador","Senegal","Mexico","Ivory Coast","England","Norway","Argentina","Uruguay","United States","Egypt","Switzerland","Algeria","Portugal","Ghana"],"kp16":["Germany","France","Canada","Netherlands","Croatia","Spain","Türkiye","Belgium","Brazil","Senegal","Mexico","England","Argentina","United States","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Argentina"],"od":[52,66,92,52,55,50,60,50]},{"n":"Entrant 21","d":[67,75,83,64,56,36,36,27],"lp":24,"champ":"Portugal","silver":"Spain","ts":"Kylian Mbappé","tsp":60,"bk":"Marc Cucurella","bkp":6,"finp":15,"chb":0,"gp":[[1,0],[2,1],[1,0],[0,2],[3,0],[0,4],[2,0],[2,3],[5,0],[2,1],[2,2],[1,0],[2,1],[1,0],[5,0],[0,2],[2,0],[0,2],[2,1],[3,0],[4,0],[0,2],[0,1],[1,0],[0,0],[0,1],[3,0],[2,0],[0,0],[5,0],[3,0],[2,1],[3,1],[2,0],[0,2],[2,0],[3,0],[0,2],[3,0],[2,0],[3,0],[1,1],[1,0],[0,2],[3,1],[2,1],[3,1],[0,2],[2,1],[0,3],[2,0],[2,1],[2,3],[2,0],[1,1],[0,2],[0,3],[0,2],[1,3],[1,0],[0,3],[1,1],[1,3],[0,1],[3,2],[1,3],[1,1],[0,3],[1,2],[0,0],[0,2],[2,2]],"jp":["South Africa","Qatar","Haiti","Paraguay","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","DR Congo","Panama"],"kp32":["Germany","Mexico","France","Australia","Czechia","Canada","Netherlands","Scotland","Colombia","England","Spain","Austria","Türkiye","Ecuador","Belgium","Algeria","Brazil","Japan","Ivory Coast","Norway","South Korea","Morocco","Croatia","Senegal","Argentina","Uruguay","United States","Egypt","Switzerland","Iran","Portugal","Ghana"],"kp16":["Germany","France","Czechia","Netherlands","England","Spain","Türkiye","Belgium","Brazil","Norway","South Korea","Croatia","Argentina","United States","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Türkiye","Brazil","South Korea","Argentina","Portugal"],"kp4":["France","Spain","Brazil","Portugal"],"od":[55,63,83,52,50,30,30,15]},{"n":"Entrant 12","d":[64,79,90,66,71,56,45,18],"lp":24,"champ":"France","silver":"Brazil","ts":"Kylian Mbappé","tsp":60,"bk":"Cristian Romero","bkp":6,"finp":0,"chb":0,"gp":[[1,1],[1,1],[2,1],[2,2],[2,1],[0,2],[2,0],[1,2],[5,0],[1,1],[1,1],[2,0],[2,0],[0,0],[3,0],[0,2],[2,1],[0,2],[2,0],[3,0],[3,0],[1,2],[2,0],[2,1],[2,0],[2,2],[2,0],[3,0],[0,1],[5,0],[2,0],[1,0],[2,1],[3,0],[0,2],[2,1],[3,1],[0,1],[2,0],[2,0],[4,0],[1,1],[1,0],[0,2],[2,0],[2,0],[2,0],[0,2],[1,2],[1,2],[1,1],[1,0],[1,2],[3,0],[2,1],[0,0],[1,2],[0,2],[0,3],[2,1],[0,3],[1,1],[1,1],[1,1],[2,0],[1,2],[1,2],[0,2],[2,2],[1,1],[0,3],[1,0]],"jp":["South Africa","Qatar","Haiti","Paraguay","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","DR Congo","Panama"],"kp32":["Germany","Scotland","France","Czechia","South Korea","Switzerland","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","Türkiye","Sweden","Belgium","Algeria","Brazil","Japan","Ecuador","Senegal","Mexico","Ivory Coast","England","Ghana","Argentina","Uruguay","United States","Egypt","Canada","Norway","Portugal","Bosnia and Herzegovina"],"kp16":["Germany","France","Switzerland","Morocco","Colombia","Spain","Türkiye","Belgium","Brazil","Senegal","Mexico","England","Argentina","United States","Norway","Portugal"],"kp8":["France","Switzerland","Spain","Türkiye","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","Brazil","Argentina"],"od":[52,67,90,54,65,50,45,0]},{"n":"Entrant 03","d":[66,85,87,68,66,56,66,62],"lp":27,"champ":"Spain","silver":"Argentina","ts":"Kylian Mbappé","tsp":60,"bk":"Rodrigo De Paul","bkp":6,"finp":30,"chb":20,"gp":[[3,0],[2,1],[2,1],[0,3],[2,1],[0,1],[2,0],[0,2],[3,0],[1,2],[2,1],[1,0],[2,1],[1,0],[2,0],[0,2],[2,0],[0,2],[2,0],[2,0],[3,0],[1,2],[2,1],[1,0],[1,0],[2,1],[2,0],[2,0],[1,2],[3,0],[2,1],[3,0],[2,0],[2,0],[0,2],[2,0],[2,0],[0,2],[3,0],[2,1],[3,0],[2,1],[2,1],[0,1],[2,0],[2,0],[2,0],[0,2],[0,2],[0,2],[2,1],[1,0],[0,2],[2,0],[1,2],[1,0],[1,2],[0,1],[0,3],[2,1],[0,3],[2,1],[1,2],[1,0],[1,0],[1,2],[1,2],[0,3],[1,2],[0,1],[0,3],[2,1]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Saudi Arabia","Iraq","Jordan","DR Congo","Panama"],"kp32":["Germany","Bosnia and Herzegovina","France","Paraguay","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","United States","Sweden","Belgium","Ivory Coast","Brazil","Japan","Ecuador","Norway","Mexico","Scotland","England","Senegal","Argentina","Uruguay","Türkiye","Egypt","Switzerland","Algeria","Portugal","Ghana"],"kp16":["Germany","France","South Korea","Netherlands","Colombia","Spain","United States","Belgium","Brazil","Norway","Mexico","England","Argentina","Türkiye","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Argentina"],"od":[54,73,87,56,60,50,60,50]},{"n":"Entrant 20","d":[58,71,73,62,61,66,45,12],"lp":15,"champ":"France","silver":"Brazil","ts":"Kylian Mbappé","tsp":60,"bk":"Rodri","bkp":0,"finp":0,"chb":0,"gp":[[3,1],[2,2],[2,0],[1,4],[2,1],[2,2],[3,1],[1,1],[5,1],[4,2],[4,1],[2,0],[3,2],[1,3],[4,0],[1,2],[3,1],[0,2],[2,0],[1,1],[4,0],[1,2],[3,2],[2,1],[2,0],[2,1],[2,0],[3,1],[0,3],[4,1],[2,1],[1,2],[3,1],[1,1],[2,0],[3,1],[2,0],[0,2],[3,0],[2,1],[3,0],[2,0],[4,1],[0,0],[3,1],[1,0],[3,1],[1,3],[1,3],[0,2],[3,2],[1,1],[1,4],[3,2],[2,2],[1,3],[0,2],[0,2],[1,4],[0,3],[0,1],[1,1],[2,4],[1,2],[2,1],[1,3],[1,1],[0,3],[1,3],[2,2],[0,3],[2,0]],"jp":["South Africa","Qatar","Scotland","Paraguay","Curaçao","Japan","Iran","Cape Verde","Iraq","Jordan","DR Congo","Panama"],"kp32":["Germany","United States","France","Czechia","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Algeria","Australia","New Zealand","Belgium","Tunisia","Brazil","Sweden","Ivory Coast","Norway","Mexico","Saudi Arabia","England","Senegal","Argentina","Uruguay","Türkiye","Egypt","Switzerland","Ghana","Portugal","Austria"],"kp16":["Germany","France","South Korea","Morocco","Croatia","Spain","Australia","Belgium","Brazil","Ivory Coast","Mexico","England","Argentina","Egypt","Switzerland","Portugal"],"kp8":["France","Morocco","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","Brazil","Argentina"],"od":[46,59,73,50,55,60,45,0]},{"n":"Entrant 05","d":[67,84,92,62,66,56,45,68],"lp":27,"champ":"Spain","silver":"Argentina","ts":"Kylian Mbappé","tsp":60,"bk":"Cristian Romero","bkp":6,"finp":30,"chb":20,"gp":[[2,1],[1,1],[1,1],[0,2],[1,1],[0,2],[1,1],[1,2],[3,0],[2,1],[2,1],[1,0],[2,1],[2,0],[4,0],[0,3],[3,0],[0,3],[3,1],[2,1],[2,0],[0,3],[1,1],[2,1],[2,0],[3,0],[2,1],[3,0],[1,2],[3,0],[1,1],[2,0],[2,2],[1,0],[0,2],[3,1],[1,0],[0,2],[2,0],[2,0],[3,1],[3,1],[2,0],[1,1],[4,0],[1,0],[1,0],[1,3],[1,2],[1,1],[1,1],[2,0],[1,2],[2,0],[1,0],[1,0],[1,2],[0,3],[1,3],[2,2],[0,3],[1,1],[1,2],[2,2],[2,1],[2,2],[1,1],[0,3],[1,2],[3,1],[0,2],[1,1]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","South Korea","France","Scotland","Czechia","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","Türkiye","Bosnia and Herzegovina","Belgium","Ecuador","Brazil","Japan","Ivory Coast","Norway","Mexico","USA","England","Iran","Argentina","Uruguay","Paraguay","Egypt","Switzerland","Sweden","Portugal","Ghana"],"kp16":["Germany","France","Canada","Netherlands","Colombia","Spain","Türkiye","Belgium","Brazil","Ivory Coast","Mexico","England","Argentina","Paraguay","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","Brazil","Argentina"],"od":[55,72,92,50,60,50,45,50]},{"n":"Entrant 04","d":[74,69,90,64,66,70,60,50],"lp":24,"champ":"Spain","silver":"Argentina","ts":"Harry Kane","tsp":36,"bk":"Pedri","bkp":6,"finp":30,"chb":20,"gp":[[2,1],[1,0],[2,1],[1,2],[2,1],[0,1],[1,0],[1,2],[3,0],[1,1],[1,2],[1,1],[2,0],[1,0],[3,0],[1,1],[3,0],[1,2],[3,0],[0,0],[3,1],[1,2],[2,1],[1,0],[0,0],[1,0],[1,1],[3,0],[1,3],[3,0],[2,1],[1,1],[2,1],[2,0],[1,1],[2,1],[2,0],[0,2],[3,1],[2,0],[3,1],[2,0],[2,1],[1,2],[2,0],[1,0],[2,0],[1,2],[1,2],[1,2],[2,1],[1,0],[1,2],[2,0],[2,1],[1,1],[0,3],[1,2],[1,3],[1,0],[0,2],[1,0],[1,2],[1,2],[1,1],[1,2],[1,1],[1,3],[1,2],[1,1],[0,2],[1,1]],"jp":["Czechia","Qatar","Haiti","Paraguay","Curaçao","Sweden","New Zealand","Cape Verde","Senegal","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Bosnia and Herzegovina","France","Saudi Arabia","South Korea","Canada","Japan","Morocco","Colombia","Croatia","Spain","Algeria","Türkiye","Ecuador","Belgium","Ghana","Brazil","Netherlands","Ivory Coast","Norway","Mexico","Scotland","England","Iran","Argentina","Uruguay","United States","Egypt","Switzerland","Australia","Portugal","Austria"],"kp16":["Germany","France","South Korea","Morocco","Croatia","Spain","Türkiye","Belgium","Brazil","Norway","Mexico","England","Argentina","United States","Switzerland","Portugal"],"kp8":["France","Morocco","Spain","Türkiye","Norway","England","Argentina","Switzerland"],"kp4":["France","Spain","England","Argentina"],"od":[56,69,84,52,60,70,60,50]},{"n":"Entrant 17","d":[65,69,80,70,66,56,45,12],"lp":21,"champ":"France","silver":"Brazil","ts":"Kylian Mbappé","tsp":60,"bk":"Casemiro","bkp":12,"finp":0,"chb":0,"gp":[[2,0],[1,0],[0,1],[0,4],[3,1],[0,3],[0,2],[0,2],[4,0],[1,3],[2,0],[3,1],[2,1],[0,1],[4,0],[0,3],[3,1],[0,2],[4,0],[3,0],[4,0],[0,2],[2,1],[0,1],[1,2],[2,1],[2,1],[2,0],[1,1],[4,0],[1,1],[0,0],[3,0],[4,0],[1,1],[2,1],[4,0],[0,3],[3,0],[4,0],[3,0],[1,1],[3,1],[1,1],[3,0],[3,0],[3,0],[1,3],[0,3],[1,1],[3,1],[3,0],[1,3],[2,0],[2,1],[3,0],[1,2],[0,1],[0,4],[0,1],[0,4],[3,0],[1,2],[1,2],[3,1],[0,2],[1,3],[0,5],[2,1],[0,1],[0,2],[3,1]],"jp":["Czechia","Qatar","Haiti","Australia","Curaçao","Tunisia","Iran","Cape Verde","Iraq","Jordan","DR Congo","Ghana"],"kp32":["Germany","Morocco","France","United States","South Korea","Bosnia and Herzegovina","Netherlands","Scotland","Portugal","Croatia","Spain","Austria","Paraguay","Canada","Belgium","South Africa","Brazil","Sweden","Ecuador","Senegal","Mexico","Ivory Coast","England","Saudi Arabia","Argentina","Uruguay","Türkiye","Egypt","Switzerland","Norway","Colombia","Panama"],"kp16":["Germany","France","Bosnia and Herzegovina","Netherlands","Portugal","Spain","Paraguay","Belgium","Brazil","Ecuador","Mexico","England","Argentina","Egypt","Norway","Colombia"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Colombia"],"kp4":["France","Spain","Brazil","Argentina"],"od":[47,57,80,52,60,50,45,0]},{"n":"Entrant 02","d":[63,79,95,66,71,56,60,68],"lp":27,"champ":"Spain","silver":"Argentina","ts":"Kylian Mbappé","tsp":60,"bk":"Cristian Romero","bkp":6,"finp":30,"chb":20,"gp":[[2,1],[1,1],[2,1],[0,2],[2,1],[0,2],[2,0],[0,2],[4,0],[1,2],[2,1],[1,0],[2,0],[1,1],[5,0],[0,2],[2,1],[0,3],[3,1],[2,0],[3,0],[1,2],[2,1],[2,0],[1,0],[2,2],[2,1],[2,0],[1,2],[4,0],[1,1],[2,0],[2,0],[3,0],[1,2],[2,0],[2,0],[0,1],[3,0],[3,0],[4,0],[2,2],[2,0],[1,3],[2,0],[2,0],[2,0],[1,3],[1,2],[0,2],[2,1],[2,1],[1,3],[3,0],[2,2],[1,0],[1,3],[1,2],[0,3],[2,1],[0,3],[2,1],[1,2],[0,0],[2,0],[1,2],[0,1],[0,4],[2,2],[1,0],[0,2],[2,0]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Bosnia and Herzegovina","France","Scotland","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","United States","Algeria","Belgium","Czechia","Brazil","Japan","Ecuador","Norway","Mexico","Sweden","England","Ivory Coast","Argentina","Uruguay","Türkiye","Egypt","Switzerland","Senegal","Portugal","Paraguay"],"kp16":["Germany","France","Canada","Netherlands","Colombia","Spain","United States","Belgium","Brazil","Norway","Mexico","England","Argentina","Türkiye","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Argentina"],"od":[51,67,95,54,65,50,60,50]},{"n":"Entrant 22","d":[70,53,85,64,51,40,45,35],"lp":27,"champ":"Spain","silver":"Brazil","ts":"Harry Kane","tsp":36,"bk":"Bruno Guimaraes","bkp":0,"finp":15,"chb":20,"gp":[[1,0],[1,1],[1,1],[0,2],[2,1],[0,1],[2,0],[0,1],[2,0],[1,1],[1,0],[2,1],[2,1],[1,1],[3,0],[0,1],[2,1],[0,2],[1,0],[1,0],[2,0],[0,1],[1,0],[1,0],[2,0],[1,1],[1,0],[2,1],[2,2],[3,0],[1,0],[1,0],[1,0],[1,0],[1,2],[1,0],[1,0],[0,1],[2,0],[1,0],[2,0],[2,2],[1,0],[1,1],[2,0],[1,1],[2,1],[0,2],[1,1],[0,0],[1,0],[2,0],[1,2],[2,0],[1,1],[0,0],[1,1],[0,0],[1,1],[2,2],[0,2],[2,2],[1,1],[1,1],[1,0],[1,1],[1,2],[0,2],[1,1],[1,0],[0,4],[0,0]],"jp":["South Africa","Qatar","Haiti","Paraguay","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","South Korea","France","Scotland","Mexico","Bosnia and Herzegovina","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","United States","Canada","Belgium","Senegal","Brazil","Japan","Ecuador","Norway","Czechia","Sweden","England","DR Congo","Argentina","Uruguay","Türkiye","Egypt","Switzerland","Iran","Portugal","Ghana"],"kp16":["Germany","France","Mexico","Netherlands","Croatia","Spain","United States","Senegal","Brazil","Ecuador","Czechia","England","Argentina","Türkiye","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Senegal","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","Brazil","Argentina"],"od":[58,53,79,52,45,40,45,35]},{"n":"Entrant 09","d":[72,84,88,70,71,56,60,12],"lp":27,"champ":"France","silver":"England","ts":"Kylian Mbappé","tsp":60,"bk":"Casemiro","bkp":12,"finp":0,"chb":0,"gp":[[2,0],[1,0],[2,1],[0,3],[2,0],[0,2],[2,1],[0,2],[4,0],[2,1],[2,1],[1,0],[2,1],[2,1],[4,0],[0,1],[2,0],[0,2],[2,0],[2,0],[2,0],[0,2],[2,1],[2,0],[1,0],[2,1],[2,0],[2,0],[1,2],[3,0],[2,1],[2,0],[2,0],[2,0],[1,2],[2,1],[2,0],[0,2],[3,1],[3,0],[3,0],[2,1],[2,1],[0,2],[3,0],[2,1],[2,0],[0,3],[1,2],[0,2],[2,1],[2,1],[0,2],[2,0],[2,1],[2,0],[1,2],[0,3],[0,2],[1,0],[0,2],[2,1],[0,2],[0,2],[2,1],[0,2],[1,2],[0,3],[1,2],[2,0],[0,4],[2,0]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Sweden","France","Scotland","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","Türkiye","Ecuador","Belgium","Czechia","Brazil","Japan","Ivory Coast","Norway","Mexico","Saudi Arabia","England","DR Congo","Argentina","Uruguay","United States","Egypt","Switzerland","Algeria","Portugal","Paraguay"],"kp16":["Germany","France","Canada","Netherlands","Colombia","Spain","Türkiye","Belgium","Brazil","Norway","Mexico","England","Argentina","United States","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Argentina"],"od":[54,72,88,52,65,50,60,0]},{"n":"Entrant 15","d":[55,78,100,54,55,30,45,62],"lp":30,"champ":"Spain","silver":"Argentina","ts":"Lamine Yamal","tsp":6,"bk":"Enzo Fernandez","bkp":12,"finp":30,"chb":20,"gp":[[2,0],[3,1],[1,1],[0,2],[3,1],[1,2],[1,1],[1,2],[4,0],[1,1],[2,0],[2,0],[2,0],[2,1],[3,1],[1,2],[3,1],[0,3],[2,1],[2,1],[3,0],[1,2],[2,0],[2,0],[1,0],[2,1],[2,1],[3,1],[1,2],[3,0],[2,0],[2,1],[2,0],[3,0],[1,2],[3,1],[3,0],[1,2],[3,0],[2,1],[3,0],[2,1],[1,0],[0,2],[3,0],[2,1],[2,0],[1,3],[0,2],[1,2],[1,0],[2,0],[1,3],[3,0],[2,1],[1,1],[0,1],[0,3],[0,3],[2,1],[1,4],[2,1],[2,3],[1,1],[2,0],[1,2],[1,2],[0,3],[1,2],[2,1],[0,3],[2,1]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Saudi Arabia","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Senegal","France","Ghana","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","Türkiye","Scotland","Belgium","Iran","Brazil","Japan","Ecuador","Norway","Mexico","Bosnia and Herzegovina","England","Ivory Coast","Argentina","Uruguay","United States","Egypt","Switzerland","Sweden","Portugal","Algeria"],"kp16":["Germany","France","South Korea","Netherlands","Croatia","Spain","Türkiye","Belgium","Brazil","Norway","Mexico","England","Argentina","United States","Switzerland","Portugal"],"kp8":["Germany","Netherlands","Spain","Türkiye","Brazil","England","Argentina","Portugal"],"kp4":["Netherlands","Spain","England","Argentina"],"od":[55,72,100,54,55,30,45,50]},{"n":"Entrant 23","d":[60,68,82,62,61,50,60,0],"lp":21,"champ":"England","silver":"France","ts":"Harry Kane","tsp":36,"bk":"Kalidou Koulibaly","bkp":0,"finp":0,"chb":0,"gp":[[2,0],[1,1],[1,0],[0,3],[1,1],[0,3],[1,1],[0,1],[4,0],[0,1],[1,1],[1,1],[1,0],[1,1],[5,0],[0,1],[2,2],[0,3],[2,0],[3,0],[2,0],[0,2],[2,0],[1,1],[2,0],[1,0],[2,0],[2,0],[1,1],[4,0],[0,0],[2,0],[2,1],[2,0],[0,1],[2,0],[3,0],[0,2],[3,0],[2,0],[3,0],[1,1],[2,1],[0,2],[3,0],[1,0],[2,0],[1,0],[0,1],[0,2],[1,1],[1,0],[1,1],[2,0],[1,0],[0,0],[0,0],[1,2],[0,2],[2,0],[0,3],[1,0],[0,2],[1,1],[2,0],[0,0],[0,1],[0,4],[0,1],[1,0],[0,1],[1,0]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Sweden","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Ghana"],"kp32":["Germany","Czechia","France","morocco","South Korea","Canada","Netherlands","Scotland","Colombia","Panama","Spain","Austria","Türkiye","Bosnia and Herzegovina","Belgium","ivory coast","Brazil","Japan","Ecuador","Norway","Mexico","sweden","England","saudi arabia","Argentina","Uruguay","United States","Egypt","Switzerland","senegal","Portugal","paraguay"],"kp16":["Germany","France","Canada","Netherlands","Colombia","Spain","Türkiye","Belgium","Brazil","Norway","sweden","England","Argentina","United States","senegal","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","senegal"],"kp4":["France","Spain","England","Argentina"],"od":[48,68,76,50,55,50,60,0]},{"n":"Entrant 01","d":[71,85,103,66,66,56,45,74],"lp":30,"champ":"Spain","silver":"Argentina","ts":"Kylian Mbappé","tsp":60,"bk":"Leandro Paredes","bkp":12,"finp":30,"chb":20,"gp":[[2,0],[2,1],[1,1],[0,2],[2,1],[0,2],[2,1],[0,2],[3,0],[1,1],[2,1],[1,0],[2,1],[2,0],[3,0],[0,2],[2,1],[0,2],[2,0],[2,0],[2,0],[0,2],[2,1],[2,0],[2,1],[1,1],[2,0],[2,0],[0,1],[3,0],[1,1],[2,0],[2,0],[2,0],[0,2],[2,0],[2,0],[0,2],[3,0],[2,0],[3,0],[2,1],[2,1],[0,1],[3,0],[2,1],[2,0],[0,2],[0,2],[0,2],[1,0],[2,1],[0,2],[2,0],[1,1],[1,0],[0,1],[0,2],[0,3],[2,1],[0,3],[1,1],[0,2],[2,1],[2,0],[1,2],[1,1],[0,3],[1,1],[2,1],[0,3],[2,1]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Saudi Arabia","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Bosnia and Herzegovina","France","Paraguay","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","United States","Ivory Coast","Belgium","Senegal","Brazil","Japan","Ecuador","Norway","Mexico","Scotland","England","Algeria","Argentina","Uruguay","Türkiye","Egypt","Switzerland","Iran","Portugal","Ghana"],"kp16":["Germany","France","Canada","Netherlands","Croatia","Spain","United States","Belgium","Brazil","Norway","Mexico","England","Argentina","Türkiye","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","Brazil","Argentina"],"od":[59,73,103,54,60,50,45,50]},{"n":"Entrant 18","d":[64,75,104,66,66,40,45,0],"lp":30,"champ":"France","silver":"England","ts":"Harry Kane","tsp":36,"bk":"Dayot Upamecano","bkp":0,"finp":0,"chb":0,"gp":[[3,1],[1,1],[0,1],[0,3],[1,0],[0,1],[1,0],[0,2],[4,0],[1,0],[2,1],[2,0],[2,0],[1,0],[2,0],[0,1],[2,0],[0,1],[1,0],[2,0],[2,0],[0,1],[1,0],[1,0],[1,0],[2,1],[1,0],[2,0],[0,2],[3,0],[1,1],[3,0],[1,0],[2,0],[0,2],[1,0],[1,1],[0,2],[2,0],[2,0],[3,0],[1,1],[2,0],[0,2],[2,0],[1,0],[2,0],[0,2],[1,1],[0,2],[1,1],[2,0],[0,2],[2,0],[0,2],[2,0],[1,1],[0,2],[0,2],[1,1],[0,3],[1,1],[0,1],[1,0],[3,0],[1,2],[1,1],[0,2],[0,2],[1,0],[0,2],[2,0]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Saudi Arabia","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","South Korea","France","Egypt","Czechia","Bosnia and Herzegovina","Netherlands","Morocco","Colombia","Croatia","Spain","Algeria","United States","Canada","Belgium","Austria","Brazil","Japan","Ivory Coast","Senegal","Mexico","Sweden","England","Norway","Argentina","Uruguay","Paraguay","Iran","Switzerland","Ecuador","Portugal","Türkiye"],"kp16":["Germany","France","Czechia","Netherlands","Colombia","Spain","United States","Belgium","Brazil","Senegal","Mexico","England","Argentina","Paraguay","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","United States","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Portugal"],"od":[52,75,98,54,60,40,45,0]},{"n":"Entrant 19","d":[65,63,72,60,71,46,51,27],"lp":21,"champ":"France","silver":"Argentina","ts":"Kylian Mbappé","tsp":60,"bk":"Rodrigo De Paul","bkp":6,"finp":15,"chb":0,"gp":[[2,0],[1,1],[2,0],[1,1],[2,1],[0,2],[1,1],[1,2],[3,0],[1,1],[2,0],[2,1],[3,1],[2,1],[2,0],[0,2],[2,0],[0,2],[3,0],[1,0],[3,0],[1,2],[2,1],[2,1],[2,1],[3,1],[2,1],[3,1],[2,2],[4,0],[2,1],[3,2],[2,0],[3,1],[1,1],[3,1],[1,0],[1,1],[3,1],[2,0],[3,0],[1,1],[2,0],[1,1],[2,0],[1,1],[2,0],[1,1],[1,1],[1,2],[1,1],[1,2],[1,3],[3,0],[1,1],[2,1],[0,2],[1,0],[0,2],[2,2],[0,3],[1,1],[0,3],[1,1],[2,1],[1,2],[1,2],[0,3],[1,2],[1,1],[1,2],[2,1]],"jp":["South Africa","Bosnia and Herzegovina","Haiti","Australia","Ivory Coast","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Curaçao","France","Senegal","Czechia","Switzerland","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","Türkiye","Qatar","Belgium","Ghana","Brazil","Sweden","Ecuador","Norway","Mexico","Scotland","England","Japan","Argentina","Uruguay","United States","Iran","Canada","Paraguay","Portugal","South Korea"],"kp16":["Germany","France","Switzerland","Netherlands","Colombia","Spain","Türkiye","Belgium","Brazil","Norway","Mexico","England","Argentina","United States","Canada","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","Mexico","Argentina","Portugal"],"kp4":["France","Spain","Brazil","Argentina"],"od":[53,51,72,48,65,40,45,15]},{"n":"Entrant 13","d":[61,70,100,64,61,50,45,35],"lp":24,"champ":"Spain","silver":"England","ts":"Harry Kane","tsp":36,"bk":"Álex Grimaldo","bkp":0,"finp":15,"chb":20,"gp":[[2,1],[2,1],[3,1],[3,2],[3,0],[1,2],[2,1],[2,2],[5,0],[0,3],[3,1],[1,2],[3,1],[1,2],[4,0],[1,3],[3,0],[0,2],[2,1],[2,0],[3,0],[1,4],[2,1],[3,0],[1,2],[3,1],[3,2],[2,0],[2,3],[4,0],[1,3],[2,1],[3,1],[2,0],[1,2],[3,1],[2,1],[1,3],[3,0],[3,1],[4,0],[2,1],[3,0],[1,1],[3,0],[2,0],[2,0],[1,4],[0,3],[1,1],[2,1],[2,1],[1,3],[3,0],[3,1],[1,2],[2,4],[0,2],[1,2],[2,0],[1,2],[2,1],[2,4],[1,2],[2,1],[1,3],[2,2],[0,4],[1,3],[2,1],[0,3],[2,1]],"jp":["Czechia","Qatar","Haiti","Paraguay","Curaçao","Sweden","Iran","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Australia","France","Tunisia","South Africa","Switzerland","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","United States","Bosnia and Herzegovina","Belgium","South Korea","Brazil","Japan","Ecuador","Norway","Mexico","Scotland","England","Ivory Coast","Argentina","Uruguay","Türkiye","Egypt","Canada","New Zealand","Portugal","Ghana"],"kp16":["Germany","France","Switzerland","Netherlands","Croatia","Spain","United States","Belgium","Brazil","Norway","Scotland","England","Argentina","Türkiye","Canada","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Portugal"],"od":[49,70,94,52,55,50,45,35]},{"n":"Entrant 14","d":[67,74,83,72,61,56,60,12],"lp":27,"champ":"France","silver":"England","ts":"Kylian Mbappé","tsp":60,"bk":"Casemiro","bkp":12,"finp":0,"chb":0,"gp":[[3,0],[3,2],[2,1],[0,4],[3,1],[1,2],[2,1],[1,2],[4,0],[1,3],[3,1],[2,1],[3,1],[1,1],[4,0],[0,2],[2,1],[2,2],[3,0],[2,0],[3,0],[0,3],[2,2],[2,1],[2,1],[2,1],[3,2],[3,1],[2,2],[4,0],[2,2],[2,1],[3,0],[1,0],[0,2],[3,1],[3,1],[1,2],[3,0],[3,0],[3,0],[0,2],[3,1],[1,2],[3,1],[2,0],[2,1],[1,2],[1,2],[0,2],[2,2],[2,1],[0,2],[3,0],[1,2],[3,0],[1,2],[1,1],[0,3],[1,0],[0,2],[2,2],[1,2],[2,1],[3,0],[0,3],[0,1],[0,3],[2,2],[1,1],[0,2],[2,1]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Saudi Arabia","Iraq","Jordan","DR Congo","Panama"],"kp32":["Germany","Sweden","France","Türkiye","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","United States","Bosnia and Herzegovina","Belgium","Czechia","Brazil","Japan","Ecuador","Senegal","Mexico","Scotland","England","Cape Verde","Argentina","Uruguay","Paraguay","Egypt","Switzerland","Algeria","Portugal","Ghana"],"kp16":["Germany","France","South Korea","Netherlands","Croatia","Spain","United States","Belgium","Brazil","Ecuador","Mexico","England","Argentina","Paraguay","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","England","Argentina"],"od":[49,62,83,54,55,50,60,0]},{"n":"Entrant 10","d":[55,77,90,62,66,56,45,53],"lp":24,"champ":"Spain","silver":"Brazil","ts":"Kylian Mbappé","tsp":60,"bk":"Cristian Romero","bkp":6,"finp":15,"chb":20,"gp":[[2,1],[0,0],[2,0],[0,3],[3,0],[1,2],[2,1],[0,1],[3,0],[1,2],[3,1],[0,0],[2,1],[1,1],[4,0],[1,2],[2,1],[0,3],[3,0],[1,0],[4,0],[0,2],[3,1],[0,0],[1,0],[2,0],[3,1],[2,1],[1,1],[4,0],[2,1],[2,1],[2,0],[2,0],[0,1],[2,0],[3,2],[1,1],[3,0],[2,0],[4,0],[2,1],[2,0],[0,0],[3,0],[2,0],[4,0],[0,2],[2,2],[0,0],[2,0],[2,2],[1,3],[3,0],[1,2],[0,0],[0,4],[1,2],[1,3],[2,2],[0,2],[2,2],[1,2],[1,1],[1,0],[2,3],[1,1],[1,3],[1,4],[1,1],[0,4],[2,0]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","DR Congo","Panama"],"kp32":["Germany","Sweden","France","Paraguay","Czechia","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Austria","United States","Sengal","Belgium","South Korea","Brazil","Japan","Ecuador","Norway","Mexico","Scotland","England","Algeria","Argentina","Uruguay","Türkiye","Iran","Switzerland","Egypt","Portugal","Ivory Coast"],"kp16":["Germany","France","Canada","Netherlands","Croatia","Spain","United States","Belgium","Brazil","Norway","Mexico","England","Argentina","Türkiye","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","Brazil","Argentina"],"od":[43,65,90,50,60,50,45,35]},{"n":"Entrant 11","d":[68,89,96,70,66,56,45,12],"lp":27,"champ":"France","silver":"Brazil","ts":"Kylian Mbappé","tsp":60,"bk":"Casemiro","bkp":12,"finp":0,"chb":0,"gp":[[2,0],[1,1],[1,0],[0,3],[3,1],[0,2],[2,1],[0,1],[4,0],[1,1],[2,1],[1,0],[2,1],[2,0],[5,0],[2,1],[2,0],[0,2],[3,0],[1,1],[2,0],[0,2],[2,1],[2,0],[1,0],[1,0],[2,0],[1,0],[0,1],[5,0],[1,2],[1,0],[3,1],[2,0],[0,1],[2,1],[2,1],[0,2],[3,0],[3,0],[3,0],[1,1],[2,0],[1,2],[3,0],[2,0],[2,0],[0,2],[1,2],[0,2],[2,1],[1,0],[0,3],[2,0],[1,1],[1,0],[1,3],[0,2],[0,2],[1,1],[0,4],[1,1],[1,2],[0,1],[2,0],[1,2],[1,1],[0,3],[1,2],[1,1],[0,3],[2,0]],"jp":["South Africa","Qatar","Haiti","Australia","Curaçao","Tunisia","New Zealand","Cape Verde","Iraq","Jordan","Uzbekistan","Panama"],"kp32":["Germany","Czechia","France","Türkiye","South Korea","Canada","Netherlands","Morocco","Colombia","Croatia","Spain","Algeria","United States","Bosnia and Herzegovina","Belgium","Ecuador","Brazil","Japan","Ivory Coast","Norway","Mexico","Sweden","England","Senegal","Argentina","Saudi Arabia","Paraguay","Egypt","Switzerland","Iran","Portugal","Uruguay"],"kp16":["Germany","France","South Korea","Netherlands","Croatia","Spain","United States","Belgium","Brazil","Norway","Mexico","England","Argentina","Paraguay","Switzerland","Portugal"],"kp8":["France","Netherlands","Spain","Belgium","Brazil","England","Argentina","Portugal"],"kp4":["France","Spain","Brazil","Argentina"],"od":[50,77,96,52,60,50,45,0]}];
+const EVENTS={"goals":{"Kylian Mbappé":[2,2,0,2,1,1,0,2],"Harry Kane":[2,0,1,2,1,0,0,0],"Lamine Yamal":[0,1,0,0,0,0,0,0]},"yell":{"Casemiro":[1,0,0,1,0,0,0,0],"Pedri":[1,0,0,0,0,0,0,0],"Marc Cucurella":[0,0,0,0,0,0,1,0],"Rodrigo De Paul":[0,0,0,0,0,0,1,0],"Cristian Romero":[0,0,0,0,0,0,0,1],"Leandro Paredes":[0,0,0,0,0,0,0,2],"Enzo Fernandez":[0,0,0,0,0,0,0,2]}};
+const RES={"md":[[{"g":"A","h":"Mexico","a":"South Africa","hs":2,"as":0},{"g":"A","h":"South Korea","a":"Czechia","hs":2,"as":1},{"g":"B","h":"Canada","a":"Bosnia and Herzegovina","hs":1,"as":1},{"g":"B","h":"Qatar","a":"Switzerland","hs":1,"as":1},{"g":"C","h":"Brazil","a":"Morocco","hs":1,"as":1},{"g":"C","h":"Haiti","a":"Scotland","hs":0,"as":1},{"g":"D","h":"United States","a":"Paraguay","hs":4,"as":1},{"g":"D","h":"Australia","a":"Türkiye","hs":2,"as":0},{"g":"E","h":"Germany","a":"Curaçao","hs":7,"as":1},{"g":"E","h":"Ivory Coast","a":"Ecuador","hs":1,"as":0},{"g":"F","h":"Netherlands","a":"Japan","hs":2,"as":2},{"g":"F","h":"Sweden","a":"Tunisia","hs":5,"as":1},{"g":"G","h":"Belgium","a":"Egypt","hs":1,"as":1},{"g":"G","h":"Iran","a":"New Zealand","hs":2,"as":2},{"g":"H","h":"Spain","a":"Cape Verde","hs":0,"as":0},{"g":"H","h":"Saudi Arabia","a":"Uruguay","hs":1,"as":1},{"g":"I","h":"France","a":"Senegal","hs":3,"as":1},{"g":"I","h":"Iraq","a":"Norway","hs":1,"as":4},{"g":"J","h":"Argentina","a":"Algeria","hs":3,"as":0},{"g":"J","h":"Austria","a":"Jordan","hs":3,"as":1},{"g":"K","h":"Portugal","a":"DR Congo","hs":1,"as":1},{"g":"K","h":"Uzbekistan","a":"Colombia","hs":1,"as":3},{"g":"L","h":"England","a":"Croatia","hs":4,"as":2},{"g":"L","h":"Ghana","a":"Panama","hs":1,"as":0}],[{"g":"A","h":"Czechia","a":"South Africa","hs":1,"as":1},{"g":"A","h":"Mexico","a":"South Korea","hs":1,"as":0},{"g":"B","h":"Switzerland","a":"Bosnia and Herzegovina","hs":4,"as":1},{"g":"B","h":"Canada","a":"Qatar","hs":6,"as":0},{"g":"C","h":"Scotland","a":"Morocco","hs":0,"as":1},{"g":"C","h":"Brazil","a":"Haiti","hs":3,"as":0},{"g":"D","h":"Türkiye","a":"Paraguay","hs":0,"as":1},{"g":"D","h":"United States","a":"Australia","hs":2,"as":0},{"g":"E","h":"Germany","a":"Ivory Coast","hs":2,"as":1},{"g":"E","h":"Ecuador","a":"Curaçao","hs":0,"as":0},{"g":"F","h":"Tunisia","a":"Japan","hs":0,"as":4},{"g":"F","h":"Netherlands","a":"Sweden","hs":5,"as":1},{"g":"G","h":"Belgium","a":"Iran","hs":0,"as":0},{"g":"G","h":"New Zealand","a":"Egypt","hs":1,"as":3},{"g":"H","h":"Spain","a":"Saudi Arabia","hs":4,"as":0},{"g":"H","h":"Uruguay","a":"Cape Verde","hs":2,"as":2},{"g":"I","h":"France","a":"Iraq","hs":3,"as":0},{"g":"I","h":"Norway","a":"Senegal","hs":3,"as":2},{"g":"J","h":"Argentina","a":"Austria","hs":2,"as":0},{"g":"J","h":"Jordan","a":"Algeria","hs":1,"as":2},{"g":"K","h":"Portugal","a":"Uzbekistan","hs":5,"as":0},{"g":"K","h":"Colombia","a":"DR Congo","hs":1,"as":0},{"g":"L","h":"England","a":"Ghana","hs":0,"as":0},{"g":"L","h":"Panama","a":"Croatia","hs":0,"as":1}],[{"g":"A","h":"Czechia","a":"Mexico","hs":0,"as":3},{"g":"A","h":"South Africa","a":"South Korea","hs":1,"as":0},{"g":"B","h":"Switzerland","a":"Canada","hs":2,"as":1},{"g":"B","h":"Bosnia and Herzegovina","a":"Qatar","hs":3,"as":1},{"g":"C","h":"Scotland","a":"Brazil","hs":0,"as":3},{"g":"C","h":"Morocco","a":"Haiti","hs":4,"as":2},{"g":"D","h":"Türkiye","a":"United States","hs":3,"as":2},{"g":"D","h":"Paraguay","a":"Australia","hs":0,"as":0},{"g":"E","h":"Ecuador","a":"Germany","hs":2,"as":1},{"g":"E","h":"Curaçao","a":"Ivory Coast","hs":0,"as":2},{"g":"F","h":"Tunisia","a":"Netherlands","hs":1,"as":3},{"g":"F","h":"Japan","a":"Sweden","hs":1,"as":1},{"g":"G","h":"New Zealand","a":"Belgium","hs":1,"as":5},{"g":"G","h":"Egypt","a":"Iran","hs":1,"as":1},{"g":"H","h":"Uruguay","a":"Spain","hs":0,"as":1},{"g":"H","h":"Cape Verde","a":"Saudi Arabia","hs":0,"as":0},{"g":"I","h":"Senegal","a":"Iraq","hs":5,"as":0},{"g":"I","h":"Norway","a":"France","hs":1,"as":4},{"g":"J","h":"Algeria","a":"Austria","hs":3,"as":3},{"g":"J","h":"Jordan","a":"Argentina","hs":1,"as":3},{"g":"K","h":"Colombia","a":"Portugal","hs":0,"as":0},{"g":"K","h":"DR Congo","a":"Uzbekistan","hs":3,"as":1},{"g":"L","h":"Panama","a":"England","hs":0,"as":2},{"g":"L","h":"Croatia","a":"Ghana","hs":2,"as":1}]],"jumbot":[{"g":"A","t":"Czechia"},{"g":"B","t":"Qatar"},{"g":"C","t":"Haiti"},{"g":"D","t":"Türkiye"},{"g":"E","t":"Curaçao"},{"g":"F","t":"Tunisia"},{"g":"G","t":"New Zealand"},{"g":"H","t":"Saudi Arabia"},{"g":"I","t":"Iraq"},{"g":"J","t":"Jordan"},{"g":"K","t":"Uzbekistan"},{"g":"L","t":"Panama"}],"r32pairs":[{"h":"Germany","a":"Paraguay"},{"h":"France","a":"Sweden"},{"h":"South Africa","a":"Canada"},{"h":"Netherlands","a":"Morocco"},{"h":"Portugal","a":"Croatia"},{"h":"Spain","a":"Austria"},{"h":"United States","a":"Bosnia and Herzegovina"},{"h":"Belgium","a":"Senegal"},{"h":"Brazil","a":"Japan"},{"h":"Ivory Coast","a":"Norway"},{"h":"Mexico","a":"Ecuador"},{"h":"England","a":"DR Congo"},{"h":"Argentina","a":"Cape Verde"},{"h":"Australia","a":"Egypt"},{"h":"Switzerland","a":"Algeria"},{"h":"Colombia","a":"Ghana"}],"r32fx":[{"h":"Germany","a":"Paraguay","w":"Paraguay","rp":1},{"h":"France","a":"Sweden","w":"France","rp":0},{"h":"South Africa","a":"Canada","w":"Canada","rp":0},{"h":"Netherlands","a":"Morocco","w":"Morocco","rp":1},{"h":"Portugal","a":"Croatia","w":"Portugal","rp":0},{"h":"Spain","a":"Austria","w":"Spain","rp":0},{"h":"United States","a":"Bosnia and Herzegovina","w":"United States","rp":0},{"h":"Belgium","a":"Senegal","w":"Belgium","rp":0},{"h":"Brazil","a":"Japan","w":"Brazil","rp":0},{"h":"Ivory Coast","a":"Norway","w":"Norway","rp":0},{"h":"Mexico","a":"Ecuador","w":"Mexico","rp":0},{"h":"England","a":"DR Congo","w":"England","rp":0},{"h":"Argentina","a":"Cape Verde","w":"Argentina","rp":0},{"h":"Australia","a":"Egypt","w":"Egypt","rp":0},{"h":"Switzerland","a":"Algeria","w":"Switzerland","rp":0},{"h":"Colombia","a":"Ghana","w":"Colombia","rp":0}],"r16fx":[{"h":"Paraguay","a":"France","w":"France","rp":0},{"h":"Canada","a":"Morocco","w":"Morocco","rp":0},{"h":"Portugal","a":"Spain","w":"Spain","rp":0},{"h":"United States","a":"Belgium","w":"Belgium","rp":0},{"h":"Brazil","a":"Norway","w":"Norway","rp":0},{"h":"Mexico","a":"England","w":"England","rp":0},{"h":"Argentina","a":"Egypt","w":"Argentina","rp":0},{"h":"Switzerland","a":"Colombia","w":"Switzerland","rp":0}],"qffx":[{"h":"France","a":"Morocco","w":"France","rp":0},{"h":"Spain","a":"Belgium","w":"Spain","rp":0},{"h":"Norway","a":"England","w":"England","rp":0},{"h":"Argentina","a":"Switzerland","w":"Argentina","rp":0}],"sffx":[{"h":"France","a":"Spain","w":"Spain","rp":0},{"h":"England","a":"Argentina","w":"Argentina","rp":0}],"final":{"champ":"Spain","silver":"Argentina","score":"1–0","note":"jatkoajalla"},"scorers":[{"n":"Kylian Mbappé","g":10},{"n":"Harry Kane","g":6},{"n":"Lamine Yamal","g":1}],"cards":[{"n":"Casemiro","k":2,"p":0},{"n":"Cristian Romero","k":1,"p":0},{"n":"Enzo Fernandez","k":2,"p":0},{"n":"Leandro Paredes","k":2,"p":0},{"n":"Marc Cucurella","k":1,"p":0},{"n":"Pedri","k":1,"p":0},{"n":"Rodrigo De Paul","k":1,"p":0}]};
+
+const STEPS=[
+ {k:"1",full:"Matchday 1",t:"Opening round",dt:"Jun 11&ndash;17",
+  wc:"The tournament kicked off across three host nations. Mbappé opened with a brace against Senegal, Kane matched it against Croatia &mdash; and Pedri went into the book in stoppage time on the very first night.",
+  pool:n=>`<b>${n.leader}</b> leads after the opening round (${n.leadPts} pts) &mdash; powered by a Kane brace and the first card of the pool. The gaps are still just a few points.`},
+ {k:"2",full:"Matchday 2",t:"Second round",dt:"Jun 18&ndash;23",
+  wc:"Germany crushed Curaçao 7&ndash;1 and Canada beat Qatar 6&ndash;0. Mbappé sank two against Iraq, and Yamal scored his only goal of the tournament against Saudi Arabia.",
+  pool:n=>`<b>${n.leader}</b> moves to the top (${n.leadPts} pts), but the margin is a point or two. Best round: <b>${n.best}</b> (+${n.bestPts} pts).`},
+ {k:"3",full:"Matchday 3 + bottom picks",t:"Groups wrapped",dt:"Jun 24&ndash;27",
+  wc:"Final group games locked in the qualifiers &mdash; and settled the group-bottom picks (3 pts per correct team). Kane became England&#8217;s all-time World Cup scorer with his goal against Panama.",
+  pool:n=>`<b>${n.leader}</b> takes the lead (${n.leadPts} pts) with the best group stage of the pool &mdash; and holds it for a long time. Gap to second: ${n.gap} points.`},
+ {k:"32",full:"Round of 32",t:"Knockouts begin",dt:"Jun 28&ndash;Jul 3",
+  wc:"32 qualifiers set (2 pts per correct team) and immediate shocks on the pitch: <b>Paraguay knocked out Germany on penalties</b> and Morocco did the same to the Netherlands. Mbappé and Kane both struck braces; Casemiro picked up his second yellow of the tournament.",
+  pool:n=>`<b>${n.leader}</b> holds the lead (${n.leadPts} pts). Best round: <b>${n.best}</b> (+${n.bestPts} pts).`},
+ {k:"R16",full:"Round of 16",t:"Last sixteen",dt:"Jul 4&ndash;7",
+  wc:"5 pts per correct qualifier. On the pitch, <b>Norway knocked out Brazil</b> and Morocco&#8217;s fairy tale continued at Canada&#8217;s expense. Mbappé beat Paraguay from the spot; Kane scored against Mexico at the Azteca.",
+  pool:n=>`<b>${n.leader}</b> leads (${n.leadPts} pts), but the chasing pack is packed tight. Best round: <b>${n.best}</b> (+${n.bestPts} pts).`},
+ {k:"QF",full:"Quarter-finals",t:"Last eight",dt:"Jul 9&ndash;11",
+  wc:"10 pts per correct team. France beat Morocco 2&ndash;0 with a Mbappé goal, Spain ended Belgium&#8217;s run with a late winner and England finished Norway&#8217;s fairy tale.",
+  pool:n=>`Best round: <b>${n.best}</b> (+${n.bestPts} pts) &mdash; seven of the eight quarter-finalists right. ${n.leader} leads by ${n.gap} points.`},
+ {k:"SF",full:"Semi-finals",t:"Final four",dt:"Jul 14&ndash;15",
+  wc:"15 pts per correct semi-finalist. Spain beat France 2&ndash;0 and Argentina edged past England in the dying minutes &mdash; the final is Spain&ndash;Argentina. Cards: Cucurella against France, De Paul against England.",
+  pool:n=>`A change at the top: <b>${n.leader}</b> takes the lead (${n.leadPts} pts) before the final day &mdash; but both of his final picks, France and England, lost their semis. Four entrants within ${n.gap4} points, and well over a hundred points still on the table.`},
+ {k:"F",full:"Final",t:"The decider",dt:"Jul 18&ndash;19",
+  wc:"<b>Spain 1&ndash;0 Argentina</b> after extra time. Argentina&#8217;s night fell apart in cards: two yellows for Enzo Fernández, a booking for Paredes plus another card after the whistle, a yellow for Romero in stoppage time. Mbappé sealed the Golden Boot (10) with a brace in the bronze match.",
+  pool:n=>`Entrant 09 drops from 1st to 7th &mdash; only Mbappé&#8217;s bronze-game goals on the final day. <b>Entrant 01</b> overtakes everyone and wins with ${n.leadPts} points: the best group stage, the Spain&ndash;Argentina final and Mbappé. Entrant 04 finishes 4th, his Kane pick (36 pts) losing 24 points to Mbappé (60).`}
+];
+
+const N=DATA.length, S=STEPS.length;
+const cum=DATA.map(o=>{let s=0;return o.d.map(v=>s+=v)});
+const finalOrder=[...Array(N).keys()].sort((a,b)=>cum[b][S-1]-cum[a][S-1]);
+const MAX=Math.max(...cum.map(c=>c[S-1]));
+const PODIUM=["#F2C14E","#C7CCD8","#CE8D5A"];
+const colorOf=i=>{const r=finalOrder.indexOf(i);return r<3?PODIUM[r]:null};
+const reduced=matchMedia("(prefers-reduced-motion: reduce)").matches;
+let step=0, pin=-1, timer=null;
+
+function ranksAt(s){
+  const idx=[...Array(N).keys()].sort((a,b)=> cum[b][s]-cum[a][s] || cum[b][S-1]-cum[a][S-1]);
+  const rk=Array(N); idx.forEach((p,i)=>rk[p]=i); return rk;
+}
+const getColW=()=> innerWidth<480?16: innerWidth<700?21:36;
+const LEAD=10, ROWH=34, ROWC=14.5, BH=23*ROWH+4;
+const bumpW=()=> S*getColW()+LEAD;
+const X=i=> i*getColW()+getColW()/2;
+
+/* trackhead pills aligned to bump columns */
+const trackhead=document.getElementById("trackhead");
+function buildPills(){
+  trackhead.innerHTML="";
+  trackhead.style.width=bumpW()+"px";
+  STEPS.forEach((s,i)=>{
+    const b=document.createElement("button");
+    b.className="pill"; b.textContent=s.k; b.title=s.full;
+    b.style.left=X(i)+"px";
+    b.onclick=()=>{stopPlay();go(i)};
+    trackhead.appendChild(b);
+  });
+}
+function stopPlay(){}
+
+/* rows */
+const rowsEl=document.getElementById("rows");
+const rowEls=DATA.map((o,i)=>{
+  const r=document.createElement("div"); r.className="row";
+  r.innerHTML=`<span class="rk"></span><span class="mv"></span>
+    <span class="nm">${o.n} <span class="cup">🏆</span></span>
+    <div class="barc"><div class="bar"></div></div>
+    <span class="dl"></span><span class="pt"></span>`;
+  r.querySelector(".bar").style.background=colorOf(i)||"rgba(244,239,225,.45)";
+  r.onclick=()=>{ pin=(pin===i?-1:i); sel.value=pin; render(false); renderCats(); };
+  rowsEl.appendChild(r); return r;
+});
+
+const storyEl=document.getElementById("story");
+const sel=document.createElement("select");
+
+/* bump: all 8 columns fixed under the pills, lines drawn up to current step */
+const bump=document.getElementById("bump");
+function drawBump(){
+  const w=bumpW();
+  bump.setAttribute("width",w); bump.setAttribute("height",BH);
+  bump.style.width=w+"px"; bump.style.height=BH+"px";
+  const rks=[]; for(let s=0;s<=step;s++) rks.push(ranksAt(s));
+  let svg="";
+  for(let i=0;i<S;i++){
+    svg+=`<line class="col${i===step?" cur":""}" x1="${X(i)}" y1="4" x2="${X(i)}" y2="${BH-4}" ${i>step?'opacity=".4"':''}/>`;
+  }
+  const paint=(i,color,wd,op,halo)=>{
+    let pts="";
+    for(let s=0;s<=step;s++) pts+=`${X(s)},${rks[s][i]*ROWH+ROWC} `;
+    pts+=`${w},${rks[step][i]*ROWH+ROWC}`;
+    let out="";
+    if(halo) out+=`<polyline points="${pts}" fill="none" stroke="#F4EFE1" stroke-width="${wd+2.4}" opacity=".9" stroke-linejoin="round"/>`;
+    out+=`<polyline points="${pts}" fill="none" stroke="${color}" stroke-width="${wd}" opacity="${op}" stroke-linejoin="round"/>`;
+    if(wd>1.4){ for(let s=0;s<=step;s++) out+=`<circle cx="${X(s)}" cy="${rks[s][i]*ROWH+ROWC}" r="2.3" fill="${color}" opacity="${op}"/>`; }
+    return out;
+  };
+  DATA.forEach((o,i)=>{ if(i!==pin && !colorOf(i)) svg+=paint(i,"#F4EFE1",1,.14,false); });
+  DATA.forEach((o,i)=>{ if(i!==pin && colorOf(i)) svg+=paint(i,colorOf(i),1.9,.9,false); });
+  if(pin>=0) svg+=paint(pin, colorOf(pin)||"#F4EFE1", 2.6, 1, true);
+  bump.innerHTML=svg;
+}
+addEventListener("resize",()=>{buildPills();drawBump()});
+
+/* round results detail */
+const lc=x=>(x||"").toString().toLowerCase().trim();
+const F32=new Set(RES.r32pairs.flatMap(p=>[lc(p.h),lc(p.a)]));
+const F16=new Set(RES.r32fx.map(f=>lc(f.w)));
+const F8=new Set(RES.r16fx.map(f=>lc(f.w)));
+const F4=new Set(RES.qffx.map(f=>lc(f.w)));
+const FINS=new Set([lc(RES.final.champ),lc(RES.final.silver)]);
+const gmm=(af,ah,pf,ph)=>{let o=((pf>ph&&af>ah)||(pf<ph&&af<ah)||(pf===ph&&af===ah))?3:0;return o+(pf===af?1:0)+(ph===ah?1:0)};
+const icon=p=> p>=3?'<span class="ok">✓</span>':p>0?'<span class="mid">±</span>':'<span class="no">✗</span>';
+const mrow=(m,own)=>{
+  if(!own) return `<div class="m"><span>${m.h} &ndash; ${m.a}</span><span class="sc">${m.hs}&ndash;${m.as}</span></div>`;
+  const pts=gmm(m.hs,m.as,own[0],own[1]);
+  return `<div class="m3"><span>${m.h} &ndash; ${m.a}</span><span class="sc">${m.hs}&ndash;${m.as}</span>
+    <span class="own">${icon(pts)} ${own[0]}&ndash;${own[1]} <b>+${pts}</b></span></div>`;
+};
+const frow=f=>{
+  const H = f.w===f.h?`<span class="w">${f.h}</span>`:f.h;
+  const A = f.w===f.a?`<span class="w">${f.a}</span>`:f.a;
+  return `<div class="m"><span>${H} &ndash; ${A}</span><span class="sc">${f.rp?"pens":""}</span></div>`;
+};
+const chips=(arr,field,per)=>arr.map(t=>{
+  if(!t) return "";
+  const ok=field.has(lc(t));
+  return `<span class="pk ${ok?"y":"n"}">${t} ${ok?`<b>+${per}</b>`:"✗"}</span>`;
+}).join("");
+function scSection(s){
+  const own=pin>=0?DATA[pin]:null;
+  const cumTo=(arr)=>arr.slice(0,s+1).reduce((a,b)=>a+b,0);
+  let out=`<div class="grp">Goals &amp; cards this round (6 pts / goal &middot; 6 pts / yellow)</div>`;
+  let any=false;
+  for(const [n,arr] of Object.entries(EVENTS.goals)){
+    if(!arr[s]) continue; any=true;
+    const mine=own&&lc(own.ts)===lc(n);
+    out+=`<div class="m${mine?" minehl":""}"><span>⚽ ${n}${mine?" ← own pick":""}</span><span class="sc">+${arr[s]} goals (total ${cumTo(arr)})${mine?` · <b>+${6*arr[s]} p</b>`:""}</span></div>`;
+  }
+  for(const [n,arr] of Object.entries(EVENTS.yell)){
+    if(!arr[s]) continue; any=true;
+    const mine=own&&lc(own.bk)===lc(n);
+    out+=`<div class="m${mine?" minehl":""}"><span>🟨 ${n}${mine?" ← own pick":""}</span><span class="sc">+${arr[s]} YC (total ${cumTo(arr)})${mine?` · <b>+${6*arr[s]} p</b>`:""}</span></div>`;
+  }
+  if(!any) out+=`<div class="m"><span>No entries for the tracked players this round.</span></div>`;
+  if(own){
+    const g=EVENTS.goals[Object.keys(EVENTS.goals).find(k=>lc(k)===lc(own.ts))]||[0,0,0,0,0,0,0,0];
+    const y=EVENTS.yell[Object.keys(EVENTS.yell).find(k=>lc(k)===lc(own.bk))]||[0,0,0,0,0,0,0,0];
+    out+=`<div class="m" style="margin-top:4px"><span>Own picks: ${own.ts} &middot; ${own.bk}</span><span class="sc">so far +${6*cumTo(g)+6*cumTo(y)} pts</span></div>`;
+  }
+  return out;
+}
+function resHtml(s){
+  const own=pin>=0?DATA[pin]:null;
+  let out="";
+  if(own){
+    const ev=own.d[s]-own.od[s];
+    out+=`<div class="rsum">${own.n} &mdash; predictions <b>+${own.od[s]}</b>${ev?` &middot; goals &amp; cards <b>+${ev}</b>`:""} &middot; round total <b>+${own.d[s]} pts</b></div>`;
+  }
+  if(s<=2){
+    let g="";
+    RES.md[s].forEach((m,idx)=>{
+      if(m.g!==g){g=m.g; out+=`<div class="grp">Group ${g}</div>`;}
+      out+=mrow(m, own?own.gp[s*24+idx]:null);
+    });
+    if(s===2){
+      out+=`<div class="grp">Group bottom picks (3 pts each)</div>`;
+      out+=RES.jumbot.map((j,i)=>{
+        if(!own) return `<div class="m"><span>${j.g} &nbsp;<b style="color:var(--chalk)">${j.t}</b></span></div>`;
+        const p=own.jp[i], hit=p&&lc(p)===lc(j.t);
+        return `<div class="m"><span>${j.g} &nbsp;<b style="color:var(--chalk)">${j.t}</b></span>
+          <span class="own">${hit?'<span class="ok">✓</span> <b>+3</b>':`<span class="no">✗</span> ${p||"&ndash;"}`}</span></div>`;
+      }).join("");
+    }
+  }
+  else if(s===3){
+    out+=`<div class="grp">Round of 32 &mdash; winners highlighted &middot; 2 pts per correct team in the 32</div>`;
+    out+=RES.r32fx.map(frow).join("")+`<div style="margin-top:6px;font-size:11px">pens = penalty shoot-out</div>`;
+    if(own) out+=`<div class="grp">Own round-of-32 picks</div>`+chips(own.kp32,F32,2);
+  }
+  else if(s===4){
+    out+=`<div class="grp">Round of 16 &mdash; winners highlighted</div>`+RES.r16fx.map(frow).join("");
+    if(own) out+=`<div class="grp">Own R16 picks (5 pts each)</div>`+chips(own.kp16,F16,5);
+  }
+  else if(s===5){
+    out+=`<div class="grp">Quarter-finals &mdash; winners highlighted</div>`+RES.qffx.map(frow).join("");
+    if(own) out+=`<div class="grp">Own QF picks (10 pts each)</div>`+chips(own.kp8,F8,10);
+  }
+  else if(s===6){
+    out+=`<div class="grp">Semi-finals &mdash; finalists highlighted</div>`+RES.sffx.map(frow).join("");
+    if(own) out+=`<div class="grp">Own SF picks (15 pts each)</div>`+chips(own.kp4,F4,15);
+  }
+  else{
+    out+=`<div class="grp">Final</div><div class="m"><span><span class="w">${RES.final.champ}</span> &ndash; ${RES.final.silver}</span><span class="sc">${RES.final.score} aet</span></div>`+
+      `<div class="m"><span>Third place: England &ndash; France</span><span class="sc">6&ndash;4</span></div>`;
+    if(own){
+      const svOk=FINS.has(lc(own.silver)), chOk=FINS.has(lc(own.champ)), exact=lc(own.champ)===lc(RES.final.champ);
+      out+=`<div class="grp">Own finalists (15 pts each, +20 for champion)</div>`+
+        `<span class="pk ${svOk?"y":"n"}">${own.silver} ${svOk?"<b>+15</b>":"✗"}</span>`+
+        `<span class="pk ${chOk?"y":"n"}">${own.champ} ${chOk?`<b>+${15+(exact?20:0)}</b>`:"✗"}</span>`+
+        (chOk&&exact?`<span class="pk y">champion exact <b>+20 incl.</b></span>`:"");
+    }
+  }
+  out+=scSection(s);
+  return out;
+}
+
+function go(s){ step=s; render(true); }
+
+function render(animateDelta){
+  const rk=ranksAt(step), prev=step>0?ranksAt(step-1):null;
+  const leaderIdx=rk.indexOf(0);
+  [...trackhead.querySelectorAll(".pill")].forEach((b,i)=>{
+    b.classList.toggle("on",i===step); b.classList.toggle("done",i<step);
+  });
+  DATA.forEach((o,i)=>{
+    const el=rowEls[i], r=rk[i];
+    el.style.top=(r*ROWH)+"px";
+    el.querySelector(".rk").textContent=(r+1)+".";
+    const mv=el.querySelector(".mv");
+    if(prev){ const d=prev[i]-r;
+      mv.textContent=d>0?("▲"+d):d<0?("▼"+(-d)):"·";
+      mv.className="mv "+(d>0?"up":d<0?"dn":"eq");
+    } else { mv.textContent="·"; mv.className="mv eq"; }
+    el.querySelector(".bar").style.width=(cum[i][step]/cum[leaderIdx][step]*100)+"%";
+    const dl=el.querySelector(".dl");
+    dl.textContent="+"+DATA[i].d[step];
+    dl.classList.toggle("show",animateDelta);
+    el.querySelector(".pt").textContent=cum[i][step];
+    el.classList.toggle("lead", r===0);
+    el.classList.toggle("pin", i===pin);
+    el.classList.toggle("champ", step===S-1 && r===0);
+  });
+  document.getElementById("hdrR").textContent=STEPS[step].full+" · "+STEPS[step].dt.replace(/&ndash;/g,"–");
+  const bestI=[...Array(N).keys()].sort((a,b)=>DATA[b].d[step]-DATA[a].d[step])[0];
+  const sorted=[...Array(N).keys()].sort((a,b)=>rk[a]-rk[b]);
+  const info={leader:DATA[leaderIdx].n, leadPts:cum[leaderIdx][step],
+    best:DATA[bestI].n, bestPts:DATA[bestI].d[step],
+    top3:sorted.slice(0,3).map(i=>DATA[i].n),
+    gap:cum[sorted[0]][step]-cum[sorted[1]][step],
+    gap4:cum[sorted[0]][step]-cum[sorted[3]][step]};
+  const st=STEPS[step];
+  let meHtml="";
+  if(pin>=0){
+    const o=DATA[pin], r=rk[pin]+1, d=o.d[step], pd=prev?prev[pin]+1:null;
+    let extra="";
+    if(step===S-1) extra=` Final-day tally: finalists ${o.finp} pts, champion ${o.chb} pts, ${o.ts} ${o.tsp} pts, cards (${o.bk}) ${o.bkp} pts. Champion pick: ${o.champ}.`;
+    meHtml=`<div class="me"><b>${o.n}</b> &mdash; rank <b>${r}.</b>${pd?` (previous round: ${pd}.)`:""}, <b>+${d}</b> pts this round, <b>${cum[pin][step]}</b> pts total.${extra}</div>`;
+  }
+  const prevDet=storyEl.querySelector("details.res");
+  const wasOpen=prevDet?prevDet.open:true;
+  storyEl.innerHTML=`
+    <div class="rnd">Round ${step+1} / ${S}</div>
+    <h2>${st.t}</h2>
+    <div class="dates">${st.dt}</div>
+    <p>${st.wc}</p>
+    <p>${st.pool(info)}</p>
+    <div class="chips">
+      <div class="chip">Leader <b>${info.leader}</b></div>
+      <div class="chip">Round best <b>${info.best} +${info.bestPts}</b></div>
+    </div>
+    <details class="res"${wasOpen?" open":""}><summary>Round results</summary><div class="resbody">${resHtml(step)}</div></details>
+    <div class="follow"><label for="fsel">Follow an entrant</label></div>
+    ${meHtml}`;
+  storyEl.querySelector(".follow").appendChild(sel);
+  drawBump();
+}
+
+/* category small multiples */
+const CATS=[
+ {t:"Group games",f:o=>o.od[0]+o.od[1]+o.od[2]-o.lp,u:"score predictions, max 5 pts/game"},
+ {t:"Bottom picks",f:o=>o.lp,u:"3 pts per correct group bottom"},
+ {t:"Round of 32",f:o=>o.od[3],u:"2 pts per correct team"},
+ {t:"Round of 16",f:o=>o.od[4],u:"5 pts per correct team"},
+ {t:"Quarter-finals",f:o=>o.od[5],u:"10 pts per correct team"},
+ {t:"Semi-finals",f:o=>o.od[6],u:"15 pts per correct team"},
+ {t:"Finalists & champion",f:o=>o.finp+o.chb,u:"15 pts per finalist, +20 champion"},
+ {t:"Top scorer",f:o=>o.tsp,u:"6 pts per goal by chosen player"},
+ {t:"Cards",f:o=>o.bkp,u:"yellow 6 pts, red 15 pts"},
+];
+const catgrid=document.getElementById("catgrid");
+function renderCats(){
+  catgrid.innerHTML=CATS.map(c=>{
+    const vals=DATA.map((o,i)=>({i,v:c.f(o)})).sort((a,b)=>b.v-a.v || cum[b.i][S-1]-cum[a.i][S-1]);
+    const max=vals[0].v||1;
+    let list=vals.slice(0,5);
+    let pinExtra=null;
+    if(pin>=0 && !list.some(x=>x.i===pin)){
+      const pos=vals.findIndex(x=>x.i===pin);
+      pinExtra={...vals[pos],rk:pos+1};
+    }
+    const bar=(x,rkTxt)=>{
+      const col=colorOf(x.i)||"rgba(244,239,225,.5)";
+      return `<div class="cbar${x.i===pin?" pinned":""}">
+        <span class="n">${rkTxt?`<span class="rkk">${rkTxt}.</span> `:""}${DATA[x.i].n}</span>
+        <span class="tr"><span class="f" style="width:${(x.v/max*100).toFixed(1)}%;background:${col};display:block"></span></span>
+        <span class="v">${x.v}</span></div>`;
+    };
+    return `<div class="cat"><h4>${c.t}</h4><div class="max">${c.u}</div>`+
+      list.map(x=>bar(x,"")).join("")+
+      (pinExtra?`<div style="border-top:1px dashed var(--line);margin:7px 0"></div>`+bar(pinExtra,pinExtra.rk):"")+
+      `</div>`;
+  }).join("");
+}
+
+/* follow select */
+sel.innerHTML=`<option value="-1">&mdash; pick a name &mdash;</option>`+
+  finalOrder.map(i=>`<option value="${i}">${DATA[i].n}</option>`).join("");
+sel.onchange=()=>{ pin=+sel.value; render(false); renderCats(); };
+
+document.addEventListener("keydown",e=>{
+  if(e.key==="ArrowRight"&&step<S-1){stopPlay();go(step+1)}
+  if(e.key==="ArrowLeft"&&step>0){stopPlay();go(step-1)}
+});
+
+buildPills();
+go(0);
+renderCats();
+</script>
+</body>
+</html>
