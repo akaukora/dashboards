@@ -78,7 +78,9 @@
   .heat { display: grid; grid-template-columns: 44px repeat(12, minmax(0, 1fr)); gap: 3px; align-items: center; font-size: 11px; color: var(--text-3); }
   .heat .y { text-align: right; padding-right: 6px; color: var(--text-2); font-variant-numeric: tabular-nums; }
   .heat .m { text-align: center; }
-  .heat .c { aspect-ratio: 1.6; border-radius: 3px; background: var(--card-2); position: relative; cursor: default; }
+  .heat .c { aspect-ratio: 1.6; border-radius: 3px; background: var(--card-2); position: relative; cursor: pointer; }
+  .heat .c.sel { outline: 2px solid var(--text); outline-offset: -2px; }
+  .heat .c.dim { opacity: 0.35; }
   .heat .c.future { background: transparent; border: 1px dashed var(--line-2); }
   .heat .c[data-n]:hover::after { content: attr(data-tip); position: absolute; left: 50%; bottom: 110%; transform: translateX(-50%); background: #0b0e11; color: var(--text); padding: 4px 8px; border-radius: 6px; white-space: nowrap; font-size: 12px; z-index: 5; pointer-events: none; }
   .heat-scale { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-3); margin-top: 10px; justify-content: flex-end; }
@@ -93,6 +95,15 @@
   .poster .t { font-size: 12px; margin-top: 6px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .poster .s { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .stars { color: var(--green); letter-spacing: -1px; }
+
+  .active { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: -6px 0 16px; padding: 8px 12px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--line-2); }
+  .active .label { color: var(--text-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; min-width: 52px; }
+  .active .f { display: inline-flex; align-items: center; gap: 6px; background: var(--card-2); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 13px; color: var(--text); }
+  .active .f .k { color: var(--text-3); }
+  .active .f button { all: unset; cursor: pointer; width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 13px; line-height: 1; color: var(--text-2); }
+  .active .f button:hover { background: var(--line-2); color: var(--text); }
+  .active .clear { margin-left: auto; padding: 4px 10px; font-size: 12px; }
+  .chart.clickable canvas { cursor: pointer; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .chips .chip { padding: 3px 10px; font-size: 12px; }
@@ -162,17 +173,23 @@
     <span class="hint" id="sourceHint"></span>
   </div>
 
+  <div class="active" id="activeBar" hidden>
+    <span class="label">Filters</span>
+    <span id="activeChips"></span>
+    <button class="chip clear" id="clearAll" type="button">Clear all</button>
+  </div>
+
   <section class="kpis" id="kpis"></section>
 
   <section class="grid">
     <div class="card">
       <h2>Films per year</h2>
       <div class="note" id="noteYears"></div>
-      <div class="chart"><canvas id="cYears"></canvas></div>
+      <div class="chart clickable"><canvas id="cYears"></canvas></div>
     </div>
     <div class="card">
       <h2>Films per month</h2>
-      <div class="note" id="noteHeat">Each cell is one month; brighter means more films.</div>
+      <div class="note" id="noteHeat">Each cell is one month; brighter means more films. Click a cell to filter to that month.</div>
       <div class="heat" id="heat"></div>
       <div class="heat-scale" id="heatScale"></div>
     </div>
@@ -183,7 +200,7 @@
       <h2>Rating distribution</h2>
       <div class="note" id="noteRatings"></div>
       <div class="legend multi" id="ratingLegend"></div>
-      <div class="chart"><canvas id="cRatings"></canvas></div>
+      <div class="chart clickable"><canvas id="cRatings"></canvas></div>
     </div>
     <div class="card">
       <h2>Ratings over time</h2>
@@ -211,7 +228,7 @@
       <h2>Ratings by service</h2>
       <div class="note" id="noteTags"></div>
       <div class="legend multi" id="tagLegend"></div>
-      <div class="chart" id="cTagsWrap"><canvas id="cTags"></canvas></div>
+      <div class="chart clickable" id="cTagsWrap"><canvas id="cTags"></canvas></div>
     </div>
   </section>
 
@@ -219,7 +236,7 @@
     <div class="card">
       <h2>Release decade</h2>
       <div class="note" id="noteDecades"></div>
-      <div class="chart"><canvas id="cDecades"></canvas></div>
+      <div class="chart clickable"><canvas id="cDecades"></canvas></div>
     </div>
     <div class="card">
       <h2>Films by rating</h2>
@@ -353,8 +370,28 @@ function toFilms(rows) {
 }
 
 /* ---------- state ---------- */
-let ALL = [], YEARS = [], selectedYear = "all", selectedSource = "all", charts = {}, sortKey = "date", sortAsc = false, ratingFilter = "all", listFilms = [];
-const matchSource = (f) => selectedSource === "all" ? true : selectedSource === "theater" ? f.venue === "theater" : selectedSource === "home" ? f.venue === "home" : f.tags.includes(selectedSource);
+let ALL = [], YEARS = [], charts = {}, sortKey = "date", sortAsc = false, listFilms = [];
+// Every filter lives here. "year"/"source" also have button rows; the rest are set by clicking charts.
+const F = { year: null, source: null, rating: null, decade: null, month: null };
+const FILTER_LABEL = { year: "Year", source: "Source", rating: "Rating", decade: "Released", month: "Month" };
+const matchSource = (f, s) => s === "theater" ? f.venue === "theater" : s === "home" ? f.venue === "home" : f.tags.includes(s);
+// Films passing every active filter except `skip` — a chart never filters itself, it highlights instead.
+function filtered(skip) {
+  return ALL.filter((f) =>
+    (skip === "year" || F.year == null || (f.date && f.date.getFullYear() === F.year)) &&
+    (skip === "month" || F.month == null || (f.date && f.date.getMonth() === F.month)) &&
+    (skip === "source" || F.source == null || matchSource(f, F.source)) &&
+    (skip === "rating" || F.rating == null || (f.rating != null && bucket(f.rating) === F.rating)) &&
+    (skip === "decade" || F.decade == null || (f.year && Math.floor(f.year / 10) * 10 === F.decade)));
+}
+function describe(k) {
+  const v = F[k];
+  if (k === "year") return String(v);
+  if (k === "month") return MONTHS[v] + (F.year != null ? "" : " (any year)");
+  if (k === "source") return v === "theater" ? "Theater" : v === "home" ? "Home" : cap(tagLabel(v));
+  if (k === "rating") return `${v}★ ${RATING_MEANING[v]}`;
+  if (k === "decade") return v + "s";
+}
 
 /* ---------- Chart.js defaults & small plugins ---------- */
 Chart.defaults.color = css("--text-2");
@@ -434,31 +471,38 @@ const timeTicks = (single) => ({ stepSize: 1, autoSkip: false, maxRotation: 0, c
 /* ---------- render ---------- */
 function render() {
   const now = new Date();
-  const base = ALL.filter(matchSource);                                   // source filter applies everywhere
-  const films = selectedYear === "all" ? base : base.filter((f) => f.date && f.date.getFullYear() === +selectedYear);
+  const films = filtered();                                    // everything filtered
   const rated = films.filter((f) => f.rating != null);
   const years = YEARS;
   const cy = now.getFullYear();
+  const dim = css("--line-2");
+
+  /* Active-filter bar */
+  const active = Object.keys(F).filter((k) => F[k] != null);
+  $("#activeBar").hidden = !active.length;
+  $("#activeChips").innerHTML = active.map((k) => `<span class="f"><span class="k">${FILTER_LABEL[k]}</span>${esc(describe(k))}<button type="button" data-k="${k}" aria-label="Remove ${FILTER_LABEL[k]} filter">×</button></span>`).join("");
+  document.querySelectorAll("#activeChips button").forEach((b) => b.addEventListener("click", () => setFilter(b.dataset.k, null)));
 
   /* KPIs */
   const avg = rated.length ? rated.reduce((s, f) => s + f.rating, 0) / rated.length : null;
   const distinct = new Set(films.map((f) => f.title.toLowerCase())).size;     // by title: the 2019–20 export has a few wrong URLs
   const last = films.filter((f) => f.date).at(-1);
+  const noYear = filtered("year");
   let tile2;
-  if (selectedYear === "all") {
-    const thisYear = base.filter((f) => f.date && f.date.getFullYear() === cy);
-    const sameDayLast = base.filter((f) => f.date && f.date.getFullYear() === cy - 1 && f.date <= new Date(cy - 1, now.getMonth(), now.getDate()));
+  if (F.year == null) {
+    const thisYear = noYear.filter((f) => f.date && f.date.getFullYear() === cy);
+    const sameDayLast = noYear.filter((f) => f.date && f.date.getFullYear() === cy - 1 && f.date <= new Date(cy - 1, now.getMonth(), now.getDate()));
     const diff = thisYear.length - sameDayLast.length;
     tile2 = { l: `Watched in ${cy}`, v: thisYear.length, d: `<span class="${diff >= 0 ? "up" : "down"}">${diff >= 0 ? "+" : ""}${diff}</span> vs the same point in ${cy - 1}` };
   } else {
-    const prev = base.filter((f) => f.date && f.date.getFullYear() === +selectedYear - 1).length;
-    const perMonth = films.length / (+selectedYear === cy ? Math.max(1, now.getMonth() + now.getDate() / 30) : 12);
-    tile2 = { l: `Pace in ${selectedYear}`, v: perMonth.toFixed(1), d: `films per month · ${prev} logged in ${+selectedYear - 1}` };
+    const prev = noYear.filter((f) => f.date && f.date.getFullYear() === F.year - 1).length;
+    const perMonth = films.length / (F.month != null ? 1 : F.year === cy ? Math.max(1, now.getMonth() + now.getDate() / 30) : 12);
+    tile2 = { l: `Pace in ${F.year}`, v: perMonth.toFixed(1), d: `films per month · ${prev} logged in ${F.year - 1}` };
   }
   const tagged = films.filter((f) => f.venue);
   const theater = tagged.filter((f) => f.venue === "theater").length, home = tagged.filter((f) => f.venue === "home").length;
   const tiles = [
-    { l: selectedYear === "all" ? "Films logged" : `Films logged in ${selectedYear}`, v: films.length, d: `${distinct} distinct titles · ${films.length - distinct} rewatch${films.length - distinct === 1 ? "" : "es"}` },
+    { l: F.year == null ? "Films logged" : `Films logged in ${F.year}`, v: films.length, d: `${distinct} distinct titles · ${films.length - distinct} rewatch${films.length - distinct === 1 ? "" : "es"}` },
     tile2,
     { l: "Average rating", v: avg == null ? "—" : avg.toFixed(2), d: `${rated.length} rated · ${rated.filter((f) => f.rating === 5).length} must-see · ${rated.filter((f) => f.rating < 3).length} below ok` },
     { l: "In a theater", v: tagged.length ? Math.round(100 * theater / tagged.length) + "%" : "—", d: tagged.length ? `${theater} theater · ${home} home${tagged.length - theater - home ? ` · ${tagged.length - theater - home} other` : ""} · of ${tagged.length} tagged films` : "no viewing tags in this selection (tags cover 2019–20)" },
@@ -466,22 +510,22 @@ function render() {
   ];
   $("#kpis").innerHTML = tiles.map((t) => `<div class="kpi"><div class="l">${t.l}</div><div class="v${t.small ? " small" : ""}" title="${t.small ? t.v : ""}">${t.v}</div><div class="d">${t.d}</div></div>`).join("");
 
-  /* Films per year — all years of the current source, selected one highlighted */
-  const perYear = years.map((y) => base.filter((f) => f.date && f.date.getFullYear() === y).length);
-  const dim = css("--line-2");
+  /* Films per year — every year, filtered by everything but year; the chosen year highlighted */
+  const perYear = years.map((y) => noYear.filter((f) => f.date && f.date.getFullYear() === y).length);
   upsert("cYears", {
     type: "bar",
-    data: { labels: years.map(String), datasets: [barBase({ data: perYear, backgroundColor: years.map((y) => selectedYear === "all" || +selectedYear === y ? css("--green-mark") : dim) })] },
-    options: { maintainAspectRatio: false, onClick: (e, els) => { if (els.length) setYear(String(years[els[0].index]) === selectedYear ? "all" : String(years[els[0].index])); },
+    data: { labels: years.map(String), datasets: [barBase({ data: perYear, backgroundColor: years.map((y) => F.year == null || F.year === y ? css("--green-mark") : dim) })] },
+    options: { maintainAspectRatio: false, onClick: (e, els) => { if (els.length) toggleFilter("year", years[els[0].index]); },
       scales: { x: { ...AXIS, grid: { display: false } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
       plugins: { tooltip: { callbacks: { label: (c) => `${c.parsed.y} films` } } } },
   });
-  $("#noteYears").textContent = (years.includes(cy) ? `${cy} is year-to-date (through ${fmtDate(now)}). ` : "") + "Click a bar to filter.";
+  $("#noteYears").textContent = (years.includes(cy) ? `${cy} is year-to-date (through ${fmtDate(now)}). ` : "") + "Click a bar to filter; click again to clear.";
 
-  /* Heatmap */
-  const heatYears = selectedYear === "all" ? years : [+selectedYear];
+  /* Heatmap — filtered by everything but month; the chosen month outlined */
+  const heatBase = filtered("month");
+  const heatYears = F.year != null ? [F.year] : years;
   const counts = {}; let maxC = 0;
-  for (const f of base) if (f.date) { const k = f.date.getFullYear() + "-" + f.date.getMonth(); counts[k] = (counts[k] || 0) + 1; }
+  for (const f of heatBase) if (f.date) { const k = f.date.getFullYear() + "-" + f.date.getMonth(); counts[k] = (counts[k] || 0) + 1; }
   for (const y of heatYears) for (let m = 0; m < 12; m++) maxC = Math.max(maxC, counts[y + "-" + m] || 0);
   const first = ALL.find((f) => f.date)?.date;
   let h = `<div></div>` + MONTHS.map((m) => `<div class="m">${m[0]}</div>`).join("");
@@ -491,34 +535,36 @@ function render() {
       const n = counts[y + "-" + m] || 0;
       const future = (y > cy) || (y === cy && m > now.getMonth()) || (first && (y < first.getFullYear() || (y === first.getFullYear() && m < first.getMonth())));
       if (future) { h += `<div class="c future"></div>`; continue; }
-      h += `<div class="c" data-n="${n}" data-tip="${MONTHS[m]} ${y}: ${n} film${n === 1 ? "" : "s"}" style="background:${heatColor(n, maxC)}"></div>`;
+      const sel = F.month === m && (F.year == null || F.year === y);
+      h += `<div class="c${sel ? " sel" : F.month != null && F.month !== m ? " dim" : ""}" data-y="${y}" data-m="${m}" data-n="${n}" data-tip="${MONTHS[m]} ${y}: ${n} film${n === 1 ? "" : "s"}" style="background:${heatColor(n, maxC)}"></div>`;
     }
   }
   $("#heat").innerHTML = h;
   $("#heatScale").innerHTML = `0 <i style="background:${heatColor(0, maxC)}"></i><i style="background:${heatColor(maxC * 0.33, maxC)}"></i><i style="background:${heatColor(maxC * 0.66, maxC)}"></i><i style="background:${heatColor(maxC, maxC)}"></i> ${maxC}`;
 
-  /* Rating distribution — columns coloured by what the rating means */
+  /* Rating distribution — filtered by everything but rating; the chosen rating highlighted */
+  const ratedNoR = filtered("rating").filter((f) => f.rating != null);
   const steps = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5].filter((s) => ALL.some((f) => f.rating === s));
-  const dist = steps.map((s) => rated.filter((f) => f.rating === s).length);
+  const dist = steps.map((s) => ratedNoR.filter((f) => f.rating === s).length);
   upsert("cRatings", {
     type: "bar",
-    data: { labels: steps.map((s) => (s % 1 ? (Math.floor(s) ? Math.floor(s) + "½" : "½") : String(s)) + "★"), datasets: [barBase({ data: dist, backgroundColor: steps.map((s) => RATING_COLORS[bucket(s)]), hoverBackgroundColor: steps.map((s) => RATING_COLORS[bucket(s)]) })] },
-    options: { maintainAspectRatio: false,
+    data: { labels: steps.map((s) => (s % 1 ? (Math.floor(s) ? Math.floor(s) + "½" : "½") : String(s)) + "★"), datasets: [barBase({ data: dist, backgroundColor: steps.map((s) => F.rating == null || F.rating === bucket(s) ? RATING_COLORS[bucket(s)] : dim), hoverBackgroundColor: steps.map((s) => RATING_COLORS[bucket(s)]) })] },
+    options: { maintainAspectRatio: false, onClick: (e, els) => { if (els.length) toggleFilter("rating", bucket(steps[els[0].index])); },
       scales: { x: { ...AXIS, grid: { display: false }, ticks: { ...AXIS.ticks, maxRotation: 0, autoSkip: false, color: css("--text-2") } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
-      plugins: { tooltip: { callbacks: { title: (c) => `${steps[c[0].dataIndex]}★ · ${RATING_MEANING[bucket(steps[c[0].dataIndex])]}`, label: (c) => `${c.parsed.y} films (${rated.length ? Math.round(100 * c.parsed.y / rated.length) : 0}%)` } } } },
+      plugins: { tooltip: { callbacks: { title: (c) => `${steps[c[0].dataIndex]}★ · ${RATING_MEANING[bucket(steps[c[0].dataIndex])]}`, label: (c) => `${c.parsed.y} films (${ratedNoR.length ? Math.round(100 * c.parsed.y / ratedNoR.length) : 0}%)` } } } },
   });
   $("#ratingLegend").innerHTML = ratingLegendHTML();
-  $("#noteRatings").textContent = rated.length ? `${rated.length} rated films · median ${median(rated.map((f) => f.rating))}★ · ${films.length - rated.length} unrated` : "No rated films in this selection.";
+  $("#noteRatings").textContent = (ratedNoR.length ? `${ratedNoR.length} rated films · median ${median(ratedNoR.map((f) => f.rating))}★ · ${filtered("rating").length - ratedNoR.length} unrated. ` : "No rated films in this selection. ") + "Click a column to filter.";
 
   /* Ratings over time: one dot per film (jittered), coloured good / ok / bad, plus each year's average as a step line */
   const datedRated = rated.filter((f) => f.date);
   let rnd = 7; const jitter = () => { rnd = (rnd * 9301 + 49297) % 233280; return (rnd / 233280 - 0.5) * 0.28; };
   const dots = datedRated.map((f) => ({ x: xOf(f.date), y: f.rating + jitter(), f }));
-  const xMin = selectedYear !== "all" ? +selectedYear * 12 : (dots.length ? Math.floor(Math.min(...dots.map((d) => d.x))) : monthIndex(now) - 12);
-  const xMax = selectedYear !== "all" ? +selectedYear * 12 + 12 : (dots.length ? Math.ceil(Math.max(...dots.map((d) => d.x))) + 1 : monthIndex(now) + 1);
+  const xMin = F.year != null ? F.year * 12 : (dots.length ? Math.floor(Math.min(...dots.map((d) => d.x))) : monthIndex(now) - 12);
+  const xMax = F.year != null ? F.year * 12 + 12 : (dots.length ? Math.ceil(Math.max(...dots.map((d) => d.x))) + 1 : monthIndex(now) + 1);
   const stepPts = [];
   for (const y of years) {
-    const ys = base.filter((f) => f.rating != null && f.date && f.date.getFullYear() === y);
+    const ys = noYear.filter((f) => f.rating != null && f.date && f.date.getFullYear() === y);
     if (!ys.length) continue;
     const a = { y, avg: ys.reduce((s, f) => s + f.rating, 0) / ys.length, n: ys.length };
     const x0 = Math.max(xMin, y * 12), x1 = Math.min(xMax, y * 12 + 12);
@@ -532,18 +578,19 @@ function render() {
       { label: "Year average", data: stepPts, type: "line", borderColor: AVG_LINE, borderWidth: 2, pointRadius: 0, pointHitRadius: 0, pointHoverRadius: 0, tension: 0, order: 1 },
     ] },
     options: { maintainAspectRatio: false, interaction: { mode: "nearest", intersect: true }, layout: { padding: { top: 12 } },
+      onClick: (e, els) => { const d = els.length && els[0].datasetIndex === 0 ? dots[els[0].index] : null; if (d && d.f.url) window.open(d.f.url, "_blank", "noopener"); },
       scales: {
-        x: { ...AXIS, type: "linear", min: xMin, max: xMax, grid: { display: false }, ticks: { ...AXIS.ticks, ...timeTicks(selectedYear !== "all") } },
+        x: { ...AXIS, type: "linear", min: xMin, max: xMax, grid: { display: false }, ticks: { ...AXIS.ticks, ...timeTicks(F.year != null) } },
         y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
       },
       plugins: { tooltip: { filter: (c) => c.datasetIndex === 0, callbacks: { title: (c) => c[0].raw.f.title, label: (c) => `${starStr(c.raw.f.rating)} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + c.raw.f.tags.map(tagLabel).join(", ") : ""}` } }, yearLabels: { pts: stepPts } } },
   });
   $("#trendLegend").innerHTML = `<span><i style="background:${CLASS_COLORS.good}"></i>4–5★ good</span><span><i style="background:${CLASS_COLORS.ok}"></i>3★ ok</span><span><i style="background:${CLASS_COLORS.bad}"></i>1–2★ below</span><span><i class="line" style="background:${AVG_LINE}"></i>Year average</span>`;
+  $("#noteTrend").textContent = "Each dot is one film (click to open it on Letterboxd); the line is that year's average rating.";
 
   /* Recent ratings — the last N rated films as labelled dots on a time axis */
   const recentRated = datedRated.slice(-RECENT_RATED);
   const rdots = recentRated.map((f) => ({ x: xOf(f.date), y: f.rating, f }));
-  // spread films that share a date and rating a little so they don't stack exactly
   const seen = {}; rdots.forEach((d) => { const k = d.x.toFixed(3) + "|" + d.y; seen[k] = (seen[k] || 0) + 1; if (seen[k] > 1) d.y += (seen[k] % 2 ? 1 : -1) * 0.18 * Math.ceil((seen[k] - 1) / 2); });
   const rMin = rdots.length ? Math.min(...rdots.map((d) => d.x)) : monthIndex(now), rMax = rdots.length ? Math.max(...rdots.map((d) => d.x)) : monthIndex(now) + 1;
   const pad = Math.max(0.4, (rMax - rMin) * 0.08);
@@ -552,75 +599,99 @@ function render() {
     type: "scatter",
     data: { datasets: [{ data: rdots, backgroundColor: rdots.map((d) => CLASS_COLORS[classOf(d.f.rating)]), borderColor: css("--card"), borderWidth: 2, pointRadius: 6, pointHoverRadius: 8 }] },
     options: { maintainAspectRatio: false, interaction: { mode: "nearest", intersect: true }, layout: { padding: { top: 10, right: 12 } },
+      onClick: (e, els) => { const d = els.length ? rdots[els[0].index] : null; if (d && d.f.url) window.open(d.f.url, "_blank", "noopener"); },
       scales: {
         x: { ...AXIS, type: "linear", min: rMin - pad, max: rMax + pad, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 1, autoSkip: false, maxRotation: 0, callback: (v) => { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); return m % 12 === 0 ? `${MONTHS[0]} ${m / 12}` : MONTHS[m % 12]; } } },
         y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
       },
       plugins: { tooltip: { callbacks: { title: (c) => c[0].raw.f.title + (c[0].raw.f.year ? ` (${c[0].raw.f.year})` : ""), label: (c) => `${starStr(c.raw.f.rating)} ${RATING_MEANING[bucket(c.raw.f.rating)]} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + c.raw.f.tags.map(tagLabel).join(", ") : ""}` } }, dotLabels: { labels: rdots.map((d) => shortTitle(d.f.title)) } } },
   });
-  $("#noteRecentRatings").textContent = recentRated.length ? `The last ${recentRated.length} rated films, ${fmtDate(recentRated[0].date)} – ${fmtDate(recentRated.at(-1).date)}. Labels are skipped where they would overlap; hover for the rest.` : "No rated films in this selection.";
+  $("#noteRecentRatings").textContent = recentRated.length ? `The last ${recentRated.length} rated films, ${fmtDate(recentRated[0].date)} – ${fmtDate(recentRated.at(-1).date)}. Labels are skipped where they would overlap; hover for the rest, click to open.` : "No rated films in this selection.";
 
   /* Recent watches */
   const recent = films.filter((f) => f.date).slice(-RECENT_COUNT).reverse();
   $("#posters").innerHTML = recent.map((f) => `<div class="poster">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">` : ""}${f.poster ? `<img loading="lazy" src="${esc(f.poster)}" alt="${esc(f.title)} poster">` : `<div class="ph">${esc(f.title)}</div>`}${f.url ? "</a>" : ""}<div class="t" title="${esc(f.title)}">${esc(f.title)}${f.year ? ` <span style="color:var(--text-3)">${f.year}</span>` : ""}</div><div class="s"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating) || "&nbsp;"}</span></div><div class="s">${fmtDate(f.date)}${f.tags.length ? ` · ${esc(tagLabel(f.tags[0]))}` : ""}</div></div>`).join("");
-  $("#noteRecent").textContent = recent.length ? `Latest ${recent.length} entries${selectedSource !== "all" ? ` for ${sourceName(selectedSource)}` : ""}.` : "Nothing in this selection.";
+  $("#noteRecent").textContent = recent.length ? `Latest ${recent.length} entries${active.length ? " in this selection" : ""}.` : "Nothing in this selection.";
 
-  /* Ratings by service — share of each rating per viewing tag, plus the average */
+  /* Ratings by service — filtered by everything but source; the chosen tag's row highlighted */
+  const ratedNoS = filtered("source").filter((f) => f.rating != null);
   const tagFilms = {};
-  for (const f of rated) for (const t of f.tags) (tagFilms[t] = tagFilms[t] || []).push(f);
+  for (const f of ratedNoS) for (const t of f.tags) (tagFilms[t] = tagFilms[t] || []).push(f);
   const svc = Object.entries(tagFilms).filter(([, fs]) => fs.length >= MIN_TAG_FILMS).sort((a, b) => b[1].length - a[1].length);
+  const svcTags = svc.map(([t]) => t);
   const levels = [1, 2, 3, 4, 5];
   const avgOf = (fs) => fs.reduce((s, f) => s + f.rating, 0) / fs.length;
+  const rowOn = (t) => F.source == null || F.source === t || (F.source === "theater" && THEATER_TAGS.includes(t)) || (F.source === "home" && HOME_TAGS.includes(t));
   $("#cTagsWrap").style.height = Math.max(120, 30 * svc.length + 40) + "px";
   upsert("cTags", {
     type: "bar",
     data: { labels: svc.map(([t]) => tagLabel(t)), datasets: levels.map((lv) => ({
       label: `${lv}★`, data: svc.map(([, fs]) => 100 * fs.filter((f) => bucket(f.rating) === lv).length / fs.length),
-      backgroundColor: RATING_COLORS[lv], borderColor: css("--card"), borderWidth: { left: lv > 1 ? 2 : 0 }, borderSkipped: false, maxBarThickness: 18, raw: svc.map(([, fs]) => fs.filter((f) => bucket(f.rating) === lv).length),
+      backgroundColor: svcTags.map((t) => rowOn(t) ? RATING_COLORS[lv] : hexA(RATING_COLORS[lv], 0.25)), hoverBackgroundColor: RATING_COLORS[lv],
+      borderColor: css("--card"), borderWidth: { left: lv > 1 ? 2 : 0 }, borderSkipped: false, maxBarThickness: 18, raw: svc.map(([, fs]) => fs.filter((f) => bucket(f.rating) === lv).length),
     })) },
     options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: 90 } },
       scales: { x: { ...AXIS, stacked: true, min: 0, max: 100, ticks: { ...AXIS.ticks, stepSize: 25, callback: (v) => v + "%" } }, y: { ...AXIS, stacked: true, grid: { display: false }, ticks: { ...AXIS.ticks, color: css("--text-2") } } },
       plugins: { tooltip: { callbacks: {
         title: (c) => `${c[0].label} · ${svc[c[0].dataIndex][1].length} rated films`,
         label: (c) => `${c.dataset.label} ${RATING_MEANING[+c.dataset.label[0]]}: ${c.dataset.raw[c.dataIndex]} films (${Math.round(c.parsed.x)}%)`,
-        afterBody: (c) => `Average ${avgOf(svc[c[0].dataIndex][1]).toFixed(2)}★`,
-      } }, rowEnd: { text: svc.map(([, fs]) => `${avgOf(fs).toFixed(2)}★ · ${fs.length}`) } } },
+        afterBody: (c) => `Average ${avgOf(svc[c[0].dataIndex][1]).toFixed(2)}★ · click to filter`,
+      } }, rowEnd: { text: svc.map(([, fs]) => `${avgOf(fs).toFixed(2)}★ · ${fs.length}`) }, rowHighlight: {} } },
   });
+  charts.cTags.$tags = svcTags;
+  if (!charts.cTags.$wired) {   // Chart.js only fires onHover/onClick inside the plot area, so listen on the canvas to cover the labels too
+    const cv = charts.cTags.canvas, ch = charts.cTags;
+    const rowFromEvent = (ev) => rowAt(ch, ev.offsetY);
+    cv.addEventListener("mousemove", (ev) => { const i = rowFromEvent(ev); if (ch.$row !== i) { ch.$row = i; ch.draw(); } cv.style.cursor = i != null ? "pointer" : "default"; });
+    cv.addEventListener("mouseleave", () => { ch.$row = null; ch.draw(); });
+    cv.addEventListener("click", (ev) => { const i = rowFromEvent(ev); if (i != null && ch.$tags[i]) toggleFilter("source", ch.$tags[i] === "cinema" ? "theater" : ch.$tags[i]); });   // the cinema row is the Theater button
+    charts.cTags.$wired = true;
+  }
   $("#tagLegend").innerHTML = ratingLegendHTML() + `<span style="margin-left:auto;color:var(--text-3)">avg · films</span>`;
-  $("#noteTags").textContent = svc.length ? `Share of ratings per viewing tag, tags with ${MIN_TAG_FILMS}+ rated films. A film can carry several tags (netflix and streaming, say). Only the 2019–2020 export has tags.` : "No viewing tags in this selection — tags exist only for 2019–2020. Pick 2019, 2020 or All years to see them.";
+  $("#noteTags").textContent = svc.length ? `Share of ratings per viewing tag, tags with ${MIN_TAG_FILMS}+ rated films. Click a row to filter by that service. Only the 2019–2020 export has tags.` : "No viewing tags in this selection — tags exist only for 2019–2020. Pick 2019, 2020 or All years to see them.";
   $("#cTagsWrap").style.display = svc.length ? "" : "none";
   $("#tagLegend").style.display = svc.length ? "" : "none";
 
-  /* Release decade (RSS rows carry a year) */
-  const withYear = films.filter((f) => f.year);
+  /* Release decade — filtered by everything but decade; the chosen decade highlighted */
+  const withYear = filtered("decade").filter((f) => f.year);
   const decades = [...new Set(withYear.map((f) => Math.floor(f.year / 10) * 10))].sort();
   upsert("cDecades", {
     type: "bar",
-    data: { labels: decades.map((d) => d + "s"), datasets: [barBase({ data: decades.map((d) => withYear.filter((f) => Math.floor(f.year / 10) * 10 === d).length) })] },
-    options: { maintainAspectRatio: false,
+    data: { labels: decades.map((d) => d + "s"), datasets: [barBase({ data: decades.map((d) => withYear.filter((f) => Math.floor(f.year / 10) * 10 === d).length), backgroundColor: decades.map((d) => F.decade == null || F.decade === d ? css("--green-mark") : dim) })] },
+    options: { maintainAspectRatio: false, onClick: (e, els) => { if (els.length) toggleFilter("decade", decades[els[0].index]); },
       scales: { x: { ...AXIS, grid: { display: false } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
-      plugins: { tooltip: { callbacks: { label: (c) => `${c.parsed.y} films` } } } },
+      plugins: { tooltip: { callbacks: { label: (c) => `${c.parsed.y} films · click to filter` } } } },
   });
-  const noYear = films.length - withYear.length;
-  $("#noteDecades").textContent = withYear.length ? `${withYear.length} films with a release year${noYear ? ` · ${noYear} from the 2019–20 export have none` : ""} · median ${median(withYear.map((f) => f.year))}` : "Release years are only in the RSS-era entries (Nov 2020 onward).";
+  $("#cDecades").parentElement.style.display = decades.length ? "" : "none";
+  const noYr = filtered("decade").length - withYear.length;
+  $("#noteDecades").textContent = withYear.length ? `${withYear.length} films with a release year${noYr ? ` · ${noYr} from the 2019–20 export have none` : ""} · median ${median(withYear.map((f) => f.year))}. Click a bar to filter.` : "Release years are only in the RSS-era entries (Nov 2020 onward).";
 
-  /* Films by rating — list with a star filter */
+  /* Films by rating — the list; its chips set the same rating filter as the chart */
   listFilms = rated.slice().reverse();
-  const present = [5, 4, 3, 2, 1].filter((lv) => listFilms.some((f) => bucket(f.rating) === lv));
-  if (ratingFilter !== "all" && !present.includes(ratingFilter)) ratingFilter = "all";
-  $("#ratingChips").innerHTML = [["all", "All"], ...present.map((lv) => [lv, `${lv}★ ${RATING_MEANING[lv]}`])].map(([v, l]) => `<button type="button" class="chip" data-r="${v}">${l}</button>`).join("");
-  document.querySelectorAll("#ratingChips .chip").forEach((b) => b.addEventListener("click", () => { ratingFilter = b.dataset.r === "all" ? "all" : +b.dataset.r; drawList(); }));
-  drawList();
+  const present = [5, 4, 3, 2, 1].filter((lv) => ratedNoR.some((f) => bucket(f.rating) === lv));
+  $("#ratingChips").innerHTML = [["all", "All"], ...present.map((lv) => [lv, `${lv}★ ${RATING_MEANING[lv]}`])].map(([v, l]) => `<button type="button" class="chip${(F.rating == null ? "all" : String(F.rating)) === String(v) ? " active" : ""}" data-r="${v}">${l}</button>`).join("");
+  document.querySelectorAll("#ratingChips .chip").forEach((b) => b.addEventListener("click", () => setFilter("rating", b.dataset.r === "all" ? null : +b.dataset.r)));
+  $("#topList").innerHTML = listFilms.map((f) => `<li><span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</span><span class="dt"><span class="stars" style="color:${RATING_COLORS[bucket(f.rating)]}">${starStr(f.rating)}</span> · ${fmtDate(f.date)}</span></li>`).join("") || `<li><span style="color:var(--text-3)">No rated films in this selection.</span></li>`;
+  $("#noteTop").textContent = `${listFilms.length} film${listFilms.length === 1 ? "" : "s"}, newest first.`;
 
   renderTable(films);
 }
 
-function drawList() {
-  const rows = ratingFilter === "all" ? listFilms : listFilms.filter((f) => bucket(f.rating) === ratingFilter);
-  document.querySelectorAll("#ratingChips .chip").forEach((b) => b.classList.toggle("active", String(ratingFilter) === b.dataset.r));
-  $("#topList").innerHTML = rows.map((f) => `<li><span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</span><span class="dt"><span class="stars" style="color:${RATING_COLORS[bucket(f.rating)]}">${starStr(f.rating)}</span> · ${fmtDate(f.date)}</span></li>`).join("") || `<li><span style="color:var(--text-3)">No films with this rating in the selection.</span></li>`;
-  $("#noteTop").textContent = `${rows.length} film${rows.length === 1 ? "" : "s"}, newest first.`;
+// Which horizontal-bar row sits at a canvas y-pixel (works over the label area too, not just the bars).
+function rowAt(chart, pos) {
+  if (pos == null || pos < chart.chartArea.top || pos > chart.chartArea.bottom) return null;
+  const i = Math.round(chart.scales.y.getValueForPixel(pos));
+  return i >= 0 && i < chart.data.labels.length ? i : null;
 }
+Chart.register({
+  id: "rowHighlight",
+  beforeDatasetsDraw(chart, args, opts) {
+    if (!opts || chart.$row == null) return;
+    const { ctx, chartArea: ca, scales: { y } } = chart;
+    const c = y.getPixelForValue(chart.$row), half = (ca.bottom - ca.top) / Math.max(1, chart.data.labels.length) / 2;
+    ctx.save(); ctx.fillStyle = "rgba(255,255,255,0.06)"; ctx.fillRect(0, c - half, chart.width, half * 2); ctx.restore();
+  },
+});
 
 function heatColor(n, max) {
   if (!n || !max) return css("--card-2");
@@ -656,36 +727,53 @@ $("#search").addEventListener("input", drawTable);
 $("#tableToggle").addEventListener("click", () => { const on = $("#tableCard").classList.toggle("show"); $("#tableToggle").classList.toggle("active", on); $("#tableToggle").setAttribute("aria-pressed", on); if (on) $("#tableCard").scrollIntoView({ behavior: "smooth", block: "start" }); });
 
 /* ---------- filters ---------- */
-function syncHash() {
-  const parts = []; if (selectedYear !== "all") parts.push(selectedYear); if (selectedSource !== "all") parts.push(selectedSource);
-  try { history.replaceState(null, "", parts.length ? "#" + parts.map(encodeURIComponent).join(";") : location.pathname + location.search); } catch (e) {}
+function setFilter(k, v) {
+  F[k] = v;
+  if (k === "year" && v == null) F.month = null;             // a month without its year is rarely what you meant
+  syncHash(); paintChips(); render();
 }
-function setYear(y) { selectedYear = y; syncHash(); paintChips(); render(); }
-function setSource(s) { selectedSource = s; syncHash(); paintChips(); render(); }
+const toggleFilter = (k, v) => setFilter(k, F[k] === v ? null : v);
+function syncHash() {
+  const q = Object.keys(F).filter((k) => F[k] != null).map((k) => `${k[0]}=${encodeURIComponent(F[k])}`).join("&");
+  try { history.replaceState(null, "", q ? "#" + q : location.pathname + location.search); } catch (e) {}
+}
 function paintChips() {
-  document.querySelectorAll("#yearFilters .chip[data-y]").forEach((c) => c.classList.toggle("active", c.dataset.y === selectedYear));
-  document.querySelectorAll("#sourceFilters .chip[data-s]").forEach((c) => c.classList.toggle("active", c.dataset.s === selectedSource));
+  document.querySelectorAll("#yearFilters .chip[data-y]").forEach((c) => c.classList.toggle("active", c.dataset.y === String(F.year ?? "all")));
+  document.querySelectorAll("#sourceFilters .chip[data-s]").forEach((c) => c.classList.toggle("active", c.dataset.s === (F.source ?? "all")));
 }
 function buildFilters() {
-  const mk = (row, attr, val, label, before, onClick) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset[attr] = val; b.textContent = label; b.addEventListener("click", () => onClick(val)); before.before(b); };
+  const mk = (attr, val, label, before, onClick) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset[attr] = val; b.textContent = label; b.addEventListener("click", () => onClick(val)); before.before(b); };
   document.querySelectorAll("#yearFilters .chip[data-y], #sourceFilters .chip[data-s]").forEach((c) => c.remove());
-  const yEnd = $("#tableToggle");
-  mk("y", "y", "all", "All years", yEnd, setYear);
-  YEARS.forEach((y) => mk("y", "y", String(y), String(y), yEnd, setYear));
+  const yEnd = $("#tableToggle"), setY = (v) => setFilter("year", v === "all" ? null : +v), setS = (v) => setFilter("source", v === "all" ? null : v);
+  mk("y", "all", "All years", yEnd, setY);
+  YEARS.forEach((y) => mk("y", String(y), String(y), yEnd, setY));
   const sEnd = $("#sourceHint");
-  mk("s", "s", "all", "All sources", sEnd, setSource);
-  mk("s", "s", "theater", "Theater", sEnd, setSource);
-  mk("s", "s", "home", "Home", sEnd, setSource);
+  mk("s", "all", "All sources", sEnd, setS);
+  mk("s", "theater", "Theater", sEnd, setS);
+  mk("s", "home", "Home", sEnd, setS);
   const tagCount = {}; for (const f of ALL) for (const t of f.tags) tagCount[t] = (tagCount[t] || 0) + 1;
-  Object.entries(tagCount).filter(([t, n]) => n >= MIN_SOURCE_CHIP && !UMBRELLA_TAGS.includes(t)).sort((a, b) => b[1] - a[1]).forEach(([t]) => mk("s", "s", t, cap(tagLabel(t)), sEnd, setSource));
+  Object.entries(tagCount).filter(([t, n]) => n >= MIN_SOURCE_CHIP && !UMBRELLA_TAGS.includes(t)).sort((a, b) => b[1] - a[1]).forEach(([t]) => mk("s", t, cap(tagLabel(t)), sEnd, setS));
   const taggedDates = ALL.filter((f) => f.tags.length && f.date).map((f) => f.date);
   if (taggedDates.length) { const a = taggedDates[0], b = taggedDates.at(-1); $("#sourceHint").textContent = `tags cover ${MONTHS[a.getMonth()]} ${a.getFullYear()} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`; }
+  $("#clearAll").addEventListener("click", () => { Object.keys(F).forEach((k) => (F[k] = null)); syncHash(); paintChips(); render(); });
+  $("#heat").addEventListener("click", (e) => { const c = e.target.closest(".c[data-m]"); if (!c) return; const y = +c.dataset.y, m = +c.dataset.m; if (F.month === m && F.year === y) { F.month = null; } else { F.year = y; F.month = m; } syncHash(); paintChips(); render(); });
 }
 function readHash() {
-  const parts = location.hash.replace("#", "").split(";").filter(Boolean).map(decodeURIComponent);
+  Object.keys(F).forEach((k) => (F[k] = null));
+  const raw = location.hash.replace("#", ""); if (!raw) return;
   const sources = new Set(["theater", "home", ...ALL.flatMap((f) => f.tags)]);
-  selectedYear = "all"; selectedSource = "all";
-  for (const p of parts) { if (YEARS.map(String).includes(p)) selectedYear = p; else if (sources.has(p)) selectedSource = p; }
+  if (!raw.includes("=")) {   // older links: "#2024;netflix"
+    for (const p of raw.split(";").map(decodeURIComponent)) { if (YEARS.map(String).includes(p)) F.year = +p; else if (sources.has(p)) F.source = p; }
+    return;
+  }
+  for (const [k, v] of new URLSearchParams(raw)) {
+    const val = decodeURIComponent(v);
+    if (k === "y" && YEARS.includes(+val)) F.year = +val;
+    else if (k === "s" && sources.has(val)) F.source = val;
+    else if (k === "r" && [1, 2, 3, 4, 5].includes(+val)) F.rating = +val;
+    else if (k === "d" && /^\d{4}$/.test(val)) F.decade = +val;
+    else if (k === "m" && +val >= 0 && +val < 12) F.month = +val;
+  }
 }
 
 /* ---------- load ---------- */
