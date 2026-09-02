@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antti's Letterboxd diary</title>
+<meta name="description" content="Live dashboard of Antti's Letterboxd film diary, fed from a Google Sheet.">
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<style>
+  /* ---------- tokens (Letterboxd-inspired dark) ---------- */
+  :root {
+    --bg: #14181c;
+    --card: #1e252d;
+    --card-2: #2c3440;
+    --line: #2c3440;
+    --line-2: #384352;
+    --text: #e6edf3;
+    --text-2: #9ab;
+    --text-3: #678;
+    --green: #00e054;        /* UI accent (stars, highlights) */
+    --green-mark: #00a83f;   /* data mark, validated on dark surface */
+    --blue-mark: #2a9dd1;    /* second series, validated */
+    --orange: #ff8000;
+    --radius: 10px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.45; }
+  a { color: var(--text-2); text-decoration: none; }
+  a:hover { color: var(--text); }
+
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; }
+
+  /* ---------- header ---------- */
+  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 20px; }
+  header h1 { font-size: 26px; margin: 0; letter-spacing: -0.01em; font-weight: 700; }
+  header h1 span { color: var(--green); }
+  header .sub { color: var(--text-2); margin-top: 4px; font-size: 13px; }
+  header .sub .dot { color: var(--text-3); margin: 0 6px; }
+  header .profile { font-size: 13px; color: var(--text-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; }
+
+  /* ---------- filter row ---------- */
+  .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 18px; }
+  .filters .label { color: var(--text-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; }
+  .chip { background: var(--card); border: 1px solid var(--line-2); color: var(--text-2); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer; }
+  .chip:hover { color: var(--text); border-color: var(--text-3); }
+  .chip.active { background: var(--green-mark); border-color: var(--green-mark); color: #fff; font-weight: 600; }
+  .chip.ghost { margin-left: auto; }
+  .chip.ghost.active { background: var(--card-2); border-color: var(--text-3); color: var(--text); }
+
+  /* ---------- KPI tiles ---------- */
+  .kpis { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; margin-bottom: 14px; }
+  .kpi { background: var(--card); border-radius: var(--radius); padding: 14px 16px; min-width: 0; }
+  .kpi .l { color: var(--text-2); font-size: 12px; margin-bottom: 6px; }
+  .kpi .v { font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
+  .kpi .v.small { font-size: 18px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kpi .d { color: var(--text-3); font-size: 12px; margin-top: 6px; }
+  .kpi .d b { color: var(--text-2); font-weight: 500; }
+  .kpi .d .up { color: var(--green); }
+  .kpi .d .down { color: var(--orange); }
+
+  /* ---------- cards / grid ---------- */
+  .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px 18px 14px; min-width: 0; }
+  .card h2 { font-size: 14px; font-weight: 600; margin: 0 0 2px; color: var(--text); }
+  .card .note { color: var(--text-3); font-size: 12px; margin-bottom: 10px; min-height: 16px; }
+  .chart { position: relative; height: 240px; }
+  .chart.tall { height: 300px; }
+  .legend { display: flex; gap: 14px; font-size: 12px; color: var(--text-2); margin: 6px 0 4px; }
+  .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
+  .legend i.line { width: 14px; height: 2px; border-radius: 1px; vertical-align: 2px; }
+
+  /* ---------- heatmap ---------- */
+  .heat { display: grid; grid-template-columns: 44px repeat(12, minmax(0, 1fr)); gap: 3px; align-items: center; font-size: 11px; color: var(--text-3); }
+  .heat .y { text-align: right; padding-right: 6px; color: var(--text-2); font-variant-numeric: tabular-nums; }
+  .heat .m { text-align: center; }
+  .heat .c { aspect-ratio: 1.6; border-radius: 3px; background: var(--card-2); position: relative; cursor: default; }
+  .heat .c.future { background: transparent; border: 1px dashed var(--line-2); }
+  .heat .c[data-n]:hover::after { content: attr(data-tip); position: absolute; left: 50%; bottom: 110%; transform: translateX(-50%); background: #0b0e11; color: var(--text); padding: 4px 8px; border-radius: 6px; white-space: nowrap; font-size: 12px; z-index: 5; pointer-events: none; }
+  .heat-scale { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-3); margin-top: 10px; justify-content: flex-end; }
+  .heat-scale i { width: 18px; height: 10px; border-radius: 2px; display: inline-block; }
+
+  /* ---------- posters ---------- */
+  .posters { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+  .poster { min-width: 0; }
+  .poster a { display: block; }
+  .poster img, .poster .ph { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 6px; background: var(--card-2); display: block; border: 1px solid var(--line-2); }
+  .poster .ph { display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; color: var(--text-2); font-size: 12px; }
+  .poster .t { font-size: 12px; margin-top: 6px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .poster .s { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .stars { color: var(--green); letter-spacing: -1px; }
+
+  /* ---------- lists ---------- */
+  .list { margin: 0; padding: 0; list-style: none; max-height: 330px; overflow: auto; }
+  .list li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .list li:last-child { border-bottom: 0; }
+  .list .yr { color: var(--text-3); margin-left: 6px; }
+  .list .dt { color: var(--text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
+
+  /* ---------- table view ---------- */
+  #tableCard { display: none; }
+  #tableCard.show { display: block; }
+  .tbar { display: flex; gap: 10px; align-items: center; margin-bottom: 10px; }
+  .tbar input { background: var(--bg); border: 1px solid var(--line-2); color: var(--text); border-radius: 6px; padding: 6px 10px; font: inherit; width: 260px; }
+  .tbar .cnt { color: var(--text-3); font-size: 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 13px; }
+  th, td { text-align: left; padding: 7px 8px; border-bottom: 1px solid var(--line); }
+  th { color: var(--text-2); font-weight: 500; cursor: pointer; user-select: none; white-space: nowrap; position: sticky; top: 0; background: var(--card); }
+  th.sorted::after { content: " ▾"; color: var(--text-3); }
+  th.sorted.asc::after { content: " ▴"; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .tscroll { max-height: 520px; overflow: auto; }
+
+  /* ---------- states ---------- */
+  #status { color: var(--text-2); background: var(--card); border-radius: var(--radius); padding: 14px 16px; margin-bottom: 14px; display: none; }
+  #status.show { display: block; }
+  #status code { color: var(--text); font-size: 12px; word-break: break-all; }
+  .loading .card, .loading .kpi { opacity: 0.55; transition: opacity .2s; }
+
+  footer { color: var(--text-3); font-size: 12px; margin-top: 22px; line-height: 1.6; }
+  footer a { color: var(--text-2); }
+
+  @media (max-width: 860px) {
+    .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .grid { grid-template-columns: 1fr; }
+    .posters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    header h1 { font-size: 22px; }
+  }
+  @media (max-width: 520px) {
+    .posters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .heat { grid-template-columns: 36px repeat(12, minmax(0, 1fr)); gap: 2px; }
+  }
+</style>
+</head>
+<body>
+<div class="wrap" id="app">
+  <header>
+    <div>
+      <h1>Antti's <span>Letterboxd</span> diary</h1>
+      <div class="sub" id="subtitle">Loading the diary from Google Sheets…</div>
+    </div>
+    <a class="profile" href="https://letterboxd.com/farbeach/" target="_blank" rel="noopener">letterboxd.com/farbeach ↗</a>
+  </header>
+
+  <div id="status"></div>
+
+  <div class="filters" id="filters">
+    <span class="label">Year</span>
+    <!-- chips injected -->
+    <button class="chip ghost" id="tableToggle" type="button" aria-pressed="false">Table view</button>
+  </div>
+
+  <section class="kpis" id="kpis"></section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Films per year</h2>
+      <div class="note" id="noteYears"></div>
+      <div class="chart"><canvas id="cYears"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Films per month</h2>
+      <div class="note" id="noteHeat">Each cell is one month; brighter means more films.</div>
+      <div class="heat" id="heat"></div>
+      <div class="heat-scale" id="heatScale"></div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Rating distribution</h2>
+      <div class="note" id="noteRatings"></div>
+      <div class="chart"><canvas id="cRatings"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Ratings over time</h2>
+      <div class="note" id="noteTrend">Each dot is one film; the line is the trailing 12-month average.</div>
+      <div class="legend"><span><i style="background:var(--green-mark)"></i>Film rating</span><span><i class="line" style="background:var(--blue-mark)"></i>12-month average</span></div>
+      <div class="chart"><canvas id="cTrend"></canvas></div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Release decade</h2>
+      <div class="note" id="noteDecades"></div>
+      <div class="chart"><canvas id="cDecades"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Where watched</h2>
+      <div class="note" id="noteTags"></div>
+      <div class="chart"><canvas id="cTags"></canvas></div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
+      <h2>Recent watches</h2>
+      <div class="note" id="noteRecent"></div>
+      <div class="posters" id="posters"></div>
+    </div>
+    <div class="card">
+      <h2>Five-star films</h2>
+      <div class="note" id="noteTop"></div>
+      <ul class="list" id="topList"></ul>
+    </div>
+  </section>
+
+  <section class="card" id="tableCard">
+    <h2>All diary entries</h2>
+    <div class="note">Click a column to sort. Same data as the charts, for the current year filter.</div>
+    <div class="tbar"><input id="search" type="search" placeholder="Search titles…" aria-label="Search titles"><span class="cnt" id="tableCount"></span></div>
+    <div class="tscroll"><table id="table"><thead><tr>
+      <th data-k="date" class="sorted">Watched</th><th data-k="title">Title</th><th data-k="year" class="num">Released</th><th data-k="rating" class="num">Rating</th><th data-k="tags">Tags</th>
+    </tr></thead><tbody></tbody></table></div>
+  </section>
+
+  <footer>
+    Data flows Letterboxd → Google Sheets → this page; it reloads on every visit and Google republishes the sheet within a few minutes of a change.
+    Entries from 2019–2020 come from a Letterboxd export (numeric ratings and viewing tags); entries since Nov 2020 come from the RSS feed (star ratings, posters, release years, no tags).
+    <span id="fetchedAt"></span>
+  </footer>
+</div>
+
+<script>
+/* =========================================================
+   CONFIG — the only line most edits need
+   ========================================================= */
+const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTt0RWBNQH3ViiQ3zMEXdSVJAVQ6MgQWWXGzAxQ7sQbkn-XsgOKBzU_MhAC0pItSb55XFpMT56NYKvp/pub?gid=1532977941&single=true&output=csv";
+const RECENT_COUNT = 12;
+
+/* ---------- helpers ---------- */
+const $ = (s) => document.querySelector(s);
+const css = (v) => getComputedStyle(document.documentElement).getPropertyValue(v).trim();
+const MONTHS = ["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"];
+const fmtDate = (d) => d ? `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}` : "—";
+const starStr = (r) => r == null ? "" : "★".repeat(Math.floor(r)) + (r % 1 ? "½" : "");
+const esc = (s) => String(s).replace(/[&<>"']/g, (c) => ({"&":"&amp;","<":"&lt;",">":"&gt;",'"':"&quot;","'":"&#39;"}[c]));
+const monthIndex = (d) => d.getFullYear() * 12 + d.getMonth();   // months since year 0, for the numeric x axis
+
+function parseCSV(text) {
+  const rows = []; let row = [], field = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) {
+      if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; }
+      else field += c;
+    } else if (c === '"') q = true;
+    else if (c === ",") { row.push(field); field = ""; }
+    else if (c === "\n") { row.push(field); rows.push(row); row = []; field = ""; }
+    else if (c !== "\r") field += c;
+  }
+  if (field !== "" || row.length) { row.push(field); rows.push(row); }
+  return rows;
+}
+
+/* ---------- turn the sheet's two record formats into one shape ---------- */
+const STAR_RE = /^★{1,5}½?$|^½$/;
+function toFilms(rows) {
+  const films = [];
+  for (const r of rows.slice(1)) {
+    if (!r || r.length < 8) continue;
+    const url = (r[1] || "").trim();
+
+    if (r[0] === "Film") {
+      // Legacy export rows: Type, URL, Title, Stars, My rating2, My rating, Support1-5, Watched Date, Tags.1-4, Unique title
+      const title = (r[2] || "").trim();
+      if (!title) continue;
+      const rawRating = (r[5] && r[5] !== "#REF!") ? r[5] : r[4];
+      const rating = rawRating && !isNaN(parseFloat(rawRating)) ? parseFloat(rawRating) : null;
+      let date = null;
+      const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((r[11] || "").trim());
+      if (m) date = new Date(+m[3], +m[1] - 1, +m[2]);
+      const tags = [r[12], r[13], r[14], r[15]].map((t) => (t || "").trim().toLowerCase()).filter(Boolean);
+      films.push({ title, year: null, rating, date, tags, url: url.startsWith("http") ? url : null, poster: null, source: "export" });
+      continue;
+    }
+
+    if (url.startsWith("http")) {
+      // RSS rows: "", URL, "Title, Year", ★★★★, "", "", <poster html>, "Weekday Month D, YYYY.</p>", …
+      // A title containing a comma spills into extra cells, so locate the star cell first.
+      let k = -1;
+      for (let i = 3; i < Math.min(r.length, 7); i++) if (STAR_RE.test((r[i] || "").trim())) { k = i; break; }
+      let rating = null, titleCells;
+      if (k === -1) { titleCells = [r[2]]; k = 3; } // unrated entry — assume the normal layout
+      else {
+        titleCells = r.slice(2, k);
+        const s = r[k].trim();
+        rating = (s.match(/★/g) || []).length + (s.includes("½") ? 0.5 : 0);
+      }
+      let full = titleCells.join(", ").trim();
+      let year = null;
+      const ym = /^(.*),\s*(\d{4})$/.exec(full);
+      if (ym) { full = ym[1].trim(); year = +ym[2]; }
+      if (!full || full === "#VALUE!") continue;
+      const posterHtml = r[k + 3] || "";
+      const pm = /src="([^"]+)"/.exec(posterHtml);
+      const poster = pm ? pm[1] : null;
+      let date = null;
+      const ds = (r[k + 4] || "").replace(/<\/?p>/g, "").replace(/\.$/, "").trim();
+      if (ds) { const d = new Date(ds.replace(/^[A-Za-z]+\s+/, "")); if (!isNaN(d)) date = new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
+      films.push({ title: full, year, rating, date, tags: [], url, poster, source: "rss" });
+    }
+  }
+  films.sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0));
+  return films;
+}
+
+/* ---------- state ---------- */
+let ALL = [], selectedYear = "all", charts = {}, sortKey = "date", sortAsc = false;
+
+/* ---------- Chart.js defaults ---------- */
+Chart.defaults.color = css("--text-2");
+Chart.defaults.font.family = css("--font");
+Chart.defaults.font.size = 12;
+Chart.defaults.animation.duration = 300;
+Chart.defaults.plugins.legend.display = false;
+Chart.defaults.plugins.tooltip.backgroundColor = "#0b0e11";
+Chart.defaults.plugins.tooltip.titleColor = css("--text");
+Chart.defaults.plugins.tooltip.bodyColor = css("--text-2");
+Chart.defaults.plugins.tooltip.padding = 10;
+Chart.defaults.plugins.tooltip.cornerRadius = 6;
+Chart.defaults.plugins.tooltip.displayColors = false;
+const GRID = { color: css("--line"), lineWidth: 1 };
+const AXIS = { grid: GRID, border: { display: false }, ticks: { color: css("--text-3") } };
+
+function upsert(id, cfg) {
+  if (charts[id]) { charts[id].data = cfg.data; charts[id].options = cfg.options; charts[id].update(); return; }
+  charts[id] = new Chart(document.getElementById(id), cfg);
+}
+const barBase = (extra = {}) => ({ backgroundColor: css("--green-mark"), hoverBackgroundColor: css("--green"), borderRadius: 4, borderSkipped: "bottom", maxBarThickness: 24, categoryPercentage: 0.8, barPercentage: 0.9, ...extra });
+
+/* ---------- render ---------- */
+function render() {
+  const now = new Date();
+  const films = selectedYear === "all" ? ALL : ALL.filter((f) => f.date && f.date.getFullYear() === +selectedYear);
+  const rated = films.filter((f) => f.rating != null);
+  const years = [...new Set(ALL.filter((f) => f.date).map((f) => f.date.getFullYear()))].sort();
+
+  /* KPIs */
+  const avg = rated.length ? rated.reduce((s, f) => s + f.rating, 0) / rated.length : null;
+  const keyOf = (f) => f.title.toLowerCase();   // by title: the 2019–20 export has a few wrong URLs
+  const distinct = new Set(films.map(keyOf)).size;
+  const last = films.filter((f) => f.date).at(-1);
+  let tile2;
+  if (selectedYear === "all") {
+    const y = now.getFullYear();
+    const thisYear = ALL.filter((f) => f.date && f.date.getFullYear() === y);
+    const sameDayLast = ALL.filter((f) => f.date && f.date.getFullYear() === y - 1 && f.date <= new Date(y - 1, now.getMonth(), now.getDate()));
+    const diff = thisYear.length - sameDayLast.length;
+    tile2 = { l: `Watched in ${y}`, v: thisYear.length, d: `<span class="${diff >= 0 ? "up" : "down"}">${diff >= 0 ? "+" : ""}${diff}</span> vs the same point in ${y - 1}` };
+  } else {
+    const prev = ALL.filter((f) => f.date && f.date.getFullYear() === +selectedYear - 1).length;
+    const perMonth = films.length / (+selectedYear === now.getFullYear() ? Math.max(1, now.getMonth() + now.getDate() / 30) : 12);
+    tile2 = { l: `Pace in ${selectedYear}`, v: perMonth.toFixed(1), d: `films per month · ${prev} logged in ${+selectedYear - 1}` };
+  }
+  const tiles = [
+    { l: selectedYear === "all" ? "Films logged" : `Films logged in ${selectedYear}`, v: films.length, d: `${distinct} distinct titles · ${films.length - distinct} rewatch${films.length - distinct === 1 ? "" : "es"}` },
+    tile2,
+    { l: "Average rating", v: avg == null ? "—" : avg.toFixed(2), d: `${rated.length} rated · ${rated.filter((f) => f.rating === 5).length} five-star` },
+    { l: "Most common rating", v: mode(rated.map((f) => f.rating)), d: rated.length ? `${Math.round(100 * rated.filter((f) => f.rating >= 4).length / rated.length)}% rated 4★ or higher` : "" },
+    { l: "Last watched", v: last ? esc(last.title) : "—", small: true, d: last ? `${fmtDate(last.date)}${last.rating != null ? " · " + starStr(last.rating) : ""}` : "" },
+  ];
+  $("#kpis").innerHTML = tiles.map((t) => `<div class="kpi"><div class="l">${t.l}</div><div class="v${t.small ? " small" : ""}" title="${t.small ? t.v : ""}">${t.v}</div><div class="d">${t.d}</div></div>`).join("");
+
+  /* Films per year — always all years, selected one highlighted */
+  const perYear = years.map((y) => ALL.filter((f) => f.date && f.date.getFullYear() === y).length);
+  const dim = css("--line-2");
+  upsert("cYears", {
+    type: "bar",
+    data: { labels: years.map(String), datasets: [barBase({ data: perYear, backgroundColor: years.map((y) => selectedYear === "all" || +selectedYear === y ? css("--green-mark") : dim) })] },
+    options: { maintainAspectRatio: false, onClick: (e, els) => { if (els.length) setYear(String(years[els[0].index]) === selectedYear ? "all" : String(years[els[0].index])); },
+      scales: { x: { ...AXIS, grid: { display: false } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
+      plugins: { tooltip: { callbacks: { label: (c) => `${c.parsed.y} films` } } } },
+  });
+  const cy = now.getFullYear();
+  $("#noteYears").textContent = years.includes(cy) ? `${cy} is year-to-date (through ${fmtDate(now)}). Click a bar to filter.` : "Click a bar to filter.";
+
+  /* Heatmap */
+  const heatYears = selectedYear === "all" ? years : [+selectedYear];
+  const counts = {}; let maxC = 0;
+  for (const f of ALL) if (f.date) { const k = f.date.getFullYear() + "-" + f.date.getMonth(); counts[k] = (counts[k] || 0) + 1; }
+  for (const y of heatYears) for (let m = 0; m < 12; m++) maxC = Math.max(maxC, counts[y + "-" + m] || 0);
+  const first = ALL.find((f) => f.date)?.date;
+  let h = `<div></div>` + MONTHS.map((m) => `<div class="m">${m[0]}</div>`).join("");
+  for (const y of heatYears) {
+    h += `<div class="y">${y}</div>`;
+    for (let m = 0; m < 12; m++) {
+      const n = counts[y + "-" + m] || 0;
+      const future = (y > cy) || (y === cy && m > now.getMonth()) || (first && (y < first.getFullYear() || (y === first.getFullYear() && m < first.getMonth())));
+      if (future) { h += `<div class="c future"></div>`; continue; }
+      h += `<div class="c" data-n="${n}" data-tip="${MONTHS[m]} ${y}: ${n} film${n === 1 ? "" : "s"}" style="background:${heatColor(n, maxC)}"></div>`;
+    }
+  }
+  $("#heat").innerHTML = h;
+  $("#heatScale").innerHTML = `0 <i style="background:${heatColor(0, maxC)}"></i><i style="background:${heatColor(maxC * 0.33, maxC)}"></i><i style="background:${heatColor(maxC * 0.66, maxC)}"></i><i style="background:${heatColor(maxC, maxC)}"></i> ${maxC}`;
+
+  /* Rating distribution */
+  const steps = [0.5, 1, 1.5, 2, 2.5, 3, 3.5, 4, 4.5, 5];
+  const dist = steps.map((s) => rated.filter((f) => f.rating === s).length);
+  upsert("cRatings", {
+    type: "bar",
+    data: { labels: steps.map((s) => (s % 1 ? (Math.floor(s) ? Math.floor(s) + "½" : "½") : String(s)) + "★"), datasets: [barBase({ data: dist })] },
+    options: { maintainAspectRatio: false,
+      scales: { x: { ...AXIS, grid: { display: false }, ticks: { ...AXIS.ticks, maxRotation: 0, autoSkip: false, color: css("--text-2") } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
+      plugins: { tooltip: { callbacks: { title: (c) => `${steps[c[0].dataIndex]} stars`, label: (c) => `${c.parsed.y} films (${rated.length ? Math.round(100 * c.parsed.y / rated.length) : 0}%)` } } } },
+  });
+  $("#noteRatings").textContent = rated.length ? `${rated.length} rated films · median ${median(rated.map((f) => f.rating))}★ · ${films.length - rated.length} unrated` : "No rated films in this selection.";
+
+  /* Ratings over time: dots + trailing 12-month mean */
+  const datedRated = rated.filter((f) => f.date);
+  const seed = 7; let rnd = seed;
+  const jitter = () => { rnd = (rnd * 9301 + 49297) % 233280; return (rnd / 233280 - 0.5) * 0.28; };
+  const dots = datedRated.map((f) => ({ x: monthIndex(f.date) + (f.date.getDate() - 1) / 31, y: f.rating + jitter(), f }));
+  const allDated = ALL.filter((f) => f.rating != null && f.date);
+  const line = [];
+  if (allDated.length) {
+    const startM = monthIndex(allDated[0].date), endM = monthIndex(now);
+    for (let m = startM + 5; m <= endM; m++) {
+      const win = allDated.filter((f) => { const mi = monthIndex(f.date); return mi > m - 12 && mi <= m; });
+      if (win.length >= 6) line.push({ x: m + 0.5, y: win.reduce((s, f) => s + f.rating, 0) / win.length, n: win.length });
+    }
+  }
+  const xMin = dots.length ? Math.floor(Math.min(...dots.map((d) => d.x))) : monthIndex(now) - 12;
+  const xMax = dots.length ? Math.ceil(Math.max(...dots.map((d) => d.x))) + 0.5 : monthIndex(now) + 1;
+  const lineSel = line.filter((p) => p.x >= xMin && p.x <= xMax);
+  upsert("cTrend", {
+    type: "scatter",
+    data: { datasets: [
+      { label: "Film rating", data: dots, backgroundColor: hexA(css("--green-mark"), 0.55), borderColor: css("--bg"), borderWidth: 1, pointRadius: 4, pointHoverRadius: 6, pointHoverBackgroundColor: css("--green"), order: 2 },
+      { label: "12-month average", data: lineSel, type: "line", borderColor: css("--blue-mark"), borderWidth: 2, pointRadius: 0, pointHitRadius: 0, pointHoverRadius: 0, tension: 0.35, order: 1 },
+    ] },
+    options: { maintainAspectRatio: false, interaction: { mode: "nearest", intersect: true },
+      scales: {
+        x: { ...AXIS, type: "linear", min: xMin, max: xMax, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 1, autoSkip: false, maxRotation: 0, callback: (v) => (Math.round(v) % 12 === 0 && Math.abs(v - Math.round(v)) < 1e-6) ? String(Math.round(v) / 12) : (selectedYear !== "all" && Math.abs(v - Math.round(v)) < 1e-6 ? MONTHS[Math.round(v) % 12] : "") } },
+        y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
+      },
+      plugins: { tooltip: { callbacks: {
+        title: (c) => c[0].raw.f ? c[0].raw.f.title : "12-month average",
+        label: (c) => c.raw.f ? `${starStr(c.raw.f.rating)} · ${fmtDate(c.raw.f.date)}` : `${c.raw.y.toFixed(2)} over ${c.raw.n} films`,
+      } } } },
+  });
+
+  /* Release decade (RSS rows carry a year) */
+  const withYear = films.filter((f) => f.year);
+  const decades = [...new Set(withYear.map((f) => Math.floor(f.year / 10) * 10))].sort();
+  upsert("cDecades", {
+    type: "bar",
+    data: { labels: decades.map((d) => d + "s"), datasets: [barBase({ data: decades.map((d) => withYear.filter((f) => Math.floor(f.year / 10) * 10 === d).length) })] },
+    options: { maintainAspectRatio: false,
+      scales: { x: { ...AXIS, grid: { display: false } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
+      plugins: { tooltip: { callbacks: { label: (c) => `${c.parsed.y} films` } } } },
+  });
+  const noYear = films.length - withYear.length;
+  $("#noteDecades").textContent = withYear.length ? `${withYear.length} films with a release year${noYear ? ` · ${noYear} from the 2019–20 export have none` : ""} · median ${median(withYear.map((f) => f.year))}` : "Release years are only in the RSS-era entries (Nov 2020 onward).";
+
+  /* Where watched (tags) */
+  const tagCount = {};
+  for (const f of films) for (const t of f.tags) tagCount[t] = (tagCount[t] || 0) + 1;
+  const tagged = films.filter((f) => f.tags.length).length;
+  const topTags = Object.entries(tagCount).sort((a, b) => b[1] - a[1]).slice(0, 10);
+  upsert("cTags", {
+    type: "bar",
+    data: { labels: topTags.map((t) => t[0]), datasets: [barBase({ data: topTags.map((t) => t[1]), maxBarThickness: 18 })] },
+    options: { indexAxis: "y", maintainAspectRatio: false,
+      scales: { x: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } }, y: { ...AXIS, grid: { display: false }, ticks: { ...AXIS.ticks, color: css("--text-2") } } },
+      plugins: { tooltip: { callbacks: { label: (c) => `${c.parsed.x} films` } } } },
+  });
+  $("#noteTags").textContent = tagged ? `Viewing tags on ${tagged} films (only the 2019–2020 export has them).` : "No viewing tags in this selection — tags exist only for 2019–2020.";
+  $("#cTags").parentElement.style.display = tagged ? "" : "none";
+  if (!tagged) $("#noteTags").textContent += " Pick 2019, 2020 or All years to see them.";
+
+  /* Recent watches */
+  const recent = films.filter((f) => f.date).slice(-RECENT_COUNT).reverse();
+  $("#posters").innerHTML = recent.map((f) => `<div class="poster">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">` : ""}${f.poster ? `<img loading="lazy" src="${esc(f.poster)}" alt="${esc(f.title)} poster">` : `<div class="ph">${esc(f.title)}</div>`}${f.url ? "</a>" : ""}<div class="t" title="${esc(f.title)}">${esc(f.title)}${f.year ? ` <span style="color:var(--text-3)">${f.year}</span>` : ""}</div><div class="s"><span class="stars">${starStr(f.rating) || "&nbsp;"}</span></div><div class="s">${fmtDate(f.date)}</div></div>`).join("");
+  $("#noteRecent").textContent = recent.length ? `Latest ${recent.length} entries.` : "";
+
+  /* Five-star list */
+  const five = rated.filter((f) => f.rating === 5).slice().reverse();
+  $("#topList").innerHTML = five.map((f) => `<li><span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</span><span class="dt">${fmtDate(f.date)}</span></li>`).join("") || `<li><span style="color:var(--text-3)">No five-star ratings in this selection.</span></li>`;
+  $("#noteTop").textContent = five.length ? `${five.length} films, newest first.` : "";
+
+  renderTable(films);
+}
+
+function heatColor(n, max) {
+  if (!n || !max) return css("--card-2");
+  const t = 0.25 + 0.75 * Math.min(1, n / max);            // one hue, dark → bright
+  const a = hexToRgb(css("--card-2")), b = hexToRgb(css("--green"));
+  return `rgb(${a.map((c, i) => Math.round(c + (b[i] - c) * t)).join(",")})`;
+}
+function hexToRgb(h) { h = h.replace("#", ""); return [0, 2, 4].map((i) => parseInt(h.slice(i, i + 2), 16)); }
+function hexA(h, a) { const [r, g, b] = hexToRgb(h); return `rgba(${r},${g},${b},${a})`; }
+function median(a) { if (!a.length) return "—"; const s = a.slice().sort((x, y) => x - y); const m = Math.floor(s.length / 2); return s.length % 2 ? s[m] : (s[m - 1] + s[m]) / 2; }
+function mode(a) { if (!a.length) return "—"; const c = {}; a.forEach((v) => (c[v] = (c[v] || 0) + 1)); const best = Object.entries(c).sort((x, y) => y[1] - x[1] || +y[0] - +x[0])[0]; return `<span class="stars">${starStr(+best[0])}</span>`; }
+
+/* ---------- table view ---------- */
+let tableRows = [];
+function renderTable(films) {
+  tableRows = films;
+  drawTable();
+}
+function drawTable() {
+  const q = $("#search").value.trim().toLowerCase();
+  let rows = tableRows.filter((f) => !q || f.title.toLowerCase().includes(q) || f.tags.some((t) => t.includes(q)));
+  const dir = sortAsc ? 1 : -1;
+  rows = rows.slice().sort((a, b) => {
+    const va = a[sortKey], vb = b[sortKey];
+    if (sortKey === "date") return dir * ((va?.getTime() ?? 0) - (vb?.getTime() ?? 0));
+    if (sortKey === "title") return dir * a.title.localeCompare(b.title);
+    if (sortKey === "tags") return dir * a.tags.join(",").localeCompare(b.tags.join(","));
+    return dir * ((va ?? -1) - (vb ?? -1));
+  });
+  $("#table tbody").innerHTML = rows.map((f) => `<tr><td style="white-space:nowrap">${fmtDate(f.date)}</td><td>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}</td><td class="num">${f.year ?? ""}</td><td class="num" title="${f.rating ?? ""}"><span class="stars">${starStr(f.rating)}</span></td><td style="color:var(--text-2)">${esc(f.tags.join(", "))}</td></tr>`).join("");
+  $("#tableCount").textContent = `${rows.length} of ${tableRows.length} entries`;
+  document.querySelectorAll("#table th").forEach((th) => { th.classList.toggle("sorted", th.dataset.k === sortKey); th.classList.toggle("asc", th.dataset.k === sortKey && sortAsc); });
+}
+document.querySelectorAll("#table th").forEach((th) => th.addEventListener("click", () => { if (sortKey === th.dataset.k) sortAsc = !sortAsc; else { sortKey = th.dataset.k; sortAsc = th.dataset.k === "title"; } drawTable(); }));
+$("#search").addEventListener("input", drawTable);
+$("#tableToggle").addEventListener("click", () => { const on = $("#tableCard").classList.toggle("show"); $("#tableToggle").classList.toggle("active", on); $("#tableToggle").setAttribute("aria-pressed", on); if (on) $("#tableCard").scrollIntoView({ behavior: "smooth", block: "start" }); });
+
+/* ---------- filters ---------- */
+function setYear(y) {
+  selectedYear = y;
+  document.querySelectorAll("#filters .chip[data-y]").forEach((c) => c.classList.toggle("active", c.dataset.y === y));
+  try { history.replaceState(null, "", y === "all" ? location.pathname : `#${y}`); } catch (e) {}
+  render();
+}
+function buildFilters(years) {
+  const toggle = $("#tableToggle");
+  document.querySelectorAll("#filters .chip[data-y]").forEach((c) => c.remove());
+  const mk = (y, label) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset.y = y; b.textContent = label; b.addEventListener("click", () => setYear(y)); toggle.before(b); };
+  mk("all", "All years");
+  years.forEach((y) => mk(String(y), String(y)));
+}
+
+/* ---------- load ---------- */
+async function load() {
+  const app = $("#app"); app.classList.add("loading");
+  const src = new URLSearchParams(location.search).get("src") || DATA_URL;
+  try {
+    const res = await fetch(src, { cache: "no-store" });
+    if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    const text = await res.text();
+    ALL = toFilms(parseCSV(text));
+    if (!ALL.length) throw new Error("The sheet returned no film rows — has the tab layout changed?");
+    const years = [...new Set(ALL.filter((f) => f.date).map((f) => f.date.getFullYear()))].sort();
+    buildFilters(years);
+    const hashYear = location.hash.replace("#", "");
+    selectedYear = years.map(String).includes(hashYear) ? hashYear : "all";
+    document.querySelectorAll("#filters .chip[data-y]").forEach((c) => c.classList.toggle("active", c.dataset.y === selectedYear));
+    const dated = ALL.filter((f) => f.date);
+    $("#subtitle").innerHTML = `${ALL.length} diary entries<span class="dot">·</span>${fmtDate(dated[0]?.date)} – ${fmtDate(dated.at(-1)?.date)}<span class="dot">·</span>live from Google Sheets`;
+    $("#fetchedAt").textContent = ` Loaded ${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}.`;
+    $("#status").classList.remove("show");
+    render();
+  } catch (err) {
+    $("#subtitle").textContent = "Could not load the diary.";
+    const sandboxed = location.protocol === "about:" || location.protocol === "blob:" || window.top !== window.self;
+    $("#status").innerHTML = `<b>Couldn't fetch the sheet.</b> ${esc(err.message)}<br>${sandboxed ? "This page seems to be running inside a preview pane, which blocks network requests — open the file in a normal browser tab (or on its GitHub Pages URL) instead.<br>" : ""}Otherwise, check that the tab is still published as CSV at:<br><code>${esc(src)}</code><br><button class="chip" style="margin-top:8px" onclick="load()">Retry</button>`;
+    $("#status").classList.add("show");
+    console.error(err);
+  } finally { app.classList.remove("loading"); }
+}
+load();
+</script>
+</body>
+</html>
