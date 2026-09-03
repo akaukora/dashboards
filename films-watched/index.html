@@ -4,7 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Antti's Letterboxd diary</title>
-<meta name="description" content="Live dashboard of Antti's Letterboxd film diary, fed from a Google Sheet.">
+<meta name="description" content="Dashboard of Antti's Letterboxd film diary, read live from films.csv in the same repository.">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
   /* ---------- tokens (Letterboxd-inspired dark) ---------- */
@@ -93,7 +93,7 @@
   .poster { min-width: 0; }
   .poster a { display: block; }
   .poster img, .poster .ph { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 6px; background: var(--card-2); display: block; border: 1px solid var(--line-2); }
-  .poster .ph { display: flex; align-items: center; justify-content: center; text-align: center; padding: 8px; color: var(--text-2); font-size: 12px; }
+  .poster .ph { display: flex; align-items: flex-end; text-align: left; padding: 10px; color: var(--text); font-size: 13px; font-weight: 600; line-height: 1.25; background: linear-gradient(160deg, #2c3440, #1a2029); overflow: hidden; }
   .poster .t { font-size: 12px; margin-top: 6px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .poster .s { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .stars { color: var(--green); letter-spacing: -1px; }
@@ -115,6 +115,22 @@
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .chips .chip { padding: 3px 10px; font-size: 12px; }
+
+  /* ---------- reviews ---------- */
+  .reviews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
+  .rev { background: var(--card-2); border-radius: 8px; padding: 12px 14px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
+  .rev .h { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
+  .rev .h a, .rev .h span.t { color: var(--text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rev .h .yr { color: var(--text-3); font-weight: 400; margin-left: 5px; }
+  .rev .m { font-size: 12px; color: var(--text-3); }
+  .rev p { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
+  .rev.open p { display: block; }
+  .rev .more { all: unset; cursor: pointer; font-size: 12px; color: var(--text-3); align-self: flex-start; }
+  .rev .more:hover { color: var(--text); }
+  td.review { color: var(--text-2); max-width: 420px; }
+  td.review .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
+  td.review .clamp.open { display: block; }
+  @media (max-width: 860px) { .reviews { grid-template-columns: 1fr; } }
 
   /* ---------- lists ---------- */
   .list { margin: 0; padding: 0; list-style: none; max-height: 330px; overflow: auto; }
@@ -145,6 +161,7 @@
 
   footer { color: var(--text-3); font-size: 12px; margin-top: 22px; line-height: 1.6; }
   footer a { color: var(--text-2); }
+  footer code { color: var(--text-2); font-size: 11px; }
 
   @media (max-width: 860px) {
     .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
@@ -163,7 +180,7 @@
   <header>
     <div>
       <h1>Antti's <span>Letterboxd</span> diary</h1>
-      <div class="sub" id="subtitle">Loading the diary from Google Sheets…</div>
+      <div class="sub" id="subtitle">Loading the diary…</div>
     </div>
     <a class="profile" href="https://letterboxd.com/farbeach/" target="_blank" rel="noopener">letterboxd.com/farbeach ↗</a>
   </header>
@@ -238,6 +255,14 @@
 
   <section class="grid one">
     <div class="card">
+      <h2>Latest reviews</h2>
+      <div class="note" id="noteReviews"></div>
+      <div class="reviews" id="reviews"></div>
+    </div>
+  </section>
+
+  <section class="grid one">
+    <div class="card">
       <h2>Ratings by service</h2>
       <div class="note" id="noteTags"></div>
       <div class="legend multi" id="tagLegend"></div>
@@ -262,15 +287,14 @@
   <section class="card" id="tableCard">
     <h2>All diary entries</h2>
     <div class="note">Click a column to sort. Same data as the charts, for the current filters.</div>
-    <div class="tbar"><input id="search" type="search" placeholder="Search titles…" aria-label="Search titles"><span class="cnt" id="tableCount"></span></div>
+    <div class="tbar"><input id="search" type="search" placeholder="Search titles, tags, reviews…" aria-label="Search"><span class="cnt" id="tableCount"></span></div>
     <div class="tscroll"><table id="table"><thead><tr>
-      <th data-k="date" class="sorted">Watched</th><th data-k="title">Title</th><th data-k="year" class="num">Released</th><th data-k="rating" class="num">Rating</th><th data-k="tags">Tags</th>
+      <th data-k="date" class="sorted">Watched</th><th data-k="title">Title</th><th data-k="year" class="num">Released</th><th data-k="rating" class="num">Rating</th><th data-k="tags">Tags</th><th data-k="review">Review</th>
     </tr></thead><tbody></tbody></table></div>
   </section>
 
   <footer>
-    Data flows Letterboxd → Google Sheets → this page; it reloads on every visit and Google republishes the sheet within a few minutes of a change.
-    Entries from 2019–2020 come from a Letterboxd export (numeric ratings and viewing tags); entries since Nov 2020 come from the RSS feed (star ratings, posters, release years, no tags).
+    Data: <code>films.csv</code> in the same repository (title, release year, watched date, rating, tags, review, link), read live on every visit — a commit to the CSV is on the page within a minute or so.
     <span id="fetchedAt"></span>
   </footer>
 </div>
@@ -279,20 +303,22 @@
 /* =========================================================
    CONFIG — the lines most edits need
    ========================================================= */
-const DATA_URL = "https://docs.google.com/spreadsheets/d/e/2PACX-1vTt0RWBNQH3ViiQ3zMEXdSVJAVQ6MgQWWXGzAxQ7sQbkn-XsgOKBzU_MhAC0pItSb55XFpMT56NYKvp/pub?gid=1532977941&single=true&output=csv";
+const DATA_URL = "https://raw.githubusercontent.com/akaukora/dashboards/main/films-watched/films.csv";
+// Expected columns (header names, any order): title, film_year, watched_date (YYYY-MM-DD), rating, tags (comma-separated), review, link. Optional: poster.
 const RECENT_COUNT = 12;                 // posters in "Recent watches"
 const RECENT_RATED = 20;                 // dots in "Recent ratings"
+const REVIEW_COUNT = 6;                  // cards in "Latest reviews"
 const MIN_TAG_FILMS = 5;                 // a viewing tag needs this many rated films for a row in "Ratings by service"
 const MIN_SOURCE_CHIP = 10;              // a tag needs this many films to get its own Source button
 const MIN_TAG_CHIP = 5;                  // a secondary tag needs this many films to get a Tags button
-const TAG_LABELS = { cinema: "theater", "theater-other": "theater, unspecified", "streaming-other": "streaming, unspecified", other: "other" };   // display names, without touching the sheet
+const TAG_LABELS = { theater: "Theater", cinema: "Theater", "streaming-other": "Streaming, unspecified", other: "Other", netflix: "Netflix", amazon: "Amazon", mubi: "MUBI", "yle areena": "Yle Areena", "disney plus": "Disney+", "hbo max": "HBO Max", skyshowtime: "SkyShowtime", "blu-ray": "Blu-ray", tv: "TV", vudu: "Vudu", xbox: "Xbox", airplane: "Airplane" };   // display names, without touching the data
 // Tag roles. A film gets exactly ONE source (its service or venue), so nothing is double-counted:
 //   umbrella tags ride along with the specific service/venue and only stand in when no specific tag exists;
 //   secondary tags describe the film or the screening and are a separate filter, never a source.
-const UMBRELLA_TAGS = { streaming: "streaming-other", cinema: "theater-other" };
-const THEATER_VENUES = ["finnkino", "kino regina", "orion", "riviera", "kino engel", "savoy", "maxim", "theater-other"];
+const UMBRELLA_TAGS = { streaming: "streaming-other", cinema: "theater" };
+const THEATER_VENUES = ["finnkino", "kino regina", "orion", "riviera", "kino engel", "savoy", "maxim", "gilda"];   // all of these roll up into the single source "theater"; the venue name is kept as detail
 const TAG_ALIASES = { "espoo ciné": "film festival", "r&a festival": "film festival", "docpoint festival": "film festival", "night visions festival": "film festival" };   // named festivals count as the generic tag
-const SECONDARY_TAGS = ["documentary", "film festival", "imax", "3d", "atmos", "kids"];
+const SECONDARY_TAGS = ["documentary", "film festival", "imax", "3d", "atmos", "kids", "short film"];
 // Antti's scale: 5 must see · 4 very good · 3 ok but forgettable · 2 not very good · 1 skip
 const RATING_MEANING = { 5: "must see", 4: "very good", 3: "ok, forgettable", 2: "not very good", 1: "skip" };
 const RATING_COLORS = { 5: "#4cc972", 4: "#25a657", 3: "#5b8fb9", 2: "#6b7885", 1: "#4a5563" };   // green = good · steel blue = ok · grays recede for the ones to skip
@@ -331,63 +357,47 @@ function parseCSV(text) {
 }
 
 /* ---------- turn the sheet's two record formats into one shape ---------- */
-const STAR_RE = /^★{1,5}½?$|^½$/;
 function classify(raw) {
   const tags = [...new Set(raw.map((t) => TAG_ALIASES[t] || t))];
-  if (!tags.length) return { src: null, venue: null, extra: [] };
+  if (!tags.length) return { src: null, venue: null, venueName: null, extra: [] };
   const extra = tags.filter((t) => SECONDARY_TAGS.includes(t));
   const specific = tags.filter((t) => !SECONDARY_TAGS.includes(t) && !(t in UMBRELLA_TAGS));
   const umbrella = tags.find((t) => t in UMBRELLA_TAGS);
-  const src = specific[0] || (umbrella ? UMBRELLA_TAGS[umbrella] : "other");
-  const venue = THEATER_VENUES.includes(src) ? "theater" : src === "other" ? "other" : "home";
-  return { src, venue, extra };
+  const venueName = specific.find((t) => THEATER_VENUES.includes(t)) || null;
+  const src = venueName ? "theater" : (specific[0] || (umbrella ? UMBRELLA_TAGS[umbrella] : "other"));
+  const venue = src === "theater" ? "theater" : src === "other" ? "other" : "home";
+  return { src, venue, venueName, extra };
 }
 const sourceLabel = (src) => src == null ? "" : TAG_LABELS[src] || src;
-const tagsText = (f) => [f.src ? sourceLabel(f.src) : "", ...f.extra.map(tagLabel)].filter(Boolean).join(" · ");
+// One sentence, computed from the data, about which entries carry tags.
+function tagCoverage() {
+  const tagged = ALL.filter((f) => f.tags.length).length;
+  if (tagged === ALL.length) return "Every entry carries a viewing tag.";
+  return `${tagged} of ${ALL.length} entries carry a viewing tag${ALL.length - tagged <= 12 ? ` (missing: ${ALL.filter((f) => !f.tags.length).map((f) => f.title).join(", ")})` : ""}.`;
+}
+const tagsText = (f) => [f.src ? sourceLabel(f.src) : "", f.venueName ? cap(f.venueName) : "", ...f.extra.map((t) => cap(tagLabel(t)))].filter(Boolean).join(" · ");
+
+/* ---------- read films.csv: one row per diary entry ---------- */
+function parseDate(str) {
+  const t = (str || "").trim(); if (!t) return null;
+  let m = /^(\d{4})-(\d{1,2})-(\d{1,2})/.exec(t); if (m) return new Date(+m[1], +m[2] - 1, +m[3]);
+  m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec(t); if (m) return new Date(+m[3], +m[1] - 1, +m[2]);       // M/D/YYYY
+  m = /^(\d{1,2})\.(\d{1,2})\.(\d{4})$/.exec(t); if (m) return new Date(+m[3], +m[2] - 1, +m[1]);      // D.M.YYYY
+  const d = new Date(t); return isNaN(d) ? null : new Date(d.getFullYear(), d.getMonth(), d.getDate());
+}
 function toFilms(rows) {
+  const hdr = (rows[0] || []).map((h) => h.trim().toLowerCase().replace(/^﻿/, ""));
+  const col = (...names) => { for (const n of names) { const i = hdr.indexOf(n); if (i >= 0) return i; } return -1; };
+  const iT = col("title", "name"), iY = col("film_year", "year", "release year"), iD = col("watched_date", "watched date", "date"), iR = col("rating", "my rating"), iTags = col("tags", "tag"), iRev = col("review"), iL = col("link", "letterboxd", "url", "letterboxd uri"), iP = col("poster");
+  if (iT < 0) throw new Error(`No "title" column found — the header row is: ${hdr.join(", ")}`);
   const films = [];
   for (const r of rows.slice(1)) {
-    if (!r || r.length < 8) continue;
-    const url = (r[1] || "").trim();
-
-    if (r[0] === "Film") {
-      // Legacy export rows: Type, URL, Title, Stars, My rating2, My rating, Support1-5, Watched Date, Tags.1-4, Unique title
-      const title = (r[2] || "").trim();
-      if (!title) continue;
-      const rawRating = (r[5] && r[5] !== "#REF!") ? r[5] : r[4];
-      const rating = rawRating && !isNaN(parseFloat(rawRating)) ? parseFloat(rawRating) : null;
-      let date = null;
-      const m = /^(\d{1,2})\/(\d{1,2})\/(\d{4})$/.exec((r[11] || "").trim());
-      if (m) date = new Date(+m[3], +m[1] - 1, +m[2]);
-      const tags = [r[12], r[13], r[14], r[15]].map((t) => (t || "").trim().toLowerCase()).filter(Boolean);
-      films.push({ title, year: null, rating, date, tags, ...classify(tags), url: url.startsWith("http") ? url : null, poster: null, source: "export" });
-      continue;
-    }
-
-    if (url.startsWith("http")) {
-      // RSS rows: "", URL, "Title, Year", ★★★★, "", "", <poster html>, "Weekday Month D, YYYY.</p>", …
-      // A title containing a comma spills into extra cells, so locate the star cell first.
-      let k = -1;
-      for (let i = 3; i < Math.min(r.length, 7); i++) if (STAR_RE.test((r[i] || "").trim())) { k = i; break; }
-      let rating = null, titleCells;
-      if (k === -1) { titleCells = [r[2]]; k = 3; } // unrated entry — assume the normal layout
-      else {
-        titleCells = r.slice(2, k);
-        const s = r[k].trim();
-        rating = (s.match(/★/g) || []).length + (s.includes("½") ? 0.5 : 0);
-      }
-      let full = titleCells.join(", ").trim();
-      let year = null;
-      const ym = /^(.*),\s*(\d{4})$/.exec(full);
-      if (ym) { full = ym[1].trim(); year = +ym[2]; }
-      if (!full || full === "#VALUE!") continue;
-      const pm = /src="([^"]+)"/.exec(r[k + 3] || "");
-      const poster = pm ? pm[1] : null;
-      let date = null;
-      const ds = (r[k + 4] || "").replace(/<\/?p>/g, "").replace(/\.$/, "").trim();
-      if (ds) { const d = new Date(ds.replace(/^[A-Za-z]+\s+/, "")); if (!isNaN(d)) date = new Date(d.getFullYear(), d.getMonth(), d.getDate()); }
-      films.push({ title: full, year, rating, date, tags: [], src: null, venue: null, extra: [], url, poster, source: "rss" });
-    }
+    const title = (r[iT] || "").trim(); if (!title) continue;
+    const year = iY >= 0 && /^\d{4}/.test(r[iY] || "") ? parseInt(r[iY], 10) : null;
+    const rating = iR >= 0 && r[iR] && !isNaN(parseFloat(r[iR])) ? parseFloat(r[iR]) : null;
+    const tags = iTags >= 0 ? (r[iTags] || "").split(",").map((t) => t.trim().toLowerCase()).filter(Boolean) : [];
+    const url = iL >= 0 && (r[iL] || "").trim().startsWith("http") ? r[iL].trim() : null;
+    films.push({ title, year, rating, date: iD >= 0 ? parseDate(r[iD]) : null, tags, ...classify(tags), review: iRev >= 0 ? (r[iRev] || "").trim() : "", url, poster: iP >= 0 && (r[iP] || "").trim() ? r[iP].trim() : null });
   }
   films.sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0));
   return films;
@@ -530,7 +540,7 @@ function render() {
 
   /* KPIs */
   const avg = rated.length ? rated.reduce((s, f) => s + f.rating, 0) / rated.length : null;
-  const distinct = new Set(films.map((f) => f.title.toLowerCase())).size;     // by title: the 2019–20 export has a few wrong URLs
+  const distinct = new Set(films.map((f) => f.title.toLowerCase())).size;     // by title: a couple of links in the data point at the wrong film
   const last = films.filter((f) => f.date).at(-1);
   const noYear = filtered("year");
   let tile2;
@@ -557,7 +567,7 @@ function render() {
     tile2,
     { l: "Average rating", v: avg == null ? "—" : avg.toFixed(2), d: `${rated.length} rated · ${good} good · ${ok} ok · ${rated.length - good - ok} below`,
       bg: rated.length ? split([[Math.round(100 * good / rated.length), hexA(CLASS_COLORS.good, 0.22)], [Math.round(100 * ok / rated.length), hexA(CLASS_COLORS.ok, 0.22)], [100, hexA(CLASS_COLORS.bad, 0.22)]]) : null },
-    { l: "In a theater", v: tagged.length ? Math.round(100 * theater / tagged.length) + "%" : "—", d: tagged.length ? `${theater} theater · ${home} home${other ? ` · ${other} other` : ""} · of ${tagged.length} tagged films` : "no viewing tags in this selection (tags cover 2019–20)",
+    { l: "In a theater", v: tagged.length ? Math.round(100 * theater / tagged.length) + "%" : "—", d: tagged.length ? `${theater} theater · ${home} home${other ? ` · ${other} other` : ""} · of ${tagged.length} tagged films` : "no tagged entries in this selection",
       bg: tagged.length ? split([[Math.round(100 * theater / tagged.length), hexA(css("--green-mark"), 0.22)], [100, "rgba(255,255,255,0.05)"]]) : null },
     { l: "Last watched", v: last ? esc(last.title) : "—", small: true, d: last ? `${fmtDate(last.date)}${last.rating != null ? " · " + starStr(last.rating) : ""}${last.tags.length ? " · " + esc(tagsText(last)) : ""}` : "" },
   ];
@@ -663,7 +673,7 @@ function render() {
         x: { ...AXIS, type: "linear", min: xMin, max: xMax, grid: { display: false }, ticks: { ...AXIS.ticks, ...timeTicks(F.year != null) } },
         y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
       },
-      plugins: { tooltip: { filter: (c) => c.datasetIndex === 0, callbacks: { title: (c) => c[0].raw.f.title, label: (c) => `${starStr(c.raw.f.rating)} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}` } }, yearLabels: { pts: stepPts } } },
+      plugins: { tooltip: { filter: (c) => c.datasetIndex === 0, callbacks: { title: (c) => c[0].raw.f.title, label: (c) => `${starStr(c.raw.f.rating)} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}`, afterBody: (c) => snippet(c[0].raw.f.review) } }, yearLabels: { pts: stepPts } } },
   });
   $("#trendLegend").innerHTML = `<span><i style="background:${CLASS_COLORS.good}"></i>4–5★ good</span><span><i style="background:${CLASS_COLORS.ok}"></i>3★ ok</span><span><i style="background:${CLASS_COLORS.bad}"></i>1–2★ below</span><span><i class="line" style="background:${AVG_LINE}"></i>Year average</span>`;
   $("#noteTrend").textContent = "Each dot is one film (click to open it on Letterboxd); the line is that year's average rating.";
@@ -684,7 +694,7 @@ function render() {
         x: { ...AXIS, type: "linear", min: rMin - pad, max: rMax + pad, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 1, autoSkip: false, maxRotation: 0, callback(v) { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); const label = this.chart.width < 480 ? MONTHS[m % 12][0] : MONTHS[m % 12]; return m % 12 === 0 ? [label, String(m / 12)] : label; } } },
         y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
       },
-      plugins: { tooltip: { callbacks: { title: (c) => c[0].raw.f.title + (c[0].raw.f.year ? ` (${c[0].raw.f.year})` : ""), label: (c) => `${starStr(c.raw.f.rating)} ${RATING_MEANING[bucket(c.raw.f.rating)]} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}` } }, dotLabels: { labels: rdots.map((d) => shortTitle(d.f.title)) } } },
+      plugins: { tooltip: { callbacks: { title: (c) => c[0].raw.f.title + (c[0].raw.f.year ? ` (${c[0].raw.f.year})` : ""), label: (c) => `${starStr(c.raw.f.rating)} ${RATING_MEANING[bucket(c.raw.f.rating)]} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}`, afterBody: (c) => snippet(c[0].raw.f.review) } }, dotLabels: { labels: rdots.map((d) => shortTitle(d.f.title)) } } },
   });
   $("#noteRecentRatings").textContent = recentRated.length ? `The last ${recentRated.length} rated films, ${fmtDate(recentRated[0].date)} – ${fmtDate(recentRated.at(-1).date)}. Labels are skipped where they would overlap; hover for the rest, click to open.` : "No rated films in this selection.";
 
@@ -693,20 +703,28 @@ function render() {
   $("#posters").innerHTML = recent.map((f) => `<div class="poster">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">` : ""}${f.poster ? `<img loading="lazy" src="${esc(f.poster)}" alt="${esc(f.title)} poster">` : `<div class="ph">${esc(f.title)}</div>`}${f.url ? "</a>" : ""}<div class="t" title="${esc(f.title)}">${esc(f.title)}${f.year ? ` <span style="color:var(--text-3)">${f.year}</span>` : ""}</div><div class="s"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating) || "&nbsp;"}</span></div><div class="s">${fmtDate(f.date)}${f.src ? ` · ${esc(sourceLabel(f.src))}` : ""}</div></div>`).join("");
   $("#noteRecent").textContent = recent.length ? `Latest ${recent.length} entries${active.length ? " in this selection" : ""}.` : "Nothing in this selection.";
 
+  /* Latest reviews — the most recent written reviews in the selection */
+  const reviewed = films.filter((f) => f.review && f.date).slice(-REVIEW_COUNT).reverse();
+  $("#reviews").innerHTML = reviewed.map((f) => `<article class="rev"><div class="h">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</a>` : `<span class="t">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</span>`}<span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"};white-space:nowrap">${starStr(f.rating)}</span></div><div class="m">${fmtDate(f.date)}${f.src ? ` · ${esc(tagsText(f))}` : ""}</div><p>${esc(f.review)}</p>${f.review.length > 260 ? `<button type="button" class="more">Read more</button>` : ""}</article>`).join("");
+  document.querySelectorAll("#reviews .more").forEach((b) => b.addEventListener("click", () => { const open = b.parentElement.classList.toggle("open"); b.textContent = open ? "Show less" : "Read more"; }));
+  const nRev = films.filter((f) => f.review).length;
+  $("#noteReviews").textContent = nRev ? `${nRev} written review${nRev === 1 ? "" : "s"} in this selection · showing the latest ${reviewed.length}.` : "No written reviews in this selection.";
+  $("#reviews").parentElement.parentElement.style.display = nRev ? "" : "none";
+
   /* Ratings by service — filtered by everything but source; the chosen tag's row highlighted */
   const ratedNoS = filtered("source").filter((f) => f.rating != null);
   const tagFilms = {};
   for (const f of ratedNoS) if (f.src) (tagFilms[f.src] = tagFilms[f.src] || []).push(f);
-  const isTheater = (t) => THEATER_VENUES.includes(t);
-  const svc = Object.entries(tagFilms).filter(([, fs]) => fs.length >= MIN_TAG_FILMS).sort((a, b) => (isTheater(b[0]) - isTheater(a[0])) || (b[1].length - a[1].length));   // theaters first, then by count
+  const isTheater = (t) => t === "theater";
+  const svc = Object.entries(tagFilms).filter(([, fs]) => fs.length >= MIN_TAG_FILMS).sort((a, b) => (isTheater(b[0]) - isTheater(a[0])) || (b[1].length - a[1].length));   // theater first, then by count
   const svcTags = svc.map(([t]) => t);
   const levels = [1, 2, 3, 4, 5];
   const avgOf = (fs) => fs.reduce((s, f) => s + f.rating, 0) / fs.length;
-  const rowOn = (t) => F.source == null || F.source === t || (F.source === "theater" && THEATER_VENUES.includes(t)) || (F.source === "home" && !THEATER_VENUES.includes(t) && t !== "other");
+  const rowOn = (t) => F.source == null || F.source === t || (F.source === "home" && t !== "theater" && t !== "other");
   $("#cTagsWrap").style.height = Math.max(120, 30 * svc.length + 40) + "px";
   upsert("cTags", {
     type: "bar",
-    data: { labels: svc.map(([t]) => isTheater(t) && t !== "theater-other" ? `${sourceLabel(t)} · theater` : sourceLabel(t)), datasets: levels.map((lv) => ({
+    data: { labels: svc.map(([t]) => sourceLabel(t)), datasets: levels.map((lv) => ({
       label: `${lv}★`, data: svc.map(([, fs]) => 100 * fs.filter((f) => bucket(f.rating) === lv).length / fs.length),
       backgroundColor: svcTags.map((t) => rowOn(t) ? RATING_COLORS[lv] : hexA(RATING_COLORS[lv], 0.25)), hoverBackgroundColor: RATING_COLORS[lv],
       borderColor: css("--card"), borderWidth: { left: lv > 1 ? 2 : 0 }, borderSkipped: false, maxBarThickness: 18, raw: svc.map(([, fs]) => fs.filter((f) => bucket(f.rating) === lv).length),
@@ -716,7 +734,7 @@ function render() {
       plugins: { tooltip: { callbacks: {
         title: (c) => `${c[0].label} · ${svc[c[0].dataIndex][1].length} rated films`,
         label: (c) => `${c.dataset.label} ${RATING_MEANING[+c.dataset.label[0]]}: ${c.dataset.raw[c.dataIndex]} films (${Math.round(c.parsed.x)}%)`,
-        afterBody: (c) => `Average ${avgOf(svc[c[0].dataIndex][1]).toFixed(2)}★ · click to filter`,
+        afterBody: (c) => { const fs = svc[c[0].dataIndex][1]; const venues = {}; fs.forEach((f) => { if (f.venueName) venues[f.venueName] = (venues[f.venueName] || 0) + 1; }); const v = Object.entries(venues).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", "); return [`Average ${avgOf(fs).toFixed(2)}★ · click to filter`, ...(v ? [`Venues: ${v}`] : [])]; },
       } }, rowEnd: { text: svc.map(([, fs]) => `${avgOf(fs).toFixed(2)}★ · ${fs.length}`) }, rowHighlight: {} } },
   });
   charts.cTags.$tags = svcTags;
@@ -729,7 +747,7 @@ function render() {
     charts.cTags.$wired = true;
   }
   $("#tagLegend").innerHTML = ratingLegendHTML() + `<span style="margin-left:auto;color:var(--text-3)">avg · films</span>`;
-  $("#noteTags").textContent = svc.length ? `Each film counts once, under the service or venue it was watched through (${MIN_TAG_FILMS}+ rated films per row). Click a row to filter. Only the 2019–2020 export has tags.` : "No viewing tags in this selection — tags exist only for 2019–2020. Pick 2019, 2020 or All years to see them.";
+  $("#noteTags").textContent = svc.length ? `Each film counts once, under the service or venue it was watched through (${MIN_TAG_FILMS}+ rated films per row). Click a row to filter. ${tagCoverage()}` : `No tagged entries in this selection. ${tagCoverage()}`;
   $("#cTagsWrap").style.display = svc.length ? "" : "none";
   $("#tagLegend").style.display = svc.length ? "" : "none";
 
@@ -745,7 +763,7 @@ function render() {
   });
   $("#cDecades").parentElement.style.display = decades.length ? "" : "none";
   const noYr = filtered("decade").length - withYear.length;
-  $("#noteDecades").textContent = withYear.length ? `${withYear.length} films with a release year${noYr ? ` · ${noYr} from the 2019–20 export have none` : ""} · median ${median(withYear.map((f) => f.year))}. Click a bar to filter.` : "Release years are only in the RSS-era entries (Nov 2020 onward).";
+  $("#noteDecades").textContent = withYear.length ? `${withYear.length} films with a release year${noYr ? ` · ${noYr} without one` : ""} · median ${median(withYear.map((f) => f.year))}. Click a bar to filter.` : "No release years in this selection.";
 
   /* Films by rating — the list; its chips set the same rating filter as the chart */
   listFilms = rated.slice().reverse();
@@ -786,6 +804,14 @@ function sparkline(cur, prev, title) {
     </svg>`;
 }
 
+// Wraps a review into tooltip lines (max ~4 lines of 48 chars), or nothing if there is no review.
+function snippet(text) {
+  if (!text) return [];
+  const words = text.split(/\s+/), lines = [""];
+  for (const w of words) { if ((lines.at(-1) + " " + w).trim().length > 48) { if (lines.length === 4) { lines[3] = lines[3].replace(/\s?\S*$/, "") + "…"; return ["", ...lines]; } lines.push(w); } else lines[lines.length - 1] = (lines.at(-1) + " " + w).trim(); }
+  return ["", ...lines];
+}
+
 function heatColor(n, max) {
   if (!n || !max) return css("--card-2");
   const t = 0.25 + 0.75 * Math.min(1, n / max);            // one hue, dark → bright
@@ -802,16 +828,18 @@ let tableRows = [];
 function renderTable(films) { tableRows = films; drawTable(); }
 function drawTable() {
   const q = $("#search").value.trim().toLowerCase();
-  let rows = tableRows.filter((f) => !q || f.title.toLowerCase().includes(q) || f.tags.some((t) => t.includes(q)) || tagsText(f).toLowerCase().includes(q));
+  let rows = tableRows.filter((f) => !q || f.title.toLowerCase().includes(q) || f.tags.some((t) => t.includes(q)) || tagsText(f).toLowerCase().includes(q) || f.review.toLowerCase().includes(q));
   const dir = sortAsc ? 1 : -1;
   rows = rows.slice().sort((a, b) => {
     const va = a[sortKey], vb = b[sortKey];
     if (sortKey === "date") return dir * ((va?.getTime() ?? 0) - (vb?.getTime() ?? 0));
     if (sortKey === "title") return dir * a.title.localeCompare(b.title);
     if (sortKey === "tags") return dir * tagsText(a).localeCompare(tagsText(b));
+    if (sortKey === "review") return dir * ((a.review ? 1 : 0) - (b.review ? 1 : 0) || a.review.localeCompare(b.review));
     return dir * ((va ?? -1) - (vb ?? -1));
   });
-  $("#table tbody").innerHTML = rows.map((f) => `<tr><td style="white-space:nowrap">${fmtDate(f.date)}</td><td>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}</td><td class="num">${f.year ?? ""}</td><td class="num" title="${f.rating ?? ""}"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating)}</span></td><td style="color:var(--text-2)">${esc(tagsText(f))}</td></tr>`).join("");
+  $("#table tbody").innerHTML = rows.map((f) => `<tr><td style="white-space:nowrap">${fmtDate(f.date)}</td><td>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}</td><td class="num">${f.year ?? ""}</td><td class="num" title="${f.rating ?? ""}"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating)}</span></td><td style="color:var(--text-2)">${esc(tagsText(f))}</td><td class="review">${f.review ? `<div class="clamp" title="Click to expand">${esc(f.review)}</div>` : ""}</td></tr>`).join("");
+  $("#table tbody").querySelectorAll(".clamp").forEach((el) => el.addEventListener("click", () => el.classList.toggle("open")));
   $("#tableCount").textContent = `${rows.length} of ${tableRows.length} entries`;
   document.querySelectorAll("#table th").forEach((th) => { th.classList.toggle("sorted", th.dataset.k === sortKey); th.classList.toggle("asc", th.dataset.k === sortKey && sortAsc); });
 }
@@ -846,7 +874,7 @@ function buildFilters() {
   mk("s", "theater", "Theater", sEnd, setS);
   mk("s", "home", "Home", sEnd, setS);
   const srcCount = {}; for (const f of ALL) if (f.src) srcCount[f.src] = (srcCount[f.src] || 0) + 1;
-  Object.entries(srcCount).filter(([t, n]) => n >= MIN_SOURCE_CHIP && !t.endsWith("-other") && t !== "other").sort((a, b) => b[1] - a[1]).forEach(([t]) => mk("s", t, cap(sourceLabel(t)), sEnd, setS));
+  Object.entries(srcCount).filter(([t, n]) => n >= MIN_SOURCE_CHIP && !t.endsWith("-other") && t !== "other" && t !== "theater").sort((a, b) => b[1] - a[1]).forEach(([t]) => mk("s", t, cap(sourceLabel(t)), sEnd, setS));
   const extraCount = {}; for (const f of ALL) for (const t of f.extra) extraCount[t] = (extraCount[t] || 0) + 1;
   const extras = Object.entries(extraCount).filter(([, n]) => n >= MIN_TAG_CHIP).sort((a, b) => b[1] - a[1]);
   const tEnd = $("#tagHint"), setT = (v) => setFilter("tag", v === "all" ? null : v);
@@ -854,7 +882,7 @@ function buildFilters() {
   $("#tagFilters").hidden = !extras.length;
   if (extras.length) { mk("t", "all", "Any", tEnd, setT); extras.forEach(([t]) => mk("t", t, cap(tagLabel(t)), tEnd, setT)); }
   const taggedDates = ALL.filter((f) => f.tags.length && f.date).map((f) => f.date);
-  if (taggedDates.length) { const a = taggedDates[0], b = taggedDates.at(-1); $("#sourceHint").textContent = `tags cover ${MONTHS[a.getMonth()]} ${a.getFullYear()} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`; }
+  if (taggedDates.length) { const a = taggedDates[0], b = taggedDates.at(-1); $("#sourceHint").textContent = `tagged entries: ${MONTHS[a.getMonth()]} ${a.getFullYear()} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`; $("#sourceHint").title = tagCoverage(); }
   document.querySelectorAll("#yearsMode button").forEach((b) => b.addEventListener("click", () => { yearsMode = b.dataset.m; try { localStorage.setItem("yearsMode", yearsMode); } catch (e) {} render(); }));
   $("#clearAll").addEventListener("click", () => { Object.keys(F).forEach((k) => (F[k] = null)); syncHash(); paintChips(); render(); });
   $("#heat").addEventListener("click", (e) => { const c = e.target.closest(".c[data-m]"); if (!c) return; const y = +c.dataset.y, m = +c.dataset.m; if (F.month === m && F.year === y) { F.month = null; } else { F.year = y; F.month = m; } syncHash(); paintChips(); render(); });
@@ -894,7 +922,8 @@ async function load() {
     readHash();
     paintChips();
     const dated = ALL.filter((f) => f.date);
-    $("#subtitle").innerHTML = `${ALL.length} diary entries<span class="dot">·</span>${fmtDate(dated[0]?.date)} – ${fmtDate(dated.at(-1)?.date)}<span class="dot">·</span>live from Google Sheets`;
+    const reviews = ALL.filter((f) => f.review).length;
+    $("#subtitle").innerHTML = `${ALL.length} diary entries<span class="dot">·</span>${fmtDate(dated[0]?.date)} – ${fmtDate(dated.at(-1)?.date)}${reviews ? `<span class="dot">·</span>${reviews} written reviews` : ""}`;
     $("#fetchedAt").textContent = ` Loaded ${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}.`;
     $("#status").classList.remove("show");
     render();
