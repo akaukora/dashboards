@@ -1,6 +1,6 @@
-Title,Year,Watched Date,Rating,Tags,Review,Letterboxd URL
+title,film_year,watched_date,rating,tags,review,link
 Iverson,2014.0,2019-01-01,3.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/iverson/
-Mary Poppins Returns,2018.0,2019-01-02,4.0,"imax, cinema","Good actors, nice story, can't remember the songs that well though and they don't really compare with the originals.",https://letterboxd.com/farbeach/film/mary-poppins-returns/
+Mary Poppins Returns,2018.0,2019-01-02,4.0,"imax, cinema","Good actors, nice story, can't remember the songs anymore, but I remember I enjoyed them. Solid.",https://letterboxd.com/farbeach/film/mary-poppins-returns/
 The Grinch,2018.0,2019-01-02,2.0,"finnkino, cinema","I don't think it added anything to the world of Grinch films.",https://letterboxd.com/farbeach/film/the-grinch/
 Spider-Man: Into the Spider-Verse,2018.0,2019-01-03,5.0,"finnkino, cinema","Animation playing to its strenghts. A comic book film that feels and looks like a comic book. Great.",https://letterboxd.com/farbeach/film/spider-man-into-the-spider-verse/
 The Meyerowitz Stories (New and Selected),2017.0,2019-01-09,4.0,"netflix, streaming","I liked the vibe, the feel of the movie, and the acting, but it wasn't fully satisfying.",https://letterboxd.com/farbeach/film/the-meyerowitz-stories-new-and-selected/
@@ -9,3 +9,121 @@ Call Me by Your Name,2017.0,2019-01-11,4.0,"riviera, cinema",Excellent depiction
 Moonstruck,1987.0,2019-01-11,3.0,"amazon, streaming","I liked Nicholas Cage in this. Overall a bit formulaic romcom.",https://letterboxd.com/farbeach/film/moonstruck/
 Inside Llewyn Davis,2013.0,2019-01-16,4.0,"amazon, streaming","First Oscar Isaac movie I've seen aside from Star Wars. He is clearly very talented. Loved the music too.",https://letterboxd.com/farbeach/film/inside-llewyn-davis/
 Green Book,2018.0,2019-01-18,4.0,"kino engel, cinema","Really good main actors, and the story was also touching. A little predictable, but it's based on a real story so I guess that's acceptable.",https://letterboxd.com/farbeach/film/green-book/
+Le Temps des Forêts,,2019-01-28,4.0,"film festival, finnkino, docpoint festival, cinema",,https://letterboxd.com/farbeach/film/le-temps-des-forets/
+Roma,2018.0,2019-01-31,5.0,"netflix, streaming","Visually stunning. Amazing cinematography. The black and white worked perfectly. Everything felt authentic.",https://letterboxd.com/farbeach/film/roma-2018/
+Free Solo,2018.0,2019-02-01,5.0,"finnkino, cinema","Incredibly tense. A documentary that works as a thriller.",https://letterboxd.com/farbeach/film/free-solo/
+Cold War,2018.0,2019-02-04,4.0,"kino engel, cinema",,https://letterboxd.com/farbeach/film/cold-war-2018/
+If Beale Street Could Talk,2018.0,2019-02-08,4.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/if-beale-street-could-talk/
+Birdman,2014.0,2019-02-11,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/birdman/
+Isle of Dogs,2018.0,2019-02-14,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/isle-of-dogs/
+Can You Ever Forgive Me?,2018.0,2019-02-14,4.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/can-you-ever-forgive-me/
+The Favourite,2018.0,2019-02-17,4.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/the-favourite/
+BlacKkKlansman,2018.0,2019-02-19,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/blackkklansman/
+Capernaum,2018.0,2019-02-22,5.0,"riviera, cinema","Harrowing but important story told with remarkable authenticity.",https://letterboxd.com/farbeach/film/capernaum/
+Vice,2018.0,2019-02-24,3.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/vice/
+The Wife,2017.0,2019-02-26,4.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/the-wife/
+Happy as Lazzaro,2018.0,2019-03-01,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/happy-as-lazzaro/
+Never Look Away,2018.0,2019-03-03,5.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/never-look-away/
+Burning,2018.0,2019-03-05,4.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/burning/
+Ash Is Purest White,2018.0,2019-03-07,4.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/ash-is-purest-white/
+Climax,2018.0,2019-03-08,3.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/climax-2018/
+Sunset,2018.0,2019-03-10,3.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/sunset-2018/
+At Eternity's Gate,2018.0,2019-03-12,4.0,"riviera, cinema",,https://letterboxd.com/farbeach/film/at-eternitys-gate/
+On the Basis of Sex,2018.0,2019-03-18,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/on-the-basis-of-sex/
+Boy Erased,2018.0,2019-03-19,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/boy-erased/
+Colette,2018.0,2019-03-21,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/colette/
+The Guilty,2018.0,2019-03-26,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/the-guilty-2018/
+The Hate U Give,2018.0,2019-03-27,4.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/the-hate-u-give/
+Eighth Grade,2018.0,2019-03-28,4.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/eighth-grade/
+Leave No Trace,2018.0,2019-03-29,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/leave-no-trace/
+Three Billboards Outside Ebbing Missouri,2017.0,2019-04-01,5.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/three-billboards-outside-ebbing-missouri/
+A Quiet Place,2018.0,2019-04-03,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/a-quiet-place/
+The Post,2017.0,2019-04-04,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/the-post/
+Wildlife,2018.0,2019-04-05,4.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/wildlife-2018/
+First Man,2018.0,2019-04-06,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/first-man/
+Hereditary,2018.0,2019-04-07,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/hereditary/
+The Tale,2018.0,2019-04-09,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/the-tale/
+Won't You Be My Neighbor?,2018.0,2019-04-11,5.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/wont-you-be-my-neighbor/
+A Star Is Born,2018.0,2019-04-13,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/a-star-is-born-2018/
+The Sisters Brothers,2018.0,2019-04-14,3.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/the-sisters-brothers/
+Annihilation,2018.0,2019-04-15,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/annihilation/
+Tully,2018.0,2019-04-17,4.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/tully/
+Suspiria,2018.0,2019-04-18,3.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/suspiria-2018/
+Tolkien,,2019-05-07,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/tolkien-2019/
+The Blues Brothers,1980.0,2019-05-08,4.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/the-blues-brothers/
+Moonlight,2016.0,2019-05-09,4.0,"amazon, streaming","Subject matter that's not presented much in entertainment, so this is an important movie already from that point of view. First two parts I thought were really good in terms of acting, story, but the third part I thought wasn't as good.",https://letterboxd.com/farbeach/film/moonlight-2016/
+Another Day of Life,2018.0,2019-05-10,3.0,"espoo cine, finnkino, film festival, cinema","Animation was cool. Acting was not convincing. I liked most of the non-animated clips mixed in between and the interviews.",https://letterboxd.com/farbeach/film/another-day-of-life/
+Avengers: Endgame,2019.0,2019-05-11,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/avengers-endgame/
+Midsommar,2019.0,2019-08-01,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/midsommar/
+Once Upon a Time… in Hollywood,2019.0,2019-08-23,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/once-upon-a-time-in-hollywood/
+Joker,2019.0,2019-10-05,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/joker-2019/
+A Time to Live a Time to Die,,2019-10-30,4.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/a-time-to-live-a-time-to-die/
+The Lighthouse,2019.0,2019-11-07,4.0,"kino engel, cinema",,https://letterboxd.com/farbeach/film/the-lighthouse-2019/
+Marriage Story,2019.0,2019-11-15,5.0,"netflix, streaming","Outstanding acting. Probably both actors' best performances.",https://letterboxd.com/farbeach/film/marriage-story-2019/
+Knives Out,2019.0,2019-12-04,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/knives-out/
+The Irishman,2019.0,2019-12-06,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/the-irishman/
+Parasite,2019.0,2019-12-10,5.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/parasite-2019/
+The Two Popes,2019.0,2019-12-13,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/the-two-popes/
+Uncut Gems,2019.0,2019-12-24,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/uncut-gems/
+1917,2019.0,2020-01-09,5.0,"finnkino, cinema","Technically incredible. The continuous shot conceit works perfectly for this story.",https://letterboxd.com/farbeach/film/1917/
+Little Women,2019.0,2020-01-12,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/little-women-2019/
+Jojo Rabbit,2019.0,2020-01-15,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/jojo-rabbit/
+Vodka Mr. Palmu,1969.0,2020-01-19,3.0,"yle areena, streaming",,https://letterboxd.com/farbeach/film/vodka-mr-palmu/
+Lupin the Third: The Castle of Cagliostro,,2020-01-25,3.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/lupin-the-third-the-castle-of-cagliostro/
+Portrait of a Lady on Fire,2019.0,2020-01-28,5.0,"kino engel, cinema",,https://letterboxd.com/farbeach/film/portrait-of-a-lady-on-fire/
+Bombshell,2019.0,2020-01-30,3.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/bombshell-2019/
+The Gentlemen,2019.0,2020-02-02,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/the-gentlemen/
+Hustlers,2019.0,2020-02-04,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/hustlers/
+Bad Boys for Life,2020.0,2020-02-09,3.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/bad-boys-for-life/
+The Invisible Man,2020.0,2020-02-22,4.0,"finnkino, cinema",,https://letterboxd.com/farbeach/film/the-invisible-man-2020/
+The Vast of Night,2019.0,2020-03-15,4.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/the-vast-of-night/
+Onward,2020.0,2020-03-20,4.0,"disney plus, streaming",,https://letterboxd.com/farbeach/film/onward/
+The Platform,2019.0,2020-03-21,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/the-platform/
+Extra Ordinary,2019.0,2020-03-24,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/extra-ordinary/
+Lost Girls,2020.0,2020-03-28,3.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/lost-girls/
+Never Rarely Sometimes Always,2020.0,2020-04-01,4.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/never-rarely-sometimes-always/
+The Personal History of David Copperfield,2019.0,2020-04-04,4.0,"amazon, streaming",,https://letterboxd.com/farbeach/film/the-personal-history-of-david-copperfield/
+Extraction,2020.0,2020-04-11,3.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/extraction-2020/
+Tough Guy: The Bob Probert Story,2018.0,2020-04-16,4.0,"yle areena, streaming",,https://letterboxd.com/farbeach/film/tough-guy-the-bob-probert-story/
+Bacurau,2019.0,2020-04-19,4.0,"mubi, streaming",,https://letterboxd.com/farbeach/film/bacurau/
+Da 5 Bloods,2020.0,2020-06-12,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/da-5-bloods/
+The Forty-Year-Old Version,2020.0,2020-11-10,3.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/the-forty-year-old-version/
+RBG,2018.0,2020-11-10,4.0,"yle areena, streaming",,https://letterboxd.com/farbeach/film/rbg/
+Aurora,2018.0,2020-11-06,4.0,"mubi, streaming",,https://letterboxd.com/farbeach/film/aurora-2018/
+Killing Them Softly,2012.0,2020-11-13,3.0,"yle areena, streaming",,https://letterboxd.com/farbeach/film/killing-them-softly/
+Akira,1988.0,2020-11-26,3.0,cinema,,https://letterboxd.com/farbeach/film/akira/
+Nimic,2019.0,2020-12-02,4.0,"mubi, streaming",,https://letterboxd.com/farbeach/film/nimic/
+Red Penguins,2019.0,2020-12-03,4.0,,, https://letterboxd.com/farbeach/film/red-penguins/
+The Trial of the Chicago 7,2020.0,2020-11-30,4.0,,, https://letterboxd.com/farbeach/film/the-trial-of-the-chicago-7/
+The China Hustle,2017.0,2020-12-05,4.0,,, https://letterboxd.com/farbeach/film/the-china-hustle/
+El Topo,1970.0,2020-12-08,2.0,,, https://letterboxd.com/farbeach/film/el-topo/
+John Wick: Chapter 2,2017.0,2020-12-12,4.0,,, https://letterboxd.com/farbeach/film/john-wick-chapter-2/
+Other Music,2019.0,2020-12-13,4.0,,, https://letterboxd.com/farbeach/film/other-music/
+Stay Awake Be Ready,2019.0,2020-12-19,4.0,,, https://letterboxd.com/farbeach/film/stay-awake-be-ready/
+The Half of It,2020.0,2020-12-19,5.0,,, https://letterboxd.com/farbeach/film/the-half-of-it/
+The Russian Five,2018.0,2020-12-22,4.0,,, https://letterboxd.com/farbeach/film/the-russian-five/
+Incendies,2010.0,2021-01-03,5.0,,, https://letterboxd.com/farbeach/film/incendies/
+John Wick: Chapter 3 – Parabellum,2019.0,2021-06-05,4.0,"netflix, streaming",,https://letterboxd.com/farbeach/film/john-wick-chapter-3-parabellum/
+The French Dispatch,2021.0,2021-11-19,4.0,cinema,,https://letterboxd.com/farbeach/film/the-french-dispatch/
+Glass Onion: A Knives Out Mystery,2022.0,2023-01-08,4.0,"streaming, netflix",,https://letterboxd.com/farbeach/film/glass-onion-a-knives-out-mystery/
+Ticket to Paradise,2022.0,2023-01-12,3.0,cinema,,https://letterboxd.com/farbeach/film/ticket-to-paradise/
+Migration,2023.0,2023-12-22,3.0,cinema,,https://letterboxd.com/farbeach/film/migration/
+Frankenstein,2025.0,2025-11-10,3.0,,,https://letterboxd.com/farbeach/film/frankenstein-2025/
+Eddington,2025.0,2025-10-10,4.0,,,https://letterboxd.com/farbeach/film/eddington/
+No Other Choice,2025.0,2026-01-03,4.0,,,https://letterboxd.com/farbeach/film/no-other-choice-2025/
+Zootopia 2,2025.0,2026-01-06,3.0,,,https://letterboxd.com/farbeach/film/zootopia-2/
+Marty Supreme,2025.0,2026-02-09,3.0,,,https://letterboxd.com/farbeach/film/marty-supreme/
+GOAT,2026.0,2026-02-22,4.0,,,https://letterboxd.com/farbeach/film/goat-2026/
+Nouvelle Vague,2025.0,2026-02-27,4.0,,,https://letterboxd.com/farbeach/film/nouvelle-vague-2025/
+WALL·E,2008.0,2026-02-27,4.0,,,https://letterboxd.com/farbeach/film/walle/
+Project Hail Mary,2026.0,2026-03-28,4.0,,,https://letterboxd.com/farbeach/film/project-hail-mary/
+The Testament of Ann Lee,2025.0,2026-03-29,4.0,,,https://letterboxd.com/farbeach/film/the-testament-of-ann-lee/
+I Swear,2025.0,2026-03-31,4.0,,,https://letterboxd.com/farbeach/film/i-swear/
+Hara-Kiri: Death of a Samurai,2011.0,2026-04-10,3.0,,,https://letterboxd.com/farbeach/film/hara-kiri-death-of-a-samurai/
+Nimona,2023.0,2026-06-04,4.0,,,https://letterboxd.com/farbeach/film/nimona-2023/
+The Super Mario Galaxy Movie,2026.0,2026-06-04,3.0,,,https://letterboxd.com/farbeach/film/the-super-mario-galaxy-movie/
+Millennium Actress,2001.0,2026-07-06,4.0,,,https://letterboxd.com/farbeach/film/millennium-actress/
+Minions & Monsters,2026.0,2026-07-23,3.0,,,https://letterboxd.com/farbeach/film/minions-monsters-2026/
+The Odyssey,2026.0,2026-07-29,5.0,,,https://letterboxd.com/farbeach/film/the-odyssey-2026/
+The Furious,2025.0,2026-08-22,3.0,,,https://letterboxd.com/farbeach/film/the-furious/
+The Ice Tower,2025.0,2026-09-01,3.0,,,https://letterboxd.com/farbeach/film/the-ice-tower/
