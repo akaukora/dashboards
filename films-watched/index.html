@@ -511,7 +511,7 @@ function upsert(id, cfg) {
   charts[id] = new Chart(document.getElementById(id), cfg);
 }
 const barBase = (extra = {}) => ({ backgroundColor: css("--green-mark"), hoverBackgroundColor: css("--green"), borderRadius: 4, borderSkipped: "bottom", maxBarThickness: 24, categoryPercentage: 0.8, barPercentage: 0.9, ...extra });
-const timeTicks = (single) => ({ stepSize: 1, autoSkip: false, maxRotation: 0, callback(v) { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); const narrow = this.chart.width < 480; return m % 12 === 0 ? String(m / 12) : (single ? (narrow ? MONTHS[m % 12][0] : MONTHS[m % 12]) : ""); } });
+const timeTicks = (single) => ({ stepSize: 1, autoSkip: false, maxRotation: 0, callback(v) { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); if (!single) return m % 12 === 0 ? String(m / 12) : ""; const label = this.chart.width < 480 ? MONTHS[m % 12][0] : MONTHS[m % 12]; return m % 12 === 0 ? [label, String(m / 12)] : label; } });
 
 /* ---------- render ---------- */
 function render() {
@@ -681,7 +681,7 @@ function render() {
     options: { maintainAspectRatio: false, interaction: { mode: "nearest", intersect: true }, layout: { padding: { top: 10, right: 12 } },
       onClick: (e, els) => { const d = els.length ? rdots[els[0].index] : null; if (d && d.f.url) window.open(d.f.url, "_blank", "noopener"); },
       scales: {
-        x: { ...AXIS, type: "linear", min: rMin - pad, max: rMax + pad, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 1, autoSkip: false, maxRotation: 0, callback(v) { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); const narrow = this.chart.width < 480; return m % 12 === 0 ? String(m / 12) : (narrow ? MONTHS[m % 12][0] : MONTHS[m % 12]); } } },
+        x: { ...AXIS, type: "linear", min: rMin - pad, max: rMax + pad, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 1, autoSkip: false, maxRotation: 0, callback(v) { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); const label = this.chart.width < 480 ? MONTHS[m % 12][0] : MONTHS[m % 12]; return m % 12 === 0 ? [label, String(m / 12)] : label; } } },
         y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
       },
       plugins: { tooltip: { callbacks: { title: (c) => c[0].raw.f.title + (c[0].raw.f.year ? ` (${c[0].raw.f.year})` : ""), label: (c) => `${starStr(c.raw.f.rating)} ${RATING_MEANING[bucket(c.raw.f.rating)]} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}` } }, dotLabels: { labels: rdots.map((d) => shortTitle(d.f.title)) } } },
