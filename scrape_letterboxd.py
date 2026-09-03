@@ -30,6 +30,38 @@ def extract_poster(entry):
     return m.group(1) if m else None
 
 
+def fetch_poster_from_film_page(slug):
+    """Fetch og:image from a Letterboxd film page as a last-resort poster source."""
+    url = f"https://letterboxd.com/film/{slug}/"
+    try:
+        resp = requests.get(url, headers=HEADERS, timeout=15)
+        if resp.status_code != 200:
+            return None
+        soup = BeautifulSoup(resp.text, "html.parser")
+        og = soup.find("meta", property="og:image")
+        return og["content"] if og else None
+    except Exception:
+        return None
+
+
+def backfill_missing_posters(rows):
+    """For any row missing poster_url, fetch it from the film page.
+    Deduplicated by slug so each film is only fetched once."""
+    seen_slugs = {}
+    missing = [(i, r) for i, r in enumerate(rows) if not r.get("poster_url")]
+    print(f"Backfilling posters for {len(missing)} rows...")
+    for i, row in missing:
+        slug = row["link"].strip().rstrip("/").split("/film/")[-1].split("/")[0]
+        if slug not in seen_slugs:
+            poster = fetch_poster_from_film_page(slug)
+            seen_slugs[slug] = poster or ""
+            time.sleep(0.5)
+        rows[i]["poster_url"] = seen_slugs[slug]
+    filled = sum(1 for _, r in missing if r.get("poster_url"))
+    print(f"Backfill complete: {filled}/{len(missing)} posters found")
+    return rows
+
+
 def fetch_rss():
     feed = feedparser.parse(RSS_URL)
     entries = []
@@ -108,7 +140,6 @@ def merge_and_write(entries, tag_map, outpath=OUTPUT_PATH):
         key = f"{e['slug']}_{e['watched_date']}"
         rss_keys.add(key)
         tags = tag_map.get(key, [])
-        # if entry already exists in CSV and had a poster, keep it (RSS enclosures can change)
         existing_poster = existing.get(key, {}).get("poster_url", "")
         updated_rows.append({
             "watched_date": e["watched_date"],
@@ -138,6 +169,9 @@ def merge_and_write(entries, tag_map, outpath=OUTPUT_PATH):
             })
 
     updated_rows.sort(key=lambda x: x["watched_date"] or "")
+
+    # backfill any rows still missing a poster
+    updated_rows = backfill_missing_posters(updated_rows)
 
     with open(outpath, "w", newline="", encoding="utf-8") as f:
         writer = csv.DictWriter(f, fieldnames=fieldnames)
