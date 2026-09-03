@@ -21,16 +21,21 @@ HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; PersonalDashboardBot/1.0)"}
 OUTPUT_PATH = "films-watched/films.csv"
 
 
+def extract_poster(entry):
+    """Get poster URL from enclosure first, then fall back to <img> in description."""
+    if getattr(entry, "enclosures", None):
+        return entry.enclosures[0]["href"]
+    description = entry.get("description", "") or ""
+    m = re.search(r'<img src="(https://[^"]+)"', description)
+    return m.group(1) if m else None
+
+
 def fetch_rss():
     feed = feedparser.parse(RSS_URL)
     entries = []
     for e in feed.entries:
         link = e.link
         slug = link.rstrip("/").split("/film/")[-1].split("/")[0]
-        # poster image comes as an enclosure in the RSS item
-        poster_url = e.enclosures[0]["href"] if getattr(e, "enclosures", None) else None
-        # tmdb:movieId is exposed by feedparser as tmdb_movieid
-        tmdb_id = getattr(e, "tmdb_movieid", None)
         entries.append({
             "slug": slug,
             "title": e.title,
@@ -39,8 +44,8 @@ def fetch_rss():
             "rating": getattr(e, "letterboxd_memberrating", None),
             "rewatch": getattr(e, "letterboxd_rewatch", None),
             "link": link,
-            "poster_url": poster_url,
-            "tmdb_id": tmdb_id,
+            "poster_url": extract_poster(e),
+            "tmdb_id": getattr(e, "tmdb_movieid", None),
         })
     return entries
 
@@ -85,7 +90,7 @@ def load_existing(path=OUTPUT_PATH):
         with open(path, newline="", encoding="utf-8") as f:
             reader = csv.DictReader(f)
             for row in reader:
-                slug = row["link"].rstrip("/").split("/film/")[-1].split("/")[0]
+                slug = row["link"].strip().rstrip("/").split("/film/")[-1].split("/")[0]
                 key = f"{slug}_{row['watched_date']}"
                 existing[key] = row
     except FileNotFoundError:
@@ -103,6 +108,8 @@ def merge_and_write(entries, tag_map, outpath=OUTPUT_PATH):
         key = f"{e['slug']}_{e['watched_date']}"
         rss_keys.add(key)
         tags = tag_map.get(key, [])
+        # if entry already exists in CSV and had a poster, keep it (RSS enclosures can change)
+        existing_poster = existing.get(key, {}).get("poster_url", "")
         updated_rows.append({
             "watched_date": e["watched_date"],
             "title": e["title"],
@@ -111,7 +118,7 @@ def merge_and_write(entries, tag_map, outpath=OUTPUT_PATH):
             "rewatch": e["rewatch"],
             "tags": ", ".join(tags),
             "link": e["link"],
-            "poster_url": e["poster_url"],
+            "poster_url": e["poster_url"] or existing_poster,
             "tmdb_id": e["tmdb_id"],
         })
 
