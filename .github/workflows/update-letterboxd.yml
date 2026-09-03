@@ -5,14 +5,19 @@ on:
     - cron: '0 0 * * *'  # midnight UTC = 3:00 EEST (UTC+3 summer) / 2:00 EET (UTC+2 winter)
   workflow_dispatch:
 
+permissions:
+  contents: write
+
 jobs:
   scrape:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
       - uses: actions/setup-python@v5
         with:
-          python-version: '3.11'
+          python-version: '3.12'
       - name: Install dependencies
         run: pip install requests beautifulsoup4 feedparser
       - name: Run scraper
