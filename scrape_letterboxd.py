@@ -27,6 +27,10 @@ def fetch_rss():
     for e in feed.entries:
         link = e.link
         slug = link.rstrip("/").split("/film/")[-1].split("/")[0]
+        # poster image comes as an enclosure in the RSS item
+        poster_url = e.enclosures[0]["href"] if getattr(e, "enclosures", None) else None
+        # tmdb:movieId is exposed by feedparser as tmdb_movieid
+        tmdb_id = getattr(e, "tmdb_movieid", None)
         entries.append({
             "slug": slug,
             "title": e.title,
@@ -35,6 +39,8 @@ def fetch_rss():
             "rating": getattr(e, "letterboxd_memberrating", None),
             "rewatch": getattr(e, "letterboxd_rewatch", None),
             "link": link,
+            "poster_url": poster_url,
+            "tmdb_id": tmdb_id,
         })
     return entries
 
@@ -91,6 +97,7 @@ def merge_and_write(entries, tag_map, outpath=OUTPUT_PATH):
     existing = load_existing(outpath)
     rss_keys = set()
     updated_rows = []
+    fieldnames = ["watched_date", "title", "film_year", "rating", "rewatch", "tags", "link", "poster_url", "tmdb_id"]
 
     for e in entries:
         key = f"{e['slug']}_{e['watched_date']}"
@@ -104,6 +111,8 @@ def merge_and_write(entries, tag_map, outpath=OUTPUT_PATH):
             "rewatch": e["rewatch"],
             "tags": ", ".join(tags),
             "link": e["link"],
+            "poster_url": e["poster_url"],
+            "tmdb_id": e["tmdb_id"],
         })
 
     # preserve historical rows not covered by current RSS window
@@ -117,12 +126,14 @@ def merge_and_write(entries, tag_map, outpath=OUTPUT_PATH):
                 "rewatch": row.get("rewatch", ""),
                 "tags": row["tags"],
                 "link": row["link"],
+                "poster_url": row.get("poster_url", ""),
+                "tmdb_id": row.get("tmdb_id", ""),
             })
 
     updated_rows.sort(key=lambda x: x["watched_date"] or "")
 
     with open(outpath, "w", newline="", encoding="utf-8") as f:
-        writer = csv.DictWriter(f, fieldnames=["watched_date", "title", "film_year", "rating", "rewatch", "tags", "link"])
+        writer = csv.DictWriter(f, fieldnames=fieldnames)
         writer.writeheader()
         writer.writerows(updated_rows)
     print(f"Written {len(updated_rows)} rows to {outpath}")
