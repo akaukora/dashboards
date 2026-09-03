@@ -59,8 +59,9 @@
   .kpi .d b { color: var(--text-2); font-weight: 500; }
   .kpi .d .up { color: var(--green); }
   .kpi .d .down { color: var(--orange); }
-  .kpi { position: relative; }
-  .kpi .spark { position: absolute; right: 14px; top: 14px; }
+  .kpi { position: relative; overflow: hidden; }
+  .kpi > div { position: relative; }
+  .kpi .spark { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 58%; opacity: 0.55; pointer-events: none; }
 
   /* ---------- cards / grid ---------- */
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
@@ -106,6 +107,11 @@
   .active .f button:hover { background: var(--line-2); color: var(--text); }
   .active .clear { margin-left: auto; padding: 4px 10px; font-size: 12px; }
   .chart.clickable canvas { cursor: pointer; }
+  .card .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
+  .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 999px; overflow: hidden; }
+  .seg button { all: unset; cursor: pointer; padding: 3px 10px; font: inherit; font-size: 12px; color: var(--text-2); }
+  .seg button:hover { color: var(--text); }
+  .seg button.active { background: var(--card-2); color: var(--text); font-weight: 600; }
 
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .chips .chip { padding: 3px 10px; font-size: 12px; }
@@ -190,7 +196,7 @@
 
   <section class="grid">
     <div class="card">
-      <h2>Films per year</h2>
+      <div class="head"><h2>Films per year</h2><div class="seg" id="yearsMode"><button type="button" data-m="columns">Columns</button><button type="button" data-m="lines">Lines</button></div></div>
       <div class="note" id="noteYears"></div>
       <div class="chart clickable"><canvas id="cYears"></canvas></div>
     </div>
@@ -389,6 +395,7 @@ function toFilms(rows) {
 
 /* ---------- state ---------- */
 let ALL = [], YEARS = [], charts = {}, sortKey = "date", sortAsc = false, listFilms = [];
+let yearsMode = "columns"; try { yearsMode = localStorage.getItem("yearsMode") === "lines" ? "lines" : "columns"; } catch (e) {}
 // Every filter lives here. "year"/"source" also have button rows; the rest are set by clicking charts.
 const F = { year: null, source: null, tag: null, rating: null, decade: null, month: null };
 const FILTER_LABEL = { year: "Year", source: "Source", tag: "Tag", rating: "Rating", decade: "Released", month: "Month" };
@@ -443,6 +450,24 @@ Chart.register({
     ctx.restore();
   },
 });
+// Labels each line with its year at the line's end (the focus year in text colour, the rest muted).
+Chart.register({
+  id: "lineEnds",
+  afterDatasetsDraw(chart, args, opts) {
+    if (!opts || !opts.years) return;
+    const { ctx } = chart;
+    ctx.save(); ctx.font = "11px " + css("--font"); ctx.textBaseline = "middle"; ctx.textAlign = "left";
+    const placed = [];
+    chart.data.datasets.forEach((ds, i) => {
+      const meta = chart.getDatasetMeta(i); const p = meta.data[ds.data.length - 1]; if (!p) return;
+      let y = p.y; while (placed.some((q) => Math.abs(q - y) < 12)) y += 12;   // nudge stacked labels apart
+      placed.push(y);
+      ctx.fillStyle = +ds.label === opts.focusYear ? css("--text") : css("--text-3");
+      ctx.fillText(ds.label, p.x + 6, y);
+    });
+    ctx.restore();
+  },
+});
 // Writes a text at the right-hand end of each horizontal bar row.
 Chart.register({
   id: "rowEnd",
@@ -486,7 +511,7 @@ function upsert(id, cfg) {
   charts[id] = new Chart(document.getElementById(id), cfg);
 }
 const barBase = (extra = {}) => ({ backgroundColor: css("--green-mark"), hoverBackgroundColor: css("--green"), borderRadius: 4, borderSkipped: "bottom", maxBarThickness: 24, categoryPercentage: 0.8, barPercentage: 0.9, ...extra });
-const timeTicks = (single) => ({ stepSize: 1, autoSkip: false, maxRotation: 0, callback: (v) => { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); return m % 12 === 0 ? String(m / 12) : (single ? MONTHS[m % 12] : ""); } });
+const timeTicks = (single) => ({ stepSize: 1, autoSkip: false, maxRotation: 0, callback(v) { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); const narrow = this.chart.width < 480; return m % 12 === 0 ? String(m / 12) : (single ? (narrow ? MONTHS[m % 12][0] : MONTHS[m % 12]) : ""); } });
 
 /* ---------- render ---------- */
 function render() {
@@ -538,16 +563,43 @@ function render() {
   ];
   $("#kpis").innerHTML = tiles.map((t) => `<div class="kpi"${t.bg ? ` style="background-image:${t.bg}"` : ""}>${t.spark || ""}<div class="l">${t.l}</div><div class="v${t.small ? " small" : ""}" title="${t.small ? t.v : ""}">${t.v}</div><div class="d">${t.d}</div></div>`).join("");
 
-  /* Films per year — every year, filtered by everything but year; the chosen year highlighted */
+  /* Films per year — every year, filtered by everything but year; the chosen year highlighted.
+     Columns: totals. Lines: cumulative by month, one line per year (green = chosen/current year, grays = the rest, older = darker). */
   const perYear = years.map((y) => noYear.filter((f) => f.date && f.date.getFullYear() === y).length);
-  upsert("cYears", {
-    type: "bar",
-    data: { labels: years.map(String), datasets: [barBase({ data: perYear, backgroundColor: years.map((y) => F.year == null || F.year === y ? css("--green-mark") : dim) })] },
-    options: { maintainAspectRatio: false, onClick: (e, els) => { if (els.length) toggleFilter("year", years[els[0].index]); },
-      scales: { x: { ...AXIS, grid: { display: false } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
-      plugins: { tooltip: { callbacks: { label: (c) => `${c.parsed.y} films` } } } },
-  });
-  $("#noteYears").textContent = (years.includes(cy) ? `${cy} is year-to-date (through ${fmtDate(now)}). ` : "") + "Click a bar to filter; click again to clear.";
+  const focusYear = F.year != null ? F.year : cy;
+  document.querySelectorAll("#yearsMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === yearsMode));
+  if (yearsMode === "columns") {
+    if (charts.cYears && charts.cYears.config.type !== "bar") { charts.cYears.destroy(); delete charts.cYears; }
+    upsert("cYears", {
+      type: "bar",
+      data: { labels: years.map(String), datasets: [barBase({ data: perYear, backgroundColor: years.map((y) => F.year == null || F.year === y ? css("--green-mark") : dim) })] },
+      options: { maintainAspectRatio: false, onClick: (e, els) => { if (els.length) toggleFilter("year", years[els[0].index]); },
+        scales: { x: { ...AXIS, grid: { display: false } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
+        plugins: { tooltip: { callbacks: { label: (c) => `${c.parsed.y} films` } } } },
+    });
+    $("#noteYears").textContent = (years.includes(cy) ? `${cy} is year-to-date (through ${fmtDate(now)}). ` : "") + "Click a bar to filter; click again to clear.";
+  } else {
+    if (charts.cYears && charts.cYears.config.type !== "line") { charts.cYears.destroy(); delete charts.cYears; }
+    const grays = ["#3a4551", "#46525f", "#55616e", "#66737f", "#7a8794", "#8e9ba8", "#a3afbb"];   // oldest → most recent
+    const others = years.filter((y) => y !== focusYear);
+    const gray = (y) => grays[Math.max(0, grays.length - others.length + others.indexOf(y))] || grays[0];
+    const series = years.map((y) => {
+      const upto = y === cy ? now.getMonth() : 11;
+      const data = []; let acc = 0;
+      for (let m = 0; m <= upto; m++) { acc += noYear.filter((f) => f.date && f.date.getFullYear() === y && f.date.getMonth() === m).length; data.push(acc); }
+      const focus = y === focusYear;
+      return { label: String(y), data, borderColor: focus ? css("--green-mark") : gray(y), borderWidth: focus ? 2.5 : 1.5, pointRadius: 0, pointHitRadius: 8, pointHoverRadius: 4, pointHoverBackgroundColor: focus ? css("--green") : gray(y), tension: 0.2, order: focus ? 0 : 1 };
+    });
+    upsert("cYears", {
+      type: "line",
+      data: { labels: MONTHS, datasets: series },
+      options: { maintainAspectRatio: false, interaction: { mode: "nearest", intersect: false }, layout: { padding: { right: 34 } },
+        onClick: (e, els) => { if (els.length) toggleFilter("year", years[els[0].datasetIndex]); },
+        scales: { x: { ...AXIS, grid: { display: false }, ticks: { ...AXIS.ticks, maxRotation: 0, callback(v, i) { return this.chart.width < 480 ? MONTHS[i][0] : MONTHS[i]; } } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
+        plugins: { tooltip: { callbacks: { title: (c) => `${c[0].dataset.label} · through ${MONTHS[c[0].dataIndex]}`, label: (c) => `${c.parsed.y} films` } }, lineEnds: { years, focusYear } } },
+    });
+    $("#noteYears").textContent = `Cumulative films by month, one line per year. ${focusYear} in green. Click a line to filter.`;
+  }
 
   /* Heatmap — filtered by everything but month; the chosen month outlined */
   const heatBase = filtered("month");
@@ -629,7 +681,7 @@ function render() {
     options: { maintainAspectRatio: false, interaction: { mode: "nearest", intersect: true }, layout: { padding: { top: 10, right: 12 } },
       onClick: (e, els) => { const d = els.length ? rdots[els[0].index] : null; if (d && d.f.url) window.open(d.f.url, "_blank", "noopener"); },
       scales: {
-        x: { ...AXIS, type: "linear", min: rMin - pad, max: rMax + pad, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 1, autoSkip: false, maxRotation: 0, callback: (v) => { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); return m % 12 === 0 ? String(m / 12) : MONTHS[m % 12]; } } },
+        x: { ...AXIS, type: "linear", min: rMin - pad, max: rMax + pad, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 1, autoSkip: false, maxRotation: 0, callback(v) { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); const narrow = this.chart.width < 480; return m % 12 === 0 ? String(m / 12) : (narrow ? MONTHS[m % 12][0] : MONTHS[m % 12]); } } },
         y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
       },
       plugins: { tooltip: { callbacks: { title: (c) => c[0].raw.f.title + (c[0].raw.f.year ? ` (${c[0].raw.f.year})` : ""), label: (c) => `${starStr(c.raw.f.rating)} ${RATING_MEANING[bucket(c.raw.f.rating)]} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}` } }, dotLabels: { labels: rdots.map((d) => shortTitle(d.f.title)) } } },
@@ -645,7 +697,8 @@ function render() {
   const ratedNoS = filtered("source").filter((f) => f.rating != null);
   const tagFilms = {};
   for (const f of ratedNoS) if (f.src) (tagFilms[f.src] = tagFilms[f.src] || []).push(f);
-  const svc = Object.entries(tagFilms).filter(([, fs]) => fs.length >= MIN_TAG_FILMS).sort((a, b) => b[1].length - a[1].length);
+  const isTheater = (t) => THEATER_VENUES.includes(t);
+  const svc = Object.entries(tagFilms).filter(([, fs]) => fs.length >= MIN_TAG_FILMS).sort((a, b) => (isTheater(b[0]) - isTheater(a[0])) || (b[1].length - a[1].length));   // theaters first, then by count
   const svcTags = svc.map(([t]) => t);
   const levels = [1, 2, 3, 4, 5];
   const avgOf = (fs) => fs.reduce((s, f) => s + f.rating, 0) / fs.length;
@@ -653,7 +706,7 @@ function render() {
   $("#cTagsWrap").style.height = Math.max(120, 30 * svc.length + 40) + "px";
   upsert("cTags", {
     type: "bar",
-    data: { labels: svc.map(([t]) => sourceLabel(t)), datasets: levels.map((lv) => ({
+    data: { labels: svc.map(([t]) => isTheater(t) && t !== "theater-other" ? `${sourceLabel(t)} · theater` : sourceLabel(t)), datasets: levels.map((lv) => ({
       label: `${lv}★`, data: svc.map(([, fs]) => 100 * fs.filter((f) => bucket(f.rating) === lv).length / fs.length),
       backgroundColor: svcTags.map((t) => rowOn(t) ? RATING_COLORS[lv] : hexA(RATING_COLORS[lv], 0.25)), hoverBackgroundColor: RATING_COLORS[lv],
       borderColor: css("--card"), borderWidth: { left: lv > 1 ? 2 : 0 }, borderSkipped: false, maxBarThickness: 18, raw: svc.map(([, fs]) => fs.filter((f) => bucket(f.rating) === lv).length),
@@ -723,14 +776,14 @@ Chart.register({
 
 // 12-point sparkline: previous year in the de-emphasis gray, the current year in the accent, both cumulative.
 function sparkline(cur, prev, title) {
-  const w = 96, h = 30, pad = 2, max = Math.max(1, ...cur, ...prev);
+  const w = 200, h = 60, pad = 3, max = Math.max(1, ...cur, ...prev);
   const pt = (v, i) => `${(pad + (i / 11) * (w - 2 * pad)).toFixed(1)},${(h - pad - (v / max) * (h - 2 * pad)).toFixed(1)}`;
   const path = (a) => a.map((v, i) => (i ? "L" : "M") + pt(v, i)).join(" ");
   const last = cur.length ? pt(cur.at(-1), cur.length - 1).split(",") : null;
-  return `<svg class="spark" viewBox="0 0 ${w} ${h}" width="${w}" height="${h}" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title>
-    <path d="${path(prev)}" fill="none" stroke="${css("--text-2")}" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round" opacity="0.7"/>
-    <path d="${path(cur)}" fill="none" stroke="${css("--green")}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/>
-    ${last ? `<circle cx="${last[0]}" cy="${last[1]}" r="2.5" fill="${css("--green")}" stroke="${css("--card")}" stroke-width="1.5"/>` : ""}</svg>`;
+  return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title>
+    <path d="${path(prev)}" fill="none" stroke="${css("--text-3")}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6" vector-effect="non-scaling-stroke"/>
+    <path d="${path(cur)}" fill="none" stroke="${css("--green-mark")}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    </svg>`;
 }
 
 function heatColor(n, max) {
@@ -802,6 +855,7 @@ function buildFilters() {
   if (extras.length) { mk("t", "all", "Any", tEnd, setT); extras.forEach(([t]) => mk("t", t, cap(tagLabel(t)), tEnd, setT)); }
   const taggedDates = ALL.filter((f) => f.tags.length && f.date).map((f) => f.date);
   if (taggedDates.length) { const a = taggedDates[0], b = taggedDates.at(-1); $("#sourceHint").textContent = `tags cover ${MONTHS[a.getMonth()]} ${a.getFullYear()} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`; }
+  document.querySelectorAll("#yearsMode button").forEach((b) => b.addEventListener("click", () => { yearsMode = b.dataset.m; try { localStorage.setItem("yearsMode", yearsMode); } catch (e) {} render(); }));
   $("#clearAll").addEventListener("click", () => { Object.keys(F).forEach((k) => (F[k] = null)); syncHash(); paintChips(); render(); });
   $("#heat").addEventListener("click", (e) => { const c = e.target.closest(".c[data-m]"); if (!c) return; const y = +c.dataset.y, m = +c.dataset.m; if (F.month === m && F.year === y) { F.month = null; } else { F.year = y; F.month = m; } syncHash(); paintChips(); render(); });
 }
