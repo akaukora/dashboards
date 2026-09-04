@@ -90,9 +90,11 @@
 
   /* ---------- posters ---------- */
   .posters { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 10px; }
+  .posters.wide { grid-template-columns: repeat(4, minmax(0, 1fr)); }
   .poster { min-width: 0; }
   .poster a { display: block; }
   .poster img, .poster .ph { width: 100%; aspect-ratio: 2/3; object-fit: cover; border-radius: 6px; background: var(--card-2); display: block; border: 1px solid var(--line-2); }
+  .posters.wide .poster img, .posters.wide .poster .ph { aspect-ratio: 16/9; }   /* used when most images are Letterboxd's 16:9 stills rather than posters */
   .poster .ph { display: flex; align-items: flex-end; text-align: left; padding: 10px; color: var(--text); font-size: 13px; font-weight: 600; line-height: 1.25; background: linear-gradient(160deg, #2c3440, #1a2029); overflow: hidden; }
   .poster .t { font-size: 12px; margin-top: 6px; color: var(--text); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .poster .s { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
@@ -167,10 +169,12 @@
     .kpis { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .grid { grid-template-columns: 1fr; }
     .posters { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+    .posters.wide { grid-template-columns: repeat(3, minmax(0, 1fr)); }
     header h1 { font-size: 22px; }
   }
   @media (max-width: 520px) {
     .posters { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+    .posters.wide { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .heat { grid-template-columns: 36px repeat(12, minmax(0, 1fr)); gap: 2px; }
   }
 </style>
@@ -249,7 +253,7 @@
     <div class="card">
       <h2>Recent ratings</h2>
       <div class="note" id="noteRecentRatings"></div>
-      <div class="chart tall"><canvas id="cRecent"></canvas></div>
+      <div class="chart"><canvas id="cRecent"></canvas></div>
     </div>
   </section>
 
@@ -388,16 +392,19 @@ function parseDate(str) {
 function toFilms(rows) {
   const hdr = (rows[0] || []).map((h) => h.trim().toLowerCase().replace(/^﻿/, ""));
   const col = (...names) => { for (const n of names) { const i = hdr.indexOf(n); if (i >= 0) return i; } return -1; };
-  const iT = col("title", "name"), iY = col("film_year", "year", "release year"), iD = col("watched_date", "watched date", "date"), iR = col("rating", "my rating"), iTags = col("tags", "tag"), iRev = col("review"), iL = col("link", "letterboxd", "url", "letterboxd uri"), iP = col("poster");
+  const iT = col("title", "name"), iY = col("film_year", "year", "release year"), iD = col("watched_date", "watched date", "date"), iR = col("rating", "my rating"), iTags = col("tags", "tag"), iRev = col("review"), iL = col("link", "letterboxd", "url", "letterboxd uri"), iP = col("poster", "poster_url", "poster url", "image"), iRw = col("rewatch");
   if (iT < 0) throw new Error(`No "title" column found — the header row is: ${hdr.join(", ")}`);
   const films = [];
   for (const r of rows.slice(1)) {
-    const title = (r[iT] || "").trim(); if (!title) continue;
-    const year = iY >= 0 && /^\d{4}/.test(r[iY] || "") ? parseInt(r[iY], 10) : null;
+    let title = (r[iT] || "").trim(); if (!title) continue;
+    let year = iY >= 0 && /^\d{4}/.test(r[iY] || "") ? parseInt(r[iY], 10) : null;
+    const rssStyle = /^(.*?),\s*(\d{4})\s*-\s*[★½]*\s*$/.exec(title);      // "Title, 2024 - ★★★★" as the RSS feed writes it
+    if (rssStyle) { title = rssStyle[1].trim(); year = year ?? +rssStyle[2]; }
+    else { const m = /^(.*?)\s*-\s*[★½]+\s*$/.exec(title); if (m) title = m[1].trim(); }
     const rating = iR >= 0 && r[iR] && !isNaN(parseFloat(r[iR])) ? parseFloat(r[iR]) : null;
     const tags = iTags >= 0 ? (r[iTags] || "").split(",").map((t) => t.trim().toLowerCase()).filter(Boolean) : [];
     const url = iL >= 0 && (r[iL] || "").trim().startsWith("http") ? r[iL].trim() : null;
-    films.push({ title, year, rating, date: iD >= 0 ? parseDate(r[iD]) : null, tags, ...classify(tags), review: iRev >= 0 ? (r[iRev] || "").trim() : "", url, poster: iP >= 0 && (r[iP] || "").trim() ? r[iP].trim() : null });
+    films.push({ title, year, rating, date: iD >= 0 ? parseDate(r[iD]) : null, tags, ...classify(tags), review: iRev >= 0 ? (r[iRev] || "").trim() : "", rewatch: iRw >= 0 && /^(yes|true|1)$/i.test((r[iRw] || "").trim()), url, poster: iP >= 0 && (r[iP] || "").trim() ? r[iP].trim() : null });
   }
   films.sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0));
   return films;
@@ -566,7 +573,7 @@ function render() {
     { l: F.year == null ? "Films logged" : `Films logged in ${F.year}`, v: films.length, d: `${distinct} distinct titles · ${films.length - distinct} rewatch${films.length - distinct === 1 ? "" : "es"}` },
     tile2,
     { l: "Average rating", v: avg == null ? "—" : avg.toFixed(2), d: `${rated.length} rated · ${good} good · ${ok} ok · ${rated.length - good - ok} below`,
-      bg: rated.length ? split([[Math.round(100 * good / rated.length), hexA(CLASS_COLORS.good, 0.22)], [Math.round(100 * ok / rated.length), hexA(CLASS_COLORS.ok, 0.22)], [100, hexA(CLASS_COLORS.bad, 0.22)]]) : null },
+      bg: rated.length ? split([[Math.round(100 * (rated.length - good - ok) / rated.length), hexA(CLASS_COLORS.bad, 0.22)], [Math.round(100 * ok / rated.length), hexA(CLASS_COLORS.ok, 0.22)], [100, hexA(CLASS_COLORS.good, 0.22)]]) : null },
     { l: "In a theater", v: tagged.length ? Math.round(100 * theater / tagged.length) + "%" : "—", d: tagged.length ? `${theater} theater · ${home} home${other ? ` · ${other} other` : ""} · of ${tagged.length} tagged films` : "no tagged entries in this selection",
       bg: tagged.length ? split([[Math.round(100 * theater / tagged.length), hexA(css("--green-mark"), 0.22)], [100, "rgba(255,255,255,0.05)"]]) : null },
     { l: "Last watched", v: last ? esc(last.title) : "—", small: true, d: last ? `${fmtDate(last.date)}${last.rating != null ? " · " + starStr(last.rating) : ""}${last.tags.length ? " · " + esc(tagsText(last)) : ""}` : "" },
@@ -673,7 +680,7 @@ function render() {
         x: { ...AXIS, type: "linear", min: xMin, max: xMax, grid: { display: false }, ticks: { ...AXIS.ticks, ...timeTicks(F.year != null) } },
         y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
       },
-      plugins: { tooltip: { filter: (c) => c.datasetIndex === 0, callbacks: { title: (c) => c[0].raw.f.title, label: (c) => `${starStr(c.raw.f.rating)} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}`, afterBody: (c) => snippet(c[0].raw.f.review) } }, yearLabels: { pts: stepPts } } },
+      plugins: { tooltip: { filter: (c) => c.datasetIndex === 0, callbacks: { title: (c) => c[0].raw.f.title, label: (c) => `${starStr(c.raw.f.rating)} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}`, afterBody: (c) => snippet(c[0].raw.f.review) } } } },
   });
   $("#trendLegend").innerHTML = `<span><i style="background:${CLASS_COLORS.good}"></i>4–5★ good</span><span><i style="background:${CLASS_COLORS.ok}"></i>3★ ok</span><span><i style="background:${CLASS_COLORS.bad}"></i>1–2★ below</span><span><i class="line" style="background:${AVG_LINE}"></i>Year average</span>`;
   $("#noteTrend").textContent = "Each dot is one film (click to open it on Letterboxd); the line is that year's average rating.";
@@ -684,7 +691,6 @@ function render() {
   const seen = {}; rdots.forEach((d) => { const k = d.x.toFixed(3) + "|" + d.y; seen[k] = (seen[k] || 0) + 1; if (seen[k] > 1) d.y += (seen[k] % 2 ? 1 : -1) * 0.18 * Math.ceil((seen[k] - 1) / 2); });
   const rMin = rdots.length ? Math.min(...rdots.map((d) => d.x)) : monthIndex(now), rMax = rdots.length ? Math.max(...rdots.map((d) => d.x)) : monthIndex(now) + 1;
   const pad = Math.max(0.4, (rMax - rMin) * 0.08);
-  const shortTitle = (t) => (t.length > 26 ? t.slice(0, 25).trimEnd() + "…" : t);
   upsert("cRecent", {
     type: "scatter",
     data: { datasets: [{ data: rdots, backgroundColor: rdots.map((d) => CLASS_COLORS[classOf(d.f.rating)]), borderColor: css("--card"), borderWidth: 2, pointRadius: 6, pointHoverRadius: 8 }] },
@@ -694,13 +700,16 @@ function render() {
         x: { ...AXIS, type: "linear", min: rMin - pad, max: rMax + pad, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 1, autoSkip: false, maxRotation: 0, callback(v) { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); const label = this.chart.width < 480 ? MONTHS[m % 12][0] : MONTHS[m % 12]; return m % 12 === 0 ? [label, String(m / 12)] : label; } } },
         y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
       },
-      plugins: { tooltip: { callbacks: { title: (c) => c[0].raw.f.title + (c[0].raw.f.year ? ` (${c[0].raw.f.year})` : ""), label: (c) => `${starStr(c.raw.f.rating)} ${RATING_MEANING[bucket(c.raw.f.rating)]} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}`, afterBody: (c) => snippet(c[0].raw.f.review) } }, dotLabels: { labels: rdots.map((d) => shortTitle(d.f.title)) } } },
+      plugins: { tooltip: { callbacks: { title: (c) => c[0].raw.f.title + (c[0].raw.f.year ? ` (${c[0].raw.f.year})` : ""), label: (c) => `${starStr(c.raw.f.rating)} ${RATING_MEANING[bucket(c.raw.f.rating)]} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}`, afterBody: (c) => snippet(c[0].raw.f.review) } } } },
   });
-  $("#noteRecentRatings").textContent = recentRated.length ? `The last ${recentRated.length} rated films, ${fmtDate(recentRated[0].date)} – ${fmtDate(recentRated.at(-1).date)}. Labels are skipped where they would overlap; hover for the rest, click to open.` : "No rated films in this selection.";
+  $("#noteRecentRatings").textContent = recentRated.length ? `The last ${recentRated.length} rated films, ${fmtDate(recentRated[0].date)} – ${fmtDate(recentRated.at(-1).date)}. Hover for the film, click to open it.` : "No rated films in this selection.";
 
   /* Recent watches */
   const recent = films.filter((f) => f.date).slice(-RECENT_COUNT).reverse();
-  $("#posters").innerHTML = recent.map((f) => `<div class="poster">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">` : ""}${f.poster ? `<img loading="lazy" src="${esc(f.poster)}" alt="${esc(f.title)} poster">` : `<div class="ph">${esc(f.title)}</div>`}${f.url ? "</a>" : ""}<div class="t" title="${esc(f.title)}">${esc(f.title)}${f.year ? ` <span style="color:var(--text-3)">${f.year}</span>` : ""}</div><div class="s"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating) || "&nbsp;"}</span></div><div class="s">${fmtDate(f.date)}${f.src ? ` · ${esc(sourceLabel(f.src))}` : ""}</div></div>`).join("");
+  $("#posters").innerHTML = recent.map((f) => `<div class="poster">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">` : ""}${f.poster ? `<img loading="lazy" src="${esc(f.poster)}" alt="${esc(f.title)}" onerror="this.outerHTML='<div class=&quot;ph&quot;>${esc(f.title).replace(/'/g, "&#39;")}</div>'">` : `<div class="ph">${esc(f.title)}</div>`}${f.url ? "</a>" : ""}<div class="t" title="${esc(f.title)}">${esc(f.title)}${f.year ? ` <span style="color:var(--text-3)">${f.year}</span>` : ""}</div><div class="s"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating) || "&nbsp;"}</span></div><div class="s">${fmtDate(f.date)}${f.src ? ` · ${esc(sourceLabel(f.src))}` : ""}</div></div>`).join("");
+  // Letterboxd image URLs carry their crop size (…-0-600-0-900-crop = portrait poster, …-1200-1200-675-675-crop = 16:9 still): pick the tile shape that fits most of them.
+  const landscape = recent.filter((f) => { const m = f.poster && /-(\d+)-(\d+)-(\d+)-(\d+)-crop/.exec(f.poster); return m && +m[2] > +m[4]; }).length;
+  $("#posters").classList.toggle("wide", landscape > recent.filter((f) => f.poster).length / 2);
   $("#noteRecent").textContent = recent.length ? `Latest ${recent.length} entries${active.length ? " in this selection" : ""}.` : "Nothing in this selection.";
 
   /* Latest reviews — the most recent written reviews in the selection */
