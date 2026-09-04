@@ -139,15 +139,21 @@ def fetch_poster_from_film_page(slug):
                 img = data.get("image")
                 if isinstance(img, str) and is_poster(img):
                     return img
-        resp = requests.get(f"https://letterboxd.com/ajax/poster/film/{slug}/std/500x750/", headers=HEADERS, timeout=15)
-        if resp.status_code == 200:
+        else:
+            print(f"  film page {slug}: HTTP {resp.status_code}")
+        for size in ("500x750", "230x345"):
+            resp = requests.get(f"https://letterboxd.com/ajax/poster/film/{slug}/std/{size}/", headers=HEADERS, timeout=15)
+            if resp.status_code != 200:
+                print(f"  poster endpoint {slug} {size}: HTTP {resp.status_code}")
+                continue
             soup = BeautifulSoup(resp.text, "html.parser")
             img = soup.find("img")
             src = (img.get("src") or img.get("data-src") or "") if img else ""
             if is_poster(src) and "empty-poster" not in src:
                 return src
-    except requests.RequestException:
-        pass
+        print(f"  no poster found for {slug}")
+    except requests.RequestException as exc:
+        print(f"  poster lookup {slug}: {exc}")
     return ""
 
 
@@ -181,6 +187,8 @@ def fetch_rss():
     entries = []
     for e in feed.entries:
         link = e.link
+        if "/film/" not in link:            # the feed also carries lists ("Watched in 2019") — skip them
+            continue
         entries.append({
             "slug": slug_of(link),
             "title": clean_title(e.get("title"), getattr(e, "letterboxd_filmtitle", None)),
@@ -247,10 +255,17 @@ def load_existing(path=OUTPUT_PATH):
         with open(path, newline="", encoding="utf-8-sig") as f:
             for row in csv.DictReader(f):
                 row = {k: (v or "").strip() for k, v in row.items() if k}
+                link = row.get("link", "")
+                if "/list/" in link or (link and "letterboxd.com" in link and "/film/" not in link):
+                    continue                                                    # not a diary entry
                 row["title"] = clean_title(row.get("title", ""), None)          # repairs "Title, 2025 - ★★★" left by earlier runs
-                existing[f"{slug_of(row.get('link', ''))}_{row.get('watched_date', '')}"] = row
+                existing[f"{slug_of(link)}_{row.get('watched_date', '')}"] = row
     except FileNotFoundError:
         pass
+    # an undated row whose link also belongs to a dated row is the same viewing, recorded twice
+    dated_links = {r["link"] for k, r in existing.items() if r.get("watched_date") and r.get("link")}
+    for k in [k for k, r in existing.items() if not r.get("watched_date") and r.get("link") in dated_links]:
+        del existing[k]
     return existing
 
 
@@ -260,6 +275,10 @@ def merge_rows(entries, tag_map, existing, entry_tags=None):
     entry_tags = entry_tags or {}
     for e in entries:
         key = f"{e['slug']}_{e['watched_date']}"
+        if key not in merged:
+            undated = next((k for k, r in merged.items() if not r.get("watched_date") and r.get("link") == e["link"]), None)
+            if undated:                                   # same viewing, stored without a date — fill it in rather than duplicate it
+                merged[key] = merged.pop(undated)
         row = dict(merged.get(key, {}))
         for field in ("title", "film_year", "watched_date", "rating", "rewatch", "review", "link", "tmdb_id"):
             if e.get(field):
