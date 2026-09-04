@@ -120,6 +120,18 @@
   .chips { display: flex; flex-wrap: wrap; gap: 6px; margin-bottom: 10px; }
   .chips .chip { padding: 3px 10px; font-size: 12px; }
 
+  /* ---------- marimekko ---------- */
+  .mekko { position: relative; height: 340px; }
+  .mekko[hidden] { display: none; }
+  .mekko svg { display: block; width: 100%; height: 100%; overflow: visible; }
+  .mekko .col { cursor: pointer; }
+  .mekko .col rect { transition: opacity .15s; }
+  .mekko .col.dim rect { opacity: 0.3; }
+  .mekko .col:hover rect { filter: brightness(1.15); }
+  .mekko text { font-family: var(--font); pointer-events: none; }
+  .tip { position: fixed; z-index: 20; background: #0b0e11; color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none; display: none; max-width: 260px; box-shadow: 0 4px 16px rgba(0,0,0,.4); line-height: 1.5; }
+  .tip .m { color: var(--text-2); }
+
   /* ---------- reviews ---------- */
   .reviews { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 12px; }
   .rev { background: var(--card-2); border-radius: 8px; padding: 12px 14px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
@@ -269,10 +281,11 @@
 
   <section class="grid one">
     <div class="card">
-      <h2>Ratings by service</h2>
+      <div class="head"><h2>Ratings by service</h2><div class="seg" id="svcMode"><button type="button" data-m="bars">Bars</button><button type="button" data-m="mekko">Mekko</button></div></div>
       <div class="note" id="noteTags"></div>
       <div class="legend multi" id="tagLegend"></div>
       <div class="chart clickable" id="cTagsWrap"><canvas id="cTags"></canvas></div>
+      <div class="mekko" id="mekko" hidden></div>
     </div>
   </section>
 
@@ -415,6 +428,8 @@ function toFilms(rows) {
 /* ---------- state ---------- */
 let ALL = [], YEARS = [], charts = {}, sortKey = "date", sortAsc = false, listFilms = [];
 let yearsMode = "columns"; try { yearsMode = localStorage.getItem("yearsMode") === "lines" ? "lines" : "columns"; } catch (e) {}
+let svcMode = "bars"; try { svcMode = localStorage.getItem("svcMode") === "mekko" ? "mekko" : "bars"; } catch (e) {}
+let mekkoData = null;   // last data drawn, so a resize can redraw without a full render
 // Every filter lives here. "year"/"source" also have button rows; the rest are set by clicking charts.
 const F = { year: null, source: null, tag: null, rating: null, decade: null, month: null };
 const FILTER_LABEL = { year: "Year", source: "Source", tag: "Tag", rating: "Rating", decade: "Released", month: "Month" };
@@ -759,8 +774,15 @@ function render() {
     charts.cTags.$wired = true;
   }
   $("#tagLegend").innerHTML = ratingLegendHTML() + `<span style="margin-left:auto;color:var(--text-3)">avg · films</span>`;
-  $("#noteTags").textContent = svc.length ? `Each film counts once, under the service or venue it was watched through (${MIN_TAG_FILMS}+ rated films per row). Click a row to filter. ${tagCoverage()}` : `No tagged entries in this selection. ${tagCoverage()}`;
-  $("#cTagsWrap").style.display = svc.length ? "" : "none";
+  document.querySelectorAll("#svcMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === svcMode));
+  const mekko = svcMode === "mekko";
+  $("#noteTags").textContent = !svc.length ? `No tagged entries in this selection. ${tagCoverage()}`
+    : mekko ? `Column width is the service's share of your rated films, column height how they split by rating — so every block's area is a number of films (${MIN_TAG_FILMS}+ rated films per service). Click a column to filter. ${tagCoverage()}`
+    : `Each film counts once, under the service or venue it was watched through (${MIN_TAG_FILMS}+ rated films per row). Click a row to filter. ${tagCoverage()}`;
+  $("#cTagsWrap").style.display = svc.length && !mekko ? "" : "none";
+  $("#mekko").hidden = !(svc.length && mekko);
+  mekkoData = { svc, rowOn, avgOf };
+  if (mekko && svc.length) drawMekko();
   $("#tagLegend").style.display = svc.length ? "" : "none";
 
   /* Release decade — filtered by everything but decade; the chosen decade highlighted */
@@ -822,6 +844,52 @@ function snippet(text) {
   const words = text.split(/\s+/), lines = [""];
   for (const w of words) { if ((lines.at(-1) + " " + w).trim().length > 48) { if (lines.length === 4) { lines[3] = lines[3].replace(/\s?\S*$/, "") + "…"; return ["", ...lines]; } lines.push(w); } else lines[lines.length - 1] = (lines.at(-1) + " " + w).trim(); }
   return ["", ...lines];
+}
+
+/* ---------- Marimekko view of Ratings by service: width = share of films, height = rating mix ---------- */
+const tip = document.createElement("div"); tip.className = "tip"; document.body.appendChild(tip);
+function drawMekko() {
+  const box = $("#mekko"), { svc, rowOn, avgOf } = mekkoData;
+  const W = box.clientWidth || 800, H = box.clientHeight || 340;
+  const narrow = W < 520, top = 22, bottom = narrow ? 34 : 46, gap = 3, ph = H - top - bottom;
+  const total = svc.reduce((s, [, fs]) => s + fs.length, 0);
+  let x = 0, out = "";
+  const ns = "http://www.w3.org/2000/svg";
+  svc.forEach(([t, fs], i) => {
+    const w = Math.max(2, W * fs.length / total - gap), n = fs.length;
+    const counts = [1, 2, 3, 4, 5].map((lv) => fs.filter((f) => bucket(f.rating) === lv).length);
+    const good = Math.round(100 * (counts[3] + counts[4]) / n);
+    let acc = 0, rects = "";
+    counts.forEach((c, k) => {                              // 1★ at the bottom, 5★ at the top
+      const h = ph * c / n; const y = top + ph - acc - h; acc += h;
+      if (c) rects += `<rect x="${x.toFixed(1)}" y="${y.toFixed(1)}" width="${w.toFixed(1)}" height="${Math.max(0, h - 2).toFixed(1)}" rx="2" fill="${RATING_COLORS[k + 1]}"/>`;
+    });
+    const name = sourceLabel(t), cx = x + w / 2;
+    const label = w > 64 ? name : w > 36 ? name.slice(0, 5) + "…" : "";
+    out += `<g class="col${rowOn(t) ? "" : " dim"}" data-i="${i}">
+      <rect x="${x.toFixed(1)}" y="${top}" width="${w.toFixed(1)}" height="${ph}" fill="transparent"/>${rects}
+      ${w > 44 ? `<text x="${cx.toFixed(1)}" y="${top - 8}" text-anchor="middle" font-size="11" fill="${css("--text-2")}">${good}% good</text>` : ""}
+      ${label ? `<text x="${cx.toFixed(1)}" y="${top + ph + 16}" text-anchor="middle" font-size="12" fill="${css("--text-2")}">${esc(label)}</text>` : ""}
+      ${!narrow && w > 30 ? `<text x="${cx.toFixed(1)}" y="${top + ph + 32}" text-anchor="middle" font-size="11" fill="${css("--text-3")}">${n}${w > 76 ? ` · ${avgOf(fs).toFixed(2)}★` : ""}</text>` : ""}
+    </g>`;
+    x += w + gap;
+  });
+  box.innerHTML = `<svg xmlns="${ns}" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">${out}</svg>`;
+  box.querySelectorAll(".col").forEach((g) => {
+    const [t, fs] = svc[+g.dataset.i];
+    g.addEventListener("click", () => toggleFilter("source", t));
+    g.addEventListener("mousemove", (e) => {
+      const counts = [5, 4, 3, 2, 1].map((lv) => [lv, fs.filter((f) => bucket(f.rating) === lv).length]).filter(([, c]) => c);
+      const venues = {}; fs.forEach((f) => { if (f.venueName) venues[f.venueName] = (venues[f.venueName] || 0) + 1; });
+      const v = Object.entries(venues).sort((a, b) => b[1] - a[1]).map(([k, c]) => `${cap(k)} ${c}`).join(", ");
+      tip.innerHTML = `<b>${esc(sourceLabel(t))}</b> <span class="m">· ${fs.length} rated films · ${Math.round(100 * fs.length / total)}% of all · avg ${avgOf(fs).toFixed(2)}★</span><br>${counts.map(([lv, c]) => `<span style="color:${RATING_COLORS[lv]}">●</span> ${lv}★ ${RATING_MEANING[lv]}: ${c} (${Math.round(100 * c / fs.length)}%)`).join("<br>")}${v ? `<br><span class="m">Venues: ${esc(v)}</span>` : ""}<br><span class="m">Click to filter</span>`;
+      tip.style.display = "block";
+      const tw = tip.offsetWidth, th = tip.offsetHeight;
+      tip.style.left = Math.min(window.innerWidth - tw - 8, e.clientX + 12) + "px";
+      tip.style.top = (e.clientY - th - 12 < 0 ? e.clientY + 16 : e.clientY - th - 12) + "px";
+    });
+    g.addEventListener("mouseleave", () => { tip.style.display = "none"; });
+  });
 }
 
 function heatColor(n, max) {
@@ -896,6 +964,8 @@ function buildFilters() {
   const taggedDates = ALL.filter((f) => f.tags.length && f.date).map((f) => f.date);
   if (taggedDates.length) { const a = taggedDates[0], b = taggedDates.at(-1); $("#sourceHint").textContent = `tagged entries: ${MONTHS[a.getMonth()]} ${a.getFullYear()} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`; $("#sourceHint").title = tagCoverage(); }
   document.querySelectorAll("#yearsMode button").forEach((b) => b.addEventListener("click", () => { yearsMode = b.dataset.m; try { localStorage.setItem("yearsMode", yearsMode); } catch (e) {} render(); }));
+  document.querySelectorAll("#svcMode button").forEach((b) => b.addEventListener("click", () => { svcMode = b.dataset.m; try { localStorage.setItem("svcMode", svcMode); } catch (e) {} render(); }));
+  let mekkoResize; window.addEventListener("resize", () => { clearTimeout(mekkoResize); mekkoResize = setTimeout(() => { if (svcMode === "mekko" && mekkoData) drawMekko(); }, 150); });
   $("#clearAll").addEventListener("click", () => { Object.keys(F).forEach((k) => (F[k] = null)); syncHash(); paintChips(); render(); });
   $("#heat").addEventListener("click", (e) => { const c = e.target.closest(".c[data-m]"); if (!c) return; const y = +c.dataset.y, m = +c.dataset.m; if (F.month === m && F.year === y) { F.month = null; } else { F.year = y; F.month = m; } syncHash(); paintChips(); render(); });
 }
