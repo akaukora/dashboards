@@ -61,7 +61,7 @@
   .kpi .d .down { color: var(--orange); }
   .kpi { position: relative; overflow: hidden; }
   .kpi > div { position: relative; }
-  .kpi .spark { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 58%; opacity: 0.55; pointer-events: none; }
+  .kpi .spark { position: absolute; left: 0; right: 0; bottom: 0; width: 100%; height: 58%; pointer-events: none; }
 
   /* ---------- cards / grid ---------- */
   .grid { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 14px; margin-bottom: 14px; }
@@ -706,7 +706,7 @@ function render() {
 
   /* Recent watches */
   const recent = films.filter((f) => f.date).slice(-RECENT_COUNT).reverse();
-  $("#posters").innerHTML = recent.map((f) => `<div class="poster">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">` : ""}${f.poster ? `<img loading="lazy" src="${esc(f.poster)}" alt="${esc(f.title)}" onerror="this.outerHTML='<div class=&quot;ph&quot;>${esc(f.title).replace(/'/g, "&#39;")}</div>'">` : `<div class="ph">${esc(f.title)}</div>`}${f.url ? "</a>" : ""}<div class="t" title="${esc(f.title)}">${esc(f.title)}${f.year ? ` <span style="color:var(--text-3)">${f.year}</span>` : ""}</div><div class="s"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating) || "&nbsp;"}</span></div><div class="s">${fmtDate(f.date)}${f.src ? ` · ${esc(sourceLabel(f.src))}` : ""}</div></div>`).join("");
+  $("#posters").innerHTML = recent.map((f) => `<div class="poster">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">` : ""}${f.poster ? `<img loading="lazy" referrerpolicy="no-referrer" src="${esc(f.poster)}" alt="${esc(f.title)}" onerror="this.outerHTML='<div class=&quot;ph&quot;>${esc(f.title).replace(/'/g, "&#39;")}</div>'">` : `<div class="ph">${esc(f.title)}</div>`}${f.url ? "</a>" : ""}<div class="t" title="${esc(f.title)}">${esc(f.title)}${f.year ? ` <span style="color:var(--text-3)">${f.year}</span>` : ""}</div><div class="s"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating) || "&nbsp;"}</span></div><div class="s">${fmtDate(f.date)}${f.src ? ` · ${esc(sourceLabel(f.src))}` : ""}</div></div>`).join("");
   // Letterboxd image URLs carry their crop size (…-0-600-0-900-crop = portrait poster, …-1200-1200-675-675-crop = 16:9 still): pick the tile shape that fits most of them.
   const landscape = recent.filter((f) => { const m = f.poster && /-(\d+)-(\d+)-(\d+)-(\d+)-crop/.exec(f.poster); return m && +m[2] > +m[4]; }).length;
   $("#posters").classList.toggle("wide", landscape > recent.filter((f) => f.poster).length / 2);
@@ -808,8 +808,8 @@ function sparkline(cur, prev, title) {
   const path = (a) => a.map((v, i) => (i ? "L" : "M") + pt(v, i)).join(" ");
   const last = cur.length ? pt(cur.at(-1), cur.length - 1).split(",") : null;
   return `<svg class="spark" viewBox="0 0 ${w} ${h}" preserveAspectRatio="none" role="img" aria-label="${esc(title)}"><title>${esc(title)}</title>
-    <path d="${path(prev)}" fill="none" stroke="${css("--text-3")}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" opacity="0.6" vector-effect="non-scaling-stroke"/>
-    <path d="${path(cur)}" fill="none" stroke="${css("--green-mark")}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="${path(prev)}" fill="none" stroke="${hexA(CLASS_COLORS.ok, 0.28)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
+    <path d="${path(cur)}" fill="none" stroke="${hexA(CLASS_COLORS.good, 0.38)}" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" vector-effect="non-scaling-stroke"/>
     </svg>`;
 }
 
