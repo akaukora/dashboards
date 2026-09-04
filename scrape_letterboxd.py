@@ -9,8 +9,9 @@ what is already there. Rules of the merge:
     posters survive a re-run);
   * the film title comes from <letterboxd:filmTitle>, never from the item title
     (which is "Title, 2026 - ★★★★★");
-  * tags come from the diary tag pages; if that scrape comes back empty the run is
-    ABORTED rather than writing a file with no tags;
+  * tags for each RSS entry are read from the entry's own diary page (the tag links
+    on it), with the per-tag diary listings as a second source; if neither yields a
+    tag the stored tags are kept, never blanked;
   * posters come from the RSS enclosure, else the film page's JSON-LD poster,
     else Letterboxd's poster endpoint — never og:image, which is a 16:9 still;
   * the previous CSV is copied to films.csv.bak before writing.
@@ -30,7 +31,12 @@ from bs4 import BeautifulSoup
 USERNAME = "farbeach"
 RSS_URL = f"https://letterboxd.com/{USERNAME}/rss/"
 OUTPUT_PATH = "films-watched/films.csv"
-HEADERS = {"User-Agent": "Mozilla/5.0 (compatible; PersonalDashboardBot/1.0)"}
+# A browser-like User-Agent: Letterboxd answers bot-looking agents with 403 on some pages.
+HEADERS = {
+    "User-Agent": "Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/128.0 Safari/537.36",
+    "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8",
+    "Accept-Language": "en-GB,en;q=0.9",
+}
 
 # Tag slugs as they appear in letterboxd.com/<user>/tag/<slug>/diary/ and the
 # name to store in the CSV (the dashboard's tag model uses the stored names).
@@ -55,7 +61,25 @@ STILL_MARKERS = ("/sm/upload/", "-675-675-crop")   # 16:9 share images, not post
 # ---------------------------------------------------------------- helpers
 
 def slug_of(link):
-    return link.strip().rstrip("/").split("/film/")[-1].split("/")[0]
+    """Film slug from a Letterboxd URL. Short links (boxd.it/…) have no slug, so the whole
+    link is used as the key — otherwise every short link would collide on the same key."""
+    link = (link or "").strip()
+    if "/film/" not in link:
+        return link.rstrip("/").rsplit("/", 1)[-1] if link else ""
+    return link.rstrip("/").split("/film/")[-1].split("/")[0]
+
+
+def resolve_short_link(link):
+    """boxd.it/… → the full letterboxd.com/…/film/<slug>/ URL it redirects to (or the input)."""
+    if "/film/" in link or "boxd.it" not in link:
+        return link
+    try:
+        resp = requests.get(link, headers=HEADERS, timeout=15, allow_redirects=True)
+        if resp.status_code == 200 and "/film/" in resp.url:
+            return resp.url
+    except requests.RequestException:
+        pass
+    return link
 
 
 def is_poster(url):
@@ -127,6 +151,29 @@ def fetch_poster_from_film_page(slug):
     return ""
 
 
+def tag_name(slug_tag):
+    """CSV name for a tag slug: the TAGS map, else the slug with hyphens as spaces."""
+    return TAGS.get(slug_tag, slug_tag.replace("-", " "))
+
+
+def fetch_entry_tags(link):
+    """Tags of one diary entry, read from its own page: links of the form /<user>/tag/<slug>/…"""
+    try:
+        resp = requests.get(link, headers=HEADERS, timeout=15)
+    except requests.RequestException:
+        return None
+    if resp.status_code != 200:
+        print(f"  entry page {link} → HTTP {resp.status_code}")
+        return None
+    soup = BeautifulSoup(resp.text, "html.parser")
+    found = []
+    for a in soup.select(f'a[href*="/{USERNAME}/tag/"]'):
+        m = re.search(rf"/{re.escape(USERNAME)}/tag/([^/]+)/", a.get("href", ""))
+        if m and tag_name(m.group(1)) not in found:
+            found.append(tag_name(m.group(1)))
+    return found
+
+
 # ---------------------------------------------------------------- sources
 
 def fetch_rss():
@@ -152,18 +199,28 @@ def fetch_rss():
 def scrape_tag_pages():
     """{ '<slug>_<YYYY-MM-DD>': [tag name, …] } from the per-tag diary pages."""
     tag_map = {}
+    diagnosed = False
     for slug_tag, name in TAGS.items():
         page = 1
         while True:
             url = f"https://letterboxd.com/{USERNAME}/tag/{slug_tag}/diary/" + ("" if page == 1 else f"page/{page}/")
-            resp = requests.get(url, headers=HEADERS, timeout=15)
+            try:
+                resp = requests.get(url, headers=HEADERS, timeout=15)
+            except requests.RequestException as exc:
+                print(f"  {url} → {exc}")
+                break
             if resp.status_code != 200:
-                if page == 1 and resp.status_code not in (404,):
-                    print(f"  warning: {url} → HTTP {resp.status_code}")
+                if page == 1:
+                    print(f"  tag page {slug_tag}: HTTP {resp.status_code}")
                 break
             soup = BeautifulSoup(resp.text, "html.parser")
             rows = soup.select("tr.diary-entry-row")
             if not rows:
+                if page == 1 and not diagnosed:
+                    diagnosed = True
+                    table = soup.select_one("table, section#diary-table, .diary-table")
+                    print(f"  tag page {slug_tag}: 200 but no tr.diary-entry-row — markup sample: "
+                          f"{(str(table)[:600] if table else resp.text[:300]).replace(chr(10), ' ')}")
                 break
             for row in rows:
                 item = row.select_one("[data-item-slug], [data-film-slug]")
@@ -197,9 +254,10 @@ def load_existing(path=OUTPUT_PATH):
     return existing
 
 
-def merge_rows(entries, tag_map, existing):
+def merge_rows(entries, tag_map, existing, entry_tags=None):
     """Existing rows are the base; RSS values fill in or overwrite only when non-empty."""
     merged = dict(existing)
+    entry_tags = entry_tags or {}
     for e in entries:
         key = f"{e['slug']}_{e['watched_date']}"
         row = dict(merged.get(key, {}))
@@ -208,11 +266,11 @@ def merge_rows(entries, tag_map, existing):
                 row[field] = str(e[field])
         if e["poster_url"] or not is_poster(row.get("poster_url", "")):
             row["poster_url"] = e["poster_url"] or ""
-        tags = tag_map.get(key)
+        tags = entry_tags.get(key) or tag_map.get(key)
         if tags:
             row["tags"] = ", ".join(tags)
         else:
-            row.setdefault("tags", "")
+            row.setdefault("tags", "")            # keep whatever the CSV had
         merged[key] = row
     rows = [{f: r.get(f, "") for f in FIELDNAMES} for r in merged.values()]
     rows.sort(key=lambda r: (r["watched_date"] == "", r["watched_date"], r["title"]))
@@ -225,7 +283,12 @@ def backfill_missing_posters(rows):
     todo = [r for r in rows if not is_poster(r["poster_url"])]
     print(f"Backfilling posters for {len(todo)} rows…")
     for r in todo:
-        slug = slug_of(r["link"]) if r["link"] else ""
+        if r["link"] and "/film/" not in r["link"]:
+            resolved = resolve_short_link(r["link"])
+            if resolved != r["link"]:
+                r["link"] = resolved                      # store the full URL so the row keys stay stable
+                time.sleep(0.5)
+        slug = slug_of(r["link"]) if "/film/" in r["link"] else ""
         if not slug:
             continue
         if slug not in cache:
@@ -259,15 +322,23 @@ def main():
     if not entries:
         sys.exit("RSS returned nothing — leaving the CSV untouched.")
 
-    print("Scraping tag pages…")
-    tag_map = scrape_tag_pages()
-    print(f"Tag map covers {len(tag_map)} diary entries")
-    had_tags = sum(1 for r in existing.values() if r.get("tags"))
-    if not tag_map and had_tags:
-        sys.exit("Tag scrape came back empty although the CSV has tags — Letterboxd's page layout may "
-                 "have changed. Leaving the CSV untouched.")
+    print("Reading tags from each entry's diary page…")
+    entry_tags = {}
+    for e in entries:
+        key = f"{e['slug']}_{e['watched_date']}"
+        tags = fetch_entry_tags(e["link"])
+        if tags is not None:
+            entry_tags[key] = tags
+        time.sleep(0.5)
+    print(f"  tags found for {sum(1 for v in entry_tags.values() if v)} of {len(entries)} entries")
 
-    rows = merge_rows(entries, tag_map, existing)
+    print("Scraping tag pages (second source)…")
+    tag_map = scrape_tag_pages()
+    print(f"  tag map covers {len(tag_map)} diary entries")
+    if not tag_map and not any(entry_tags.values()):
+        print("WARNING — no tags could be read from Letterboxd at all; stored tags are kept, new entries get none.")
+
+    rows = merge_rows(entries, tag_map, existing, entry_tags)
     rows = backfill_missing_posters(rows)
 
     # sanity report before writing
@@ -283,4 +354,11 @@ def main():
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception:            # make the Actions log show the real reason
+        import traceback
+        traceback.print_exc()
+        sys.exit(1)
