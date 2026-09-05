@@ -338,6 +338,7 @@ const UMBRELLA_TAGS = { streaming: "streaming-other", cinema: "theater" };
 const THEATER_VENUES = ["finnkino", "kino regina", "orion", "riviera", "kino engel", "savoy", "maxim", "gilda"];   // all of these roll up into the single source "theater"; the venue name is kept as detail
 const TAG_ALIASES = { "espoo ciné": "film festival", "r&a festival": "film festival", "docpoint festival": "film festival", "night visions festival": "film festival" };   // named festivals count as the generic tag
 const SECONDARY_TAGS = ["documentary", "film festival", "imax", "3d", "atmos", "kids", "short film"];
+const IMPLIES_THEATER = ["imax", "film festival"];   // failsafe: these only happen in a theater, so a film tagged just "imax" or "r&a festival" still counts as a theater visit (3d and atmos don't — they happen at home too)
 // Antti's scale: 5 must see · 4 very good · 3 ok but forgettable · 2 not very good · 1 skip
 const RATING_MEANING = { 5: "must see", 4: "very good", 3: "ok, forgettable", 2: "not very good", 1: "skip" };
 const RATING_COLORS = { 5: "#4cc972", 4: "#25a657", 3: "#5b8fb9", 2: "#6b7885", 1: "#4a5563" };   // green = good · steel blue = ok · grays recede for the ones to skip
@@ -383,7 +384,8 @@ function classify(raw) {
   const specific = tags.filter((t) => !SECONDARY_TAGS.includes(t) && !(t in UMBRELLA_TAGS));
   const umbrella = tags.find((t) => t in UMBRELLA_TAGS);
   const venueName = specific.find((t) => THEATER_VENUES.includes(t)) || null;
-  const src = venueName ? "theater" : (specific[0] || (umbrella ? UMBRELLA_TAGS[umbrella] : "other"));
+  let src = venueName ? "theater" : (specific[0] || (umbrella ? UMBRELLA_TAGS[umbrella] : "other"));
+  if (src === "other" && extra.some((t) => IMPLIES_THEATER.includes(t))) src = "theater";
   const venue = src === "theater" ? "theater" : src === "other" ? "other" : "home";
   return { src, venue, venueName, extra };
 }
