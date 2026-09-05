@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Antti's books</title>
-<meta name="description" content="Dashboard of Antti's StoryGraph reading history.">
+<title>Antti's StoryGraph diary</title>
+  <meta name="description" content="Dashboard of Antti's StoryGraph reading history.">
 <script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
 <style>
 :root{--bg:#14181c;--card:#1e252d;--card-2:#2c3440;--line:#2c3440;--line-2:#384352;--text:#e6edf3;--text-2:#9ab;--text-3:#678;--green:#00e054;--green-mark:#00a83f;--radius:10px;--font:-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif}
@@ -24,7 +24,7 @@ header{display:flex;flex-wrap:wrap;align-items:flex-end;justify-content:space-be
 </head>
 <body>
 <div class="wrap" id="app">
-<header><div><h1>Antti's <span>books</span></h1><div class="sub" id="subtitle">Loading reading history…</div></div><nav class="nav"><a href="../films-watched/">Films</a><a class="active" href="./">Books</a><span class="soon" title="Coming later">Games</span></nav></header>
+<header><div><h1>Antti's <span>StoryGraph</span> diary</h1><div class="sub" id="subtitle">Loading reading history…</div></div><nav class="nav"><a href="../films-watched/">Films</a><a class="active" href="./">Books</a><span class="soon" title="Coming later">Games</span></nav></header>
 <div id="status"></div>
 <div class="filters" id="yearFilters"><span class="label">Year</span><button class="chip ghost" id="tableToggle" type="button" aria-pressed="false">Table view</button></div>
 <div class="filters" id="moodFilters" hidden><span class="label">Moods</span><span class="hint" id="moodHint"></span></div>
