@@ -108,7 +108,7 @@
   .poster .s { font-size: 11px; color: var(--text-3); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
   .stars { color: var(--green); letter-spacing: -1px; }
 
-  .active { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 6px; padding: 8px 12px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--line-2); }
+  .active { position: sticky; top: 8px; z-index: 20; display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 8px 0 6px; padding: 8px 12px; background: var(--card); border-radius: var(--radius); border: 1px solid var(--line-2); box-shadow: 0 6px 18px rgba(0,0,0,0.35); }
   .active[hidden], .filters[hidden] { display: none; }
   .active .label { color: var(--text-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; min-width: 52px; }
   .active .f { display: inline-flex; align-items: center; gap: 6px; background: var(--card-2); border-radius: 999px; padding: 4px 6px 4px 12px; font-size: 13px; color: var(--text); }
