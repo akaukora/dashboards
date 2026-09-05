@@ -39,6 +39,12 @@
   header .sub .dot { color: var(--text-3); margin: 0 6px; }
   header .profile { font-size: 13px; color: var(--text-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; }
 
+  /* ---------- media navigation ---------- */
+  .nav { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; }
+  .nav > a:not(.profile), .nav .soon { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+  .nav > a:not(.profile).active { background: var(--green-mark); border-color: var(--green-mark); color: #fff; font-weight: 600; }
+  .nav .soon { color: var(--text-3); }
+
   /* ---------- filter row ---------- */
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
   .filters .label { color: var(--text-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; min-width: 52px; }
@@ -200,7 +206,12 @@
       <h1>Antti's <span>Letterboxd</span> diary</h1>
       <div class="sub" id="subtitle">Loading the diary…</div>
     </div>
-    <a class="profile" href="https://letterboxd.com/farbeach/" target="_blank" rel="noopener">letterboxd.com/farbeach ↗</a>
+    <nav class="nav" aria-label="Media dashboards">
+      <a class="active" href="./">Films</a>
+      <a href="../books-read/">Books</a>
+      <span class="soon" title="Coming later">Games</span>
+      <a class="profile" href="https://letterboxd.com/farbeach/" target="_blank" rel="noopener">letterboxd.com/farbeach ↗</a>
+    </nav>
   </header>
 
   <div id="status"></div>
