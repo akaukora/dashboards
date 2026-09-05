@@ -143,6 +143,7 @@
   .rev { background: var(--card-2); border-radius: 8px; padding: 12px 14px; min-width: 0; display: flex; flex-direction: column; gap: 6px; }
   .rev .h { display: flex; justify-content: space-between; gap: 10px; font-size: 13px; }
   .rev .h a, .rev .h span.t { color: var(--text); font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .rev .h .rw { margin-right: auto; flex: none; align-self: center; }
   .rev .h .yr { color: var(--text-3); font-weight: 400; margin-left: 5px; }
   .rev .m { font-size: 12px; color: var(--text-3); }
   .rev p { margin: 0; font-size: 13px; color: var(--text-2); line-height: 1.5; display: -webkit-box; -webkit-line-clamp: 5; -webkit-box-orient: vertical; overflow: hidden; }
@@ -159,6 +160,7 @@
   .list li { display: flex; justify-content: space-between; gap: 12px; padding: 6px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
   .list li:last-child { border-bottom: 0; }
   .list .yr { color: var(--text-3); margin-left: 6px; }
+  .rw { display: inline-block; margin-left: 6px; padding: 0 6px; border-radius: 999px; border: 1px solid var(--line-2); color: var(--text-3); font-size: 10px; line-height: 16px; vertical-align: 1px; text-transform: uppercase; letter-spacing: 0.04em; }
   .list .dt { color: var(--text-3); white-space: nowrap; font-variant-numeric: tabular-nums; }
 
   /* ---------- table view ---------- */
@@ -435,6 +437,12 @@ function toFilms(rows) {
     films.push({ title, year, rating, date: iD >= 0 ? parseDate(r[iD]) : null, tags, ...classify(tags), review: iRev >= 0 ? (r[iRev] || "").trim() : "", rewatch: iRw >= 0 && /^(yes|true|1)$/i.test((r[iRw] || "").trim()), url, poster: iP >= 0 && (r[iP] || "").trim() ? r[iP].trim() : null });
   }
   films.sort((a, b) => (a.date?.getTime() ?? 0) - (b.date?.getTime() ?? 0));
+  const seen = new Set();                                // rewatch = flagged in the data, or an earlier entry for the same film in the file
+  for (const f of films) {                               // (the …/film/slug/1/ link suffix is NOT used: Letterboxd adds it whenever the film was already marked watched, diary entry or not)
+    const key = f.url && f.url.includes("/film/") ? f.url.split("/film/")[1].split("/")[0] : f.title.toLowerCase();
+    f.rewatch = f.rewatch || (f.date != null && seen.has(key));
+    seen.add(key);
+  }
   return films;
 }
 
@@ -600,13 +608,13 @@ function render() {
   const good = rated.filter((f) => f.rating >= 4).length, ok = rated.filter((f) => f.rating >= 3 && f.rating < 4).length;
   const split = (parts) => { let acc = 0; const stops = parts.filter(([n]) => n > 0).map(([n, c]) => { const a = acc; acc += n; return `${c} ${a}% ${acc}%`; }); return `linear-gradient(90deg, ${stops.join(", ")})`; };
   const tiles = [
-    { l: F.year == null ? "Films logged" : `Films logged in ${F.year}`, v: films.length, d: `${distinct} distinct titles · ${films.length - distinct} rewatch${films.length - distinct === 1 ? "" : "es"}` },
+    { l: F.year == null ? "Films logged" : `Films logged in ${F.year}`, v: films.length, d: `${distinct} distinct titles · ${films.filter((f) => f.rewatch).length} rewatch${films.filter((f) => f.rewatch).length === 1 ? "" : "es"}` },
     tile2,
     { l: "Average rating", v: avg == null ? "—" : avg.toFixed(2), d: `${rated.length} rated · ${good} good · ${ok} ok · ${rated.length - good - ok} below`,
       bg: rated.length ? split([[Math.round(100 * (rated.length - good - ok) / rated.length), hexA(CLASS_COLORS.bad, 0.22)], [Math.round(100 * ok / rated.length), hexA(CLASS_COLORS.ok, 0.22)], [100, hexA(CLASS_COLORS.good, 0.22)]]) : null },
     { l: "In a theater", v: tagged.length ? Math.round(100 * theater / tagged.length) + "%" : "—", d: tagged.length ? `${theater} theater · ${home} home${other ? ` · ${other} other` : ""} · of ${tagged.length} tagged films` : "no tagged entries in this selection",
       bg: tagged.length ? split([[Math.round(100 * theater / tagged.length), hexA(css("--green-mark"), 0.22)], [100, "rgba(255,255,255,0.05)"]]) : null },
-    { l: "Last watched", v: last ? esc(last.title) : "—", small: true, d: last ? `${fmtDate(last.date)}${last.rating != null ? " · " + starStr(last.rating) : ""}${last.tags.length ? " · " + esc(tagsText(last)) : ""}` : "" },
+    { l: "Last watched", v: last ? esc(last.title) : "—", small: true, d: last ? `${fmtDate(last.date)}${last.rating != null ? " · " + starStr(last.rating) : ""}${last.rewatch ? " · rewatch" : ""}${last.tags.length ? " · " + esc(tagsText(last)) : ""}` : "" },
   ];
   $("#kpis").innerHTML = tiles.map((t) => `<div class="kpi"${t.bg ? ` style="background-image:${t.bg}"` : ""}>${t.spark || ""}<div class="l">${t.l}</div><div class="v${t.small ? " small" : ""}" title="${t.small ? t.v : ""}">${t.v}</div><div class="d">${t.d}</div></div>`).join("");
 
@@ -745,7 +753,7 @@ function render() {
 
   /* Latest reviews — the most recent written reviews in the selection */
   const reviewed = films.filter((f) => f.review && f.date).slice(-REVIEW_COUNT).reverse();
-  $("#reviews").innerHTML = reviewed.map((f) => `<article class="rev"><div class="h">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</a>` : `<span class="t">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</span>`}<span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"};white-space:nowrap">${starStr(f.rating)}</span></div><div class="m">${fmtDate(f.date)}${f.src ? ` · ${esc(tagsText(f))}` : ""}</div><p>${esc(f.review)}</p>${f.review.length > 260 ? `<button type="button" class="more">Read more</button>` : ""}</article>`).join("");
+  $("#reviews").innerHTML = reviewed.map((f) => `<article class="rev"${f.rating != null ? ` style="background:linear-gradient(180deg, ${hexA(RATING_COLORS[bucket(f.rating)], 0.2)}, ${hexA(RATING_COLORS[bucket(f.rating)], 0.08)}), var(--card-2)"` : ""}><div class="h">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</a>` : `<span class="t">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</span>`}${f.rewatch ? `<span class="rw">rewatch</span>` : ""}<span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"};white-space:nowrap">${starStr(f.rating)}</span></div><div class="m">${fmtDate(f.date)}${f.src ? ` · ${esc(tagsText(f))}` : ""}</div><p>${esc(f.review)}</p>${f.review.length > 260 ? `<button type="button" class="more">Read more</button>` : ""}</article>`).join("");
   document.querySelectorAll("#reviews .more").forEach((b) => b.addEventListener("click", () => { const open = b.parentElement.classList.toggle("open"); b.textContent = open ? "Show less" : "Read more"; }));
   const nRev = films.filter((f) => f.review).length;
   $("#noteReviews").textContent = nRev ? `${nRev} written review${nRev === 1 ? "" : "s"} in this selection · showing the latest ${reviewed.length}.` : "No written reviews in this selection.";
@@ -817,7 +825,7 @@ function render() {
   const present = [5, 4, 3, 2, 1].filter((lv) => ratedNoR.some((f) => bucket(f.rating) === lv));
   $("#ratingChips").innerHTML = [["all", "All"], ...present.map((lv) => [lv, `${lv}★ ${RATING_MEANING[lv]}`])].map(([v, l]) => `<button type="button" class="chip${(F.rating == null ? "all" : String(F.rating)) === String(v) ? " active" : ""}" data-r="${v}">${l}</button>`).join("");
   document.querySelectorAll("#ratingChips .chip").forEach((b) => b.addEventListener("click", () => setFilter("rating", b.dataset.r === "all" ? null : +b.dataset.r)));
-  $("#topList").innerHTML = listFilms.map((f) => `<li><span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</span><span class="dt"><span class="stars" style="color:${RATING_COLORS[bucket(f.rating)]}">${starStr(f.rating)}</span> · ${fmtDate(f.date)}</span></li>`).join("") || `<li><span style="color:var(--text-3)">No rated films in this selection.</span></li>`;
+  $("#topList").innerHTML = listFilms.map((f) => `<li><span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}${f.rewatch ? `<span class="rw">rewatch</span>` : ""}</span><span class="dt"><span class="stars" style="color:${RATING_COLORS[bucket(f.rating)]}">${starStr(f.rating)}</span> · ${fmtDate(f.date)}</span></li>`).join("") || `<li><span style="color:var(--text-3)">No rated films in this selection.</span></li>`;
   $("#noteTop").textContent = `${listFilms.length} film${listFilms.length === 1 ? "" : "s"}, newest first.`;
 
   renderTable(films);
