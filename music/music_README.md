@@ -25,8 +25,9 @@ repository as `music/`.
 ## The dashboard
 
 The centrepiece is **Forgotten favourites**: artists you played at least *N* times (20 / 50 /
-100 / 250) but haven't heard for 6 / 12 / 24 / 36 months, sortable by plays, by silence, or by
-both (plays × log of the silence). Each row has plays-per-year bars over your whole history, the
+100 / 250) from at least *M* different tracks (any / 5 / 10 / 15 — the old Tableau definition was
+50 plays and 15 tracks) but haven't heard for 6 / 12 / 24 / 36 months, sortable by plays, by
+silence, or by both (plays × log of the silence). Each row has plays-per-year bars over your whole history, the
 peak year, a recency pill, a link to the artist in your Last.fm library and a plays button that
 filters the whole dashboard to that artist. The **Rediscovered** toggle shows the mirror image:
 favourites you came back to in the last twelve months after a gap of at least the chosen length
@@ -34,9 +35,16 @@ favourites you came back to in the last twelve months after a gap of at least th
 played *N*+ times *in that period* — so 2016's favourites who have since gone quiet — while the
 silence is still measured to today.
 
+**When did I last listen to each artist?** is the bubble chart from the Tableau version: every
+artist with `BUBBLE_MIN_PLAYS`+ plays, x = the last time you played them, y = plays (log scale by
+default, Linear toggle), bubble size = distinct tracks. Forgotten favourites are bright green,
+favourites still heard a muted green, everything else grey; the big bubbles far from the right
+edge are the ones to rediscover. Hover for the artist, click to filter.
+
 Around it: five KPI tiles (scrobbles, this year vs the same point last year with a background
 sparkline, favourites and how many are silent, new artists this year, last scrobble);
-scrobbles per year with the Columns / Lines toggle; the month heatmap; **Top artists** with a
+scrobbles per year with a Columns / Lines / Per artist toggle (Per artist = scrobbles ÷ distinct
+artists that year — the old "average times listened per artist"); the month heatmap; **Top artists** with a
 recency pill each (becomes *Top tracks* when an artist is selected); a **listening clock**
 (weekday × hour, Helsinki time); **New artists per year** with the share of the year's scrobbles
 that went to artists heard for the first time (becomes *Albums* for a selected artist); recent
@@ -46,8 +54,12 @@ Cross-filtering works as on the film page: year buttons, heatmap cells and artis
 filters, shown in the sticky bar with an × each, and kept in the URL hash (`#y=2016&a=Sigur%20R%C3%B3s`).
 The favourites controls (silence, minimum plays, sort, tab) are remembered in the browser.
 
-Config constants sit at the top of the script: `TOP_COUNT`, `RECENT_COUNT`, `FAV_PAGE`,
-`TABLE_MAX`, `DEFAULTS` for the favourites controls, `RECENCY` (months → pill colour), and
+`MILESTONES` at the top of the script draws thin dashed lines with a label on the time charts —
+it starts with 11 Jan 2009, the switch from owned music in iTunes to streaming; add moves, jobs
+or anything else as `{ date: "YYYY-MM-DD", label: "…" }`.
+
+Other config constants sit next to it: `TOP_COUNT`, `RECENT_COUNT`, `FAV_PAGE`, `TABLE_MAX`,
+`BUBBLE_MIN_PLAYS`, `DEFAULTS` for the favourites controls, `RECENCY` (months → pill colour), and
 `localDate()` which converts UTC to Helsinki time without the slow `Intl` path (EET/EEST rules).
 
 ## One-time setup
