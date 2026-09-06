@@ -26,6 +26,7 @@
   .nav { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; justify-content: flex-end; }
   .nav > a { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
   .nav > a.active { background: var(--green-mark); border-color: var(--green-mark); color: #fff; font-weight: 600; }
+  .nav .soon { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--text-3); }
 
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
   .filters .label { color: var(--text-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; min-width: 52px; }
@@ -128,6 +129,7 @@
       <a href="../films-watched/">Films</a>
       <a href="../books-read/">Books</a>
       <a class="active" href="./">Music</a>
+      <span class="soon" title="Coming later">Games</span>
       <a class="profile" href="https://www.last.fm/user/akaukora" target="_blank" rel="noopener">last.fm/user/akaukora ↗</a>
     </nav>
   </header>
@@ -305,6 +307,11 @@ function build(rows) {
     S.push({ uts, y: ld.getUTCFullYear(), m: ld.getUTCMonth(), d: ld.getUTCDate(), dow: (ld.getUTCDay() + 6) % 7, h: ld.getUTCHours(), artist: r[iA], track: r[iT] || "", album: iAl >= 0 ? r[iAl] || "" : "", loved: iL >= 0 && r[iL] === "1" });
   }
   S.sort((a, b) => a.uts - b.uts);
+  // Merge spelling variants of the same artist ("Killers" / "The Killers", case differences): the most-played spelling wins.
+  const variants = new Map(), count = new Map();
+  for (const s of S) count.set(s.artist, (count.get(s.artist) || 0) + 1);
+  for (const [name, n] of count) { const k = name.toLowerCase().replace(/^the\s+/, ""); const cur = variants.get(k); if (!cur || n > count.get(cur)) variants.set(k, name); }
+  for (const s of S) { const canon = variants.get(s.artist.toLowerCase().replace(/^the\s+/, "")); if (canon && canon !== s.artist) s.artist = canon; }
   A = new Map();
   for (const s of S) {
     let a = A.get(s.artist);
@@ -411,7 +418,7 @@ function render() {
   for (const s of bubbleBase) { let b = bAgg.get(s.artist); if (!b) { b = { name: s.artist, plays: 0, last: 0, tracks: new Set() }; bAgg.set(s.artist, b); } b.plays++; if (s.uts > b.last) b.last = s.uts; b.tracks.add(s.track); }
   const favSet = new Set(favs.map((f) => f.a.name));
   const bubbles = [...bAgg.values()].filter((b) => b.plays >= BUBBLE_MIN_PLAYS).map((b) => { const sil = monthsBetween(b.last, NOW); return { x: monthX(b.last), y: b.plays, r: Math.max(2.5, Math.min(22, 1.6 * Math.sqrt(b.tracks.size))), b, sil, fav: favSet.has(b.name) }; });
-  const bx0 = Math.floor(Math.min(...bubbles.map((d) => d.x), monthX(NOW) - 12)), bx1 = Math.ceil(monthX(NOW)) + 1;
+  const bx0 = Math.floor(Math.min(monthX(S[0].uts), ...bubbles.map((d) => d.x))), bx1 = Math.ceil(monthX(NOW)) + 1;   // whole history, so the milestones show
   const bColor = (d, a) => hexA(F.artist === d.b.name ? "#e6edf3" : d.fav ? (d.sil >= ui.silence ? "#25a657" : "#4d8f63") : "#5b6e80", a);
   upsert("cBubble", { type: "bubble", data: { datasets: [{ data: bubbles, backgroundColor: bubbles.map((d) => bColor(d, d.fav ? 0.55 : 0.28)), borderColor: bubbles.map((d) => bColor(d, d.fav ? 0.9 : 0.45)), borderWidth: 1, hoverBackgroundColor: bubbles.map((d) => bColor(d, 0.95)) }] },
     options: { maintainAspectRatio: false, interaction: { mode: "nearest", intersect: true }, layout: { padding: { top: 6, right: 10 } },
