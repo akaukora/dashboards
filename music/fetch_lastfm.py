@@ -1,8 +1,9 @@
 #!/usr/bin/env python3
 """Pull a Last.fm user's scrobble history into music/scrobbles.csv, incrementally.
 
-First run: backfills the whole history (user.getRecentTracks, 200 rows a page, oldest kept).
-Later runs: asks only for scrobbles newer than the newest one already in the file and appends.
+First run: backfills the whole history in 30-day windows (user.getRecentTracks with from/to),
+oldest first, checkpointing as it goes; an interrupted run keeps what it fetched and continues
+next time. Later runs: only the windows newer than the newest scrobble on file.
 Also rewrites music/artists.csv (one row per artist: plays, first/last played, plays per year),
 which is what the dashboard loads first; the raw scrobbles are there for drill-downs.
 
@@ -145,11 +146,59 @@ def write_artists(path: Path, rows):
     return out
 
 
+# ----------------------------------------------------------------------------- windows
+# Last.fm's deep page numbers (page 300 of 530…) are unreliable — some pages 500 persistently and
+# the numbering shifts as scrobbles arrive. So the history is fetched in short time windows
+# (from/to), oldest first, a handful of pages each. Every finished window is a checkpoint, so an
+# interrupted run keeps what it got and the next run resumes from the newest scrobble on file.
+WINDOW = 30 * 86400            # seconds per window; ~500 scrobbles/month → 3 pages
+STATE_FILE = "fetch_state.json"
+
+
+def registered_at(session, key, user):
+    """The account's registration time — where a full backfill starts. Falls back to 2002 (Last.fm's launch)."""
+    try:
+        r = session.get(API, params={"method": "user.getinfo", "user": user, "api_key": key, "format": "json"}, timeout=30)
+        return int(r.json()["user"]["registered"]["unixtime"])
+    except Exception as e:                       # noqa: BLE001
+        log(f"  user.getinfo failed ({e}); starting from 2002"); return 1009843200
+
+
+def fetch_window(session, key, user, t0, t1):
+    """All scrobbles with t0 <= uts <= t1. Pages are few here, so page numbers are safe."""
+    rows, page, total_pages = [], 1, None
+    while True:
+        chunk = get_page(session, key, user, page, t0 - 1, t1)   # get_page adds 1 to `from`
+        if total_pages is None:
+            total_pages = int(chunk.get("@attr", {}).get("totalPages", 1))
+        tracks = chunk.get("track", [])
+        if isinstance(tracks, dict):
+            tracks = [tracks]
+        rows.extend(rows_from(tracks))
+        if page >= total_pages:
+            return rows
+        page += 1
+        time.sleep(PAUSE)
+
+
+def load_state(path: Path):
+    try:
+        import json
+        return json.loads(path.read_text()) if path.exists() else {}
+    except Exception:                            # noqa: BLE001
+        return {}
+
+
+def save_state(path: Path, state):
+    import json
+    path.write_text(json.dumps(state, indent=1))
+
+
 # ----------------------------------------------------------------------------- main
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("--full", action="store_true")
-    ap.add_argument("--max-pages", type=int, default=3000)
+    ap.add_argument("--max-pages", type=int, default=3000, help="(kept for compatibility; windows make it moot)")
     ap.add_argument("--data", default=str(Path(__file__).resolve().parent))
     args = ap.parse_args()
 
@@ -158,45 +207,60 @@ def main():
     if not key:
         sys.exit("LASTFM_API_KEY is not set")
     data = Path(args.data)
-    scrobbles_path, artists_path = data / "scrobbles.csv", data / "artists.csv"
-
-    existing = read_scrobbles(scrobbles_path)
-    since = 0 if args.full or not existing else max(r["uts"] for r in existing)
-    log(f"{user}: {len(existing)} scrobbles on file" + (f", newest {datetime.fromtimestamp(since, timezone.utc):%Y-%m-%d %H:%M} UTC" if since else "") + (" — full re-fetch" if args.full else ""))
+    scrobbles_path, artists_path, state_path = data / "scrobbles.csv", data / "artists.csv", data / STATE_FILE
 
     session = requests.Session()
-    session.headers["User-Agent"] = "dashboards-lastfm-fetch/1.0 (github.com/akaukora/dashboards)"
-    new, page, total_pages = [], 1, None
+    session.headers["User-Agent"] = "dashboards-lastfm-fetch/2.0 (github.com/akaukora/dashboards)"
+
+    existing = [] if args.full else read_scrobbles(scrobbles_path)
+    state = {} if args.full else load_state(state_path)
     until = int(time.time())
-    while True:
-        chunk = get_page(session, key, user, page, since, until)
-        attr = chunk.get("@attr", {})
-        if total_pages is None:
-            total_pages = int(attr.get("totalPages", 1)); total = int(attr.get("total", 0))
-            log(f"  {total} new scrobbles on {total_pages} pages")
-            if total == 0:
-                break
-        tracks = chunk.get("track", [])
-        if isinstance(tracks, dict):             # a single track comes back as an object, not a list
-            tracks = [tracks]
-        new.extend(rows_from(tracks))
-        if page % CHECKPOINT_EVERY == 0:
-            write_scrobbles(scrobbles_path, dedupe(existing + new)); log(f"  page {page}/{total_pages} · checkpoint {len(existing) + len(new)} rows")
-        if page >= total_pages or page >= args.max_pages:
-            break
-        page += 1
+    # windows still to fetch: any that failed last time, then everything newer than what we have
+    todo = [tuple(w) for w in state.get("failed", [])]
+    start = (max(r["uts"] for r in existing) + 1) if existing else registered_at(session, key, user)
+    t = start
+    while t <= until:
+        todo.append((t, min(t + WINDOW - 1, until))); t += WINDOW
+    log(f"{user}: {len(existing)} scrobbles on file" + (f", newest {datetime.fromtimestamp(start - 1, timezone.utc):%Y-%m-%d %H:%M} UTC" if existing else "") + f" — {len(todo)} windows to fetch" + (f" ({len(state.get('failed', []))} retried from last run)" if state.get("failed") else ""))
+
+    rows, failed, got = existing, [], 0
+    for i, (t0, t1) in enumerate(todo, 1):
+        try:
+            new = fetch_window(session, key, user, t0, t1)
+        except Exception as e:                   # noqa: BLE001 — keep going; the window is retried next run
+            log(f"  window {datetime.fromtimestamp(t0, timezone.utc):%Y-%m-%d} – {datetime.fromtimestamp(t1, timezone.utc):%Y-%m-%d} FAILED: {e}")
+            failed.append([t0, t1]); continue
+        if new:
+            rows = dedupe(rows + new); got += len(new)
+        if i % 12 == 0 or new and len(new) > 150:
+            write_scrobbles(scrobbles_path, rows); save_state(state_path, {"failed": failed, "checkpoint": t1})
+            log(f"  {datetime.fromtimestamp(t1, timezone.utc):%Y-%m-%d}: {len(rows)} scrobbles so far ({i}/{len(todo)} windows)")
         time.sleep(PAUSE)
 
-    before = len(existing)
-    rows = dedupe(new if (args.full and new) else existing + new)
+    if failed:                                   # one more try for the stragglers before giving up on them for this run
+        still = []
+        for t0, t1 in failed:
+            time.sleep(5)
+            try:
+                new = fetch_window(session, key, user, t0, t1); rows = dedupe(rows + new); got += len(new)
+            except Exception as e:               # noqa: BLE001
+                log(f"  retry {datetime.fromtimestamp(t0, timezone.utc):%Y-%m-%d} failed again: {e}"); still.append([t0, t1])
+        failed = still
+
     write_scrobbles(scrobbles_path, rows)
     artists = write_artists(artists_path, rows)
-    added = len(rows) - before
-    log(f"done: +{added} scrobbles → {len(rows)} total, {len(artists)} artists; "
+    save_state(state_path, {"failed": failed, "completed_through": until if not failed else None, "run": datetime.now(timezone.utc).isoformat(timespec="seconds")})
+    log(f"done: +{got} scrobbles → {len(rows)} total, {len(artists)} artists; "
         f"{rows[0]['datetime_utc'][:10] if rows else '—'} – {rows[-1]['datetime_utc'][:10] if rows else '—'}")
-    if page >= args.max_pages and total_pages and page < total_pages:
-        log(f"NOTE: stopped at the --max-pages cap ({args.max_pages}); run again to continue")
+    if failed:
+        log(f"WARNING: {len(failed)} window(s) could not be fetched and are queued for the next run: " + ", ".join(f"{datetime.fromtimestamp(a, timezone.utc):%Y-%m-%d}" for a, _ in failed))
+        sys.exit(2)                              # non-zero so the run shows as failed, but the data written above is committed by the workflow
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except SystemExit:
+        raise
+    except Exception:                            # noqa: BLE001 — full traceback in the Actions log
+        import traceback; traceback.print_exc(); sys.exit(1)
