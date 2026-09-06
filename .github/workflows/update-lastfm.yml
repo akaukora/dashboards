@@ -24,7 +24,7 @@ concurrency:
 jobs:
   fetch:
     runs-on: ubuntu-latest
-    timeout-minutes: 120          # a first backfill of a long history can take a while; daily runs take seconds
+    timeout-minutes: 120          # a first backfill of a long history takes ~5–10 min; daily runs take seconds
     steps:
       - uses: actions/checkout@v4
 
@@ -41,10 +41,11 @@ jobs:
         run: python music/fetch_lastfm.py ${{ inputs.full && '--full' || '' }}
 
       - name: Commit if anything changed
+        if: always()                # also after a failed fetch: the checkpointed rows are kept and the next run continues
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add music/scrobbles.csv music/artists.csv
+          git add music/scrobbles.csv music/artists.csv music/fetch_state.json 2>/dev/null || git add music/scrobbles.csv music/artists.csv
           if git diff --cached --quiet; then
             echo "No new scrobbles."
           else
