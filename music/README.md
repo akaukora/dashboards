@@ -47,22 +47,42 @@ favorites are green outlines with no fill, favorites still heard solid green, ev
 faint gray; the big bubbles far from the right
 edge are the ones to rediscover. Hover for the artist, click to filter.
 
-Around it: five KPI tiles (scrobbles; this year vs the same point last year with a background
-sparkline; favorite artists heard this year out of all favorites, with the tile shaded to that
-share; new artists this year, shaded to their share of the year's artists; last scrobble);
+Around it: six KPI tiles (scrobbles; this year vs the same point last year with a background
+sparkline; favorite artists heard this year out of all favorites, shaded to that share;
+forgotten favorites out of all favorites, gray for the forgotten share, with how many are silent
+3+ years; new artists this year, shaded to their share of the year's artists; the last 7 days vs the week before, with a 12-week sparkline and the last scrobble);
 scrobbles per year with a Columns / Lines / Per artist toggle (Per artist = scrobbles ÷ distinct
 artists that year — the old "average times listened per artist"); one heatmap card with a **Months / Time of day**
 toggle (scrobbles per month, or weekday × hour in Helsinki time); **Top artists** with a recency
 pill each (becomes *Top tracks* when an artist is selected); **New artists per year** with the share of the year's scrobbles
 that went to artists heard for the first time (becomes *Albums* for a selected artist); recent
-scrobbles with ♥ for loved tracks; and a table view capped at 1 000 rows with search.
+scrobbles with ♥ for loved tracks; **This week vs last week** — Last.fm-style rings for scrobbles,
+tracks, albums and artists in the last 7 (or 30) days against the period before, the tick at the
+bottom meaning "the same as before"; a **Listening fingerprint** radar comparing the focus year with
+your all-time average on consistency (share of days with listening), discovery rate, week-to-week
+variance, concentration (share of plays to the top 10 artists) and replay rate — Last.fm's own
+chart compares to a global average, which we don't have; and a table view capped at 1 000 rows.
 
-Cross-filtering works as on the film page: year buttons, heatmap cells and artist names all add
-filters. On desktop the year buttons and the active-filter bar stay pinned to the top of the
+Cross-filtering works as on the film page: year buttons (click several to combine them —
+`#y=2012,2013`), heatmap cells and artist names all add filters. On desktop the year buttons and the active-filter bar stay pinned to the top of the
 window while scrolling (on phones they scroll away, to save space); filters show with an × each, and kept in the URL hash (`#y=2016&a=Sigur%20R%C3%B3s`).
-The favorites controls (artists/tracks, silence, minimum plays, sort, tab) and the chart
-toggles are remembered in the browser. Artist names that differ only by case or a leading "The"
-("Killers" / "The Killers") are merged, the most-played spelling winning.
+The **Artists / Tracks** switch sits in the pinned top bar because it drives two cards. The
+favorites controls (silence, minimum plays, sort, tab), the chart toggles and the two collapsible
+groups (**Rediscover** — favorites and the bubble chart; **Listening** — everything else) are
+remembered in the browser. Each favorites row has a small × that hides that artist or track from
+the favorites lists (browser-only, undone with the "hidden · show again" link) — handy for the
+kids' playlist era. In *Recent scrobbles*, favorites carry a tag, and a favorite heard again after
+the chosen silence is highlighted green with "back after …". Artist names that differ only by case or a leading "The"
+("Killers" / "The Killers") are merged, the most-played spelling winning. Collaboration credits
+written as "Taylor Swift, Post Malone" or "A feat. B" are counted under the first-named artist —
+but only when that artist also appears alone with `CREDIT_MIN_PLAYS`+ plays, so "Earth, Wind &
+Fire" stays one act; "&", "and" and "x" are never treated as separators because they are almost
+always band names (Amadou & Mariam, Of Monsters and Men). `KEEP_TOGETHER` lists comma names that
+are single acts. The full credit is kept for the table and the recent list ("Fortnight (with Post
+Malone)"), and the footer reports how many scrobbles were re-credited. Set `SPLIT_CREDITS = false`
+to turn this off.
+
+A one-paragraph intro under the title says what Last.fm is for visitors who don't know it.
 
 `MILESTONES` at the top of the script draws thin dashed lines with a label on the time charts —
 it starts with 11 Jan 2009, the switch from owned music in iTunes to streaming; add moves, jobs
