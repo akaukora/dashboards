@@ -20,7 +20,8 @@ repository as `music/`.
   folder. Runs daily at 03:17 UTC and on demand (Actions → *Update Last.fm* → *Run workflow*,
   where a *full* checkbox re-fetches everything).
 - `scrobbles.csv` — one row per scrobble: `uts, datetime_utc, artist, album, track, loved`.
-  Sorted oldest first. `loved` is `1` for tracks marked loved on Last.fm, blank otherwise.
+  Sorted oldest first. `loved` is `1` for tracks marked loved on Last.fm, blank otherwise (kept
+  in the data, not shown on the page).
 - `artists.csv` — one row per artist, most played first: `artist, plays, first_played,
   last_played, tracks, loved_tracks, years` where `years` is `2019:120|2020:33|…`. A compact
   summary for other uses (the dashboard computes the same from the raw scrobbles).
@@ -50,21 +51,23 @@ edge are the ones to rediscover. Hover for the artist, click to filter.
 Around it: six KPI tiles (scrobbles; this year vs the same point last year with a background
 sparkline; favorite artists heard this year out of all favorites, shaded to that share;
 forgotten favorites out of all favorites, gray for the forgotten share, with how many are silent
-3+ years; new artists this year, shaded to their share of the year's artists; the last 7 days vs the week before, with a 12-week sparkline and the last scrobble);
+3+ years; new artists this year, shaded to their share of the year's artists; the last 7 days vs the 7 days before, with the weekly totals of the last 12 weeks as a background line);
 scrobbles per year with a Columns / Lines / Per artist toggle (Per artist = scrobbles ÷ distinct
 artists that year — the old "average times listened per artist"); one heatmap card with a **Months / Time of day**
 toggle (scrobbles per month, or weekday × hour in Helsinki time); **Top artists** with a recency
-pill each (becomes *Top tracks* when an artist is selected); **New artists per year** with the share of the year's scrobbles
-that went to artists heard for the first time (becomes *Albums* for a selected artist); recent
-scrobbles with ♥ for loved tracks; **This week vs last week** — Last.fm-style rings for scrobbles,
-tracks, albums and artists in the last 7 (or 30) days against the period before, the tick at the
-bottom meaning "the same as before"; a **Listening fingerprint** radar comparing the focus year with
+pill each and **Top tracks** side by side (with an artist selected they become that artist's
+*Albums* and *Top tracks*); **New artists per year** with the share of the year's scrobbles that
+went to artists heard for the first time (for a selected artist: their plays by month of the year,
+a seasonal profile); **Now vs before** — paired bars for scrobbles, artists, tracks, albums and
+days with music, the last 7 or 30 days against the period before, or this year to date against
+the same days last year (green = now, gray = before, with the % change); recent scrobbles; a
+**Listening fingerprint** radar comparing the focus year with
 your all-time average on consistency (share of days with listening), discovery rate, week-to-week
 variance, concentration (share of plays to the top 10 artists) and replay rate — Last.fm's own
 chart compares to a global average, which we don't have; and a table view capped at 1 000 rows.
 
 Cross-filtering works as on the film page: year buttons (click several to combine them —
-`#y=2012,2013`), heatmap cells and artist names all add filters. On desktop the year buttons and the active-filter bar stay pinned to the top of the
+`#y=2012,2013`; *Last 12 months* is a rolling window, `#l=1`), heatmap cells and artist names all add filters. On desktop the year buttons and the active-filter bar stay pinned to the top of the
 window while scrolling (on phones they scroll away, to save space); filters show with an × each, and kept in the URL hash (`#y=2016&a=Sigur%20R%C3%B3s`).
 The **Artists / Tracks** switch sits in the pinned top bar because it drives two cards. The
 favorites controls (silence, minimum plays, sort, tab), the chart toggles and the two collapsible
@@ -73,7 +76,8 @@ remembered in the browser. Each favorites row has a small × that hides that art
 the favorites lists (browser-only, undone with the "hidden · show again" link) — handy for the
 kids' playlist era. In *Recent scrobbles*, favorites carry a tag, and a favorite heard again after
 the chosen silence is highlighted green with "back after …". Artist names that differ only by case or a leading "The"
-("Killers" / "The Killers") are merged, the most-played spelling winning. Collaboration credits
+("Killers" / "The Killers") are merged, the most-played spelling winning, and so are track titles
+that differ only by case. Collaboration credits
 written as "Taylor Swift, Post Malone" or "A feat. B" are counted under the first-named artist —
 but only when that artist also appears alone with `CREDIT_MIN_PLAYS`+ plays, so "Earth, Wind &
 Fire" stays one act; "&", "and" and "x" are never treated as separators because they are almost
