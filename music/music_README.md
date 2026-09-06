@@ -11,8 +11,11 @@ repository as `music/`.
   to parse 100 000+ rows.
 
 - `fetch_lastfm.py` — pulls the scrobble history of `LASTFM_USER` (default `akaukora`) through
-  the Last.fm API into `scrobbles.csv`, and rebuilds `artists.csv`. Incremental: each run asks
-  only for scrobbles newer than the newest one already on file.
+  the Last.fm API into `scrobbles.csv`, and rebuilds `artists.csv`. Works in 30-day time
+  windows rather than deep page numbers (Last.fm's page 300-of-500 requests fail unpredictably),
+  checkpoints as it goes, and on later runs asks only for windows newer than the newest scrobble
+  on file. `fetch_state.json` (written next to the CSVs) remembers windows that failed so they
+  are retried on the next run.
 - `update-lastfm.yml` — GitHub Actions workflow. Goes in `.github/workflows/`, not in this
   folder. Runs daily at 03:17 UTC and on demand (Actions → *Update Last.fm* → *Run workflow*,
   where a *full* checkbox re-fetches everything).
@@ -69,10 +72,13 @@ Other config constants sit next to it: `TOP_COUNT`, `RECENT_COUNT`, `FAV_PAGE`, 
 2. In the `dashboards` repository: **Settings → Secrets and variables → Actions → New repository
    secret**, name `LASTFM_API_KEY`, value = the key.
 3. Add `music/fetch_lastfm.py` and `.github/workflows/update-lastfm.yml` to the repository.
-4. **Actions → Update Last.fm → Run workflow.** The first run backfills the whole history:
-   200 scrobbles per API call at four calls a second, so 100 000 scrobbles take about two to
-   three minutes plus a checkpoint commit-free write every 25 pages. The log ends with a line
-   like `done: +98 412 scrobbles → 98 412 total, 2 310 artists; 2008-03-02 – 2026-09-06`.
+4. **Actions → Update Last.fm → Run workflow.** The first run backfills the whole history in
+   30-day windows, oldest first — roughly 700 API calls for 100 000 scrobbles, five to ten
+   minutes. The log ends with a line like
+   `done: +98 412 scrobbles → 98 412 total, 2 310 artists; 2008-03-02 – 2026-09-06`.
+   If Last.fm refuses some windows even after retries, the run is marked failed (exit 2) but
+   everything else is committed anyway, the failed windows are listed in the log and queued in
+   `fetch_state.json`, and the next run fetches them first. Just run it again.
 5. From then on the daily run appends what is new and commits only when something changed.
 
 ## Notes
@@ -82,9 +88,12 @@ Other config constants sit next to it: `TOP_COUNT`, `RECENT_COUNT`, `FAV_PAGE`, 
   recent listening, the API returns nothing — the *Hide recent listening information* setting in
   Last.fm privacy must be off.
 - Timestamps are UTC in the file; the dashboard converts them to Helsinki time (`localDate()` in the script) for the heatmaps and the listening clock.
-- Last.fm occasionally returns the same scrobble twice across pages; rows are de-duplicated on
-  (timestamp, artist, track). The fetch window is frozen at the run's start time so pages don't
-  shift when a scrobble arrives mid-run.
+- Last.fm occasionally returns the same scrobble twice; rows are de-duplicated on (timestamp,
+  artist, track). The run's end time is frozen at its start so a scrobble arriving mid-run lands
+  in the next run, not in a shifted page.
+- The workflow's commit step runs even when the fetch fails, so a partial backfill is never lost.
+  The "Node.js 20 is deprecated" annotation is GitHub's notice about `actions/checkout` and
+  `actions/setup-python`, not about this script; it is harmless.
 - Size: roughly 70 bytes per scrobble, so 100 000 scrobbles ≈ 7 MB — fine for GitHub (soft
   limit 50 MB per file) and for the browser, which parses it in well under a second.
 - `python music/fetch_lastfm.py --full` re-fetches everything (also from the workflow's *full*
