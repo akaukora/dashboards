@@ -51,5 +51,9 @@ jobs:
           else
             n=$(($(wc -l < music/scrobbles.csv) - 1))
             git commit -m "Last.fm: update scrobbles ($n rows)"
-            git push
+            # other commits may have landed while the fetch ran: rebase onto them, then push (a few tries)
+            for i in 1 2 3; do
+              git pull --rebase origin main && git push && break
+              echo "push attempt $i failed; retrying"; sleep 10
+            done
           fi
