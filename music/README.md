@@ -27,42 +27,49 @@ repository as `music/`.
 
 ## The dashboard
 
-The centrepiece is **Forgotten favourites**: artists you played at least *N* times (20 / 50 /
+The centerpiece is **Forgotten favorites**: artists you played at least *N* times (20 / 50 /
 100 / 250) from at least *M* different tracks (any / 5 / 10 / 15 — the old Tableau definition was
 50 plays and 15 tracks) but haven't heard for 6 / 12 / 24 / 36 months, sortable by plays, by
-silence, or by both (plays × log of the silence). Each row has plays-per-year bars over your whole history, the
+silence, or by both (plays × log of the silence). An **Artists / Tracks** toggle switches the
+whole card — and the bubble chart below it — to individual tracks (threshold 10 / 15 / 25 / 50
+plays), where the plays button still filters to the track's artist. Each row has plays-per-year bars over your whole history, the
 peak year, a recency pill, a link to the artist in your Last.fm library and a plays button that
 filters the whole dashboard to that artist. The **Rediscovered** toggle shows the mirror image:
-favourites you came back to in the last twelve months after a gap of at least the chosen length
-(three or more plays since). With a year or month filter on, "favourite" means an artist you
-played *N*+ times *in that period* — so 2016's favourites who have since gone quiet — while the
+favorites you came back to in the last twelve months after a gap of at least the chosen length
+(three or more plays since). With a year or month filter on, "favorite" means an artist you
+played *N*+ times *in that period* — so 2016's favorites who have since gone quiet — while the
 silence is still measured to today.
 
 **When did I last listen to each artist?** is the bubble chart from the Tableau version: every
 artist with `BUBBLE_MIN_PLAYS`+ plays, x = the last time you played them, y = plays (log scale by
-default, Linear toggle), bubble size = distinct tracks. Forgotten favourites are bright green,
-favourites still heard a muted green, everything else grey; the big bubbles far from the right
+default, Linear toggle), bubble size = distinct tracks (plays, in Tracks mode). Forgotten
+favorites are green outlines with no fill, favorites still heard solid green, everything else
+faint gray; the big bubbles far from the right
 edge are the ones to rediscover. Hover for the artist, click to filter.
 
-Around it: five KPI tiles (scrobbles, this year vs the same point last year with a background
-sparkline, favourites and how many are silent, new artists this year, last scrobble);
+Around it: five KPI tiles (scrobbles; this year vs the same point last year with a background
+sparkline; favorite artists heard this year out of all favorites, with the tile shaded to that
+share; new artists this year, shaded to their share of the year's artists; last scrobble);
 scrobbles per year with a Columns / Lines / Per artist toggle (Per artist = scrobbles ÷ distinct
-artists that year — the old "average times listened per artist"); the month heatmap; **Top artists** with a
-recency pill each (becomes *Top tracks* when an artist is selected); a **listening clock**
-(weekday × hour, Helsinki time); **New artists per year** with the share of the year's scrobbles
+artists that year — the old "average times listened per artist"); one heatmap card with a **Months / Time of day**
+toggle (scrobbles per month, or weekday × hour in Helsinki time); **Top artists** with a recency
+pill each (becomes *Top tracks* when an artist is selected); **New artists per year** with the share of the year's scrobbles
 that went to artists heard for the first time (becomes *Albums* for a selected artist); recent
 scrobbles with ♥ for loved tracks; and a table view capped at 1 000 rows with search.
 
 Cross-filtering works as on the film page: year buttons, heatmap cells and artist names all add
-filters, shown in the sticky bar with an × each, and kept in the URL hash (`#y=2016&a=Sigur%20R%C3%B3s`).
-The favourites controls (silence, minimum plays, sort, tab) are remembered in the browser.
+filters. On desktop the year buttons and the active-filter bar stay pinned to the top of the
+window while scrolling (on phones they scroll away, to save space); filters show with an × each, and kept in the URL hash (`#y=2016&a=Sigur%20R%C3%B3s`).
+The favorites controls (artists/tracks, silence, minimum plays, sort, tab) and the chart
+toggles are remembered in the browser. Artist names that differ only by case or a leading "The"
+("Killers" / "The Killers") are merged, the most-played spelling winning.
 
 `MILESTONES` at the top of the script draws thin dashed lines with a label on the time charts —
 it starts with 11 Jan 2009, the switch from owned music in iTunes to streaming; add moves, jobs
 or anything else as `{ date: "YYYY-MM-DD", label: "…" }`.
 
 Other config constants sit next to it: `TOP_COUNT`, `RECENT_COUNT`, `FAV_PAGE`, `TABLE_MAX`,
-`BUBBLE_MIN_PLAYS`, `DEFAULTS` for the favourites controls, `RECENCY` (months → pill colour), and
+`BUBBLE_MIN_PLAYS`, `DEFAULTS` for the favorites controls, `RECENCY` (months → pill color), and
 `localDate()` which converts UTC to Helsinki time without the slow `Intl` path (EET/EEST rules).
 
 ## One-time setup
