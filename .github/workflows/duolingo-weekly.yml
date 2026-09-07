@@ -27,15 +27,15 @@ jobs:
           IMAP_HOST: imap.gmail.com
           IMAP_USER: ${{ secrets.DUOLINGO_MAILBOX_USER }}
           IMAP_PASSWORD: ${{ secrets.DUOLINGO_MAILBOX_APP_PASSWORD }}
-        run: python duolingo_tracker/parse_duolingo.py
+        run: python duolingo/parse_duolingo.py
 
       - name: Rebuild dashboard
-        run: python duolingo_tracker/build_dashboard.py
+        run: python duolingo/build_dashboard.py
 
       - name: Commit and push if changed
         run: |
           git config user.name "duolingo-tracker-bot"
           git config user.email "actions@users.noreply.github.com"
-          git add duolingo_tracker/data docs/index.html
+          git add duolingo/data duolingo/index.html
           git diff --cached --quiet || git commit -m "Update Duolingo weekly progress"
           git push
