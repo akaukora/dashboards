@@ -37,6 +37,7 @@
   header h1 span { color: var(--green); }
   header .sub { color: var(--text-2); margin-top: 4px; font-size: 13px; }
   header .sub .dot { color: var(--text-3); margin: 0 6px; }
+  .intro { color: var(--text-3); font-size: 13px; margin: -6px 0 14px; max-width: 900px; line-height: 1.5; } .intro a { color: var(--text-2); }
   header .profile { font-size: 13px; color: var(--text-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; }
 
   /* ---------- media navigation ---------- */
@@ -44,6 +45,9 @@
   .nav > a:not(.profile), .nav .soon { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
   .nav > a:not(.profile).active { background: var(--green-mark); border-color: var(--green-mark); color: #fff; font-weight: 600; }
   .nav .soon { color: var(--text-3); }
+.nav > a.own { border-color: var(--green-mark); color: var(--green-mark); font-weight: 600; }
+.nav > a.own:hover { background: var(--green-mark); color: #fff; }
+footer details { display: inline; } footer summary { display: inline; cursor: pointer; color: var(--text-3); text-decoration: underline dotted; } footer summary::-webkit-details-marker { display: none; } footer details[open] summary { display: block; margin-bottom: 4px; }
 
   /* ---------- filter row ---------- */
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
@@ -219,9 +223,14 @@
     <nav class="nav" aria-label="Data">
       <button class="chip" id="pickBtn" type="button" hidden>Load other files…</button>
       <button class="chip warn" id="forgetBtn" type="button" hidden title="Remove the loaded data from this browser">Forget my data</button>
-      <a class="profile" href="../films-watched/" title="The dashboard this viewer is made from">Antti's diary ↗</a>
+      <a class="active" href="./">Films</a>
+      <a href="../storygraph-viewer/">Books</a>
+      <a href="../music-viewer/">Music</a>
+      <a class="profile" href="../films-watched/" title="The dashboard this viewer is made from">Antti's films ↗</a>
     </nav>
   </header>
+
+  <p class="intro"><a href="https://letterboxd.com" target="_blank" rel="noopener">Letterboxd</a> is a film diary and social network: each film watched is logged with a date, a rating out of five stars, optional tags and a review. This page reads your export of that diary — everything happens in your browser, nothing is uploaded.</p>
 
   <div id="status"></div>
 
@@ -336,7 +345,7 @@
 
   <footer>
     <span id="fetchedAt"></span>
-    Your CSV is parsed in the browser and kept only in this browser's local storage; nothing is sent to a server. A viewer for Letterboxd exports, simplified from <a href="../films-watched/">Antti's film diary dashboard</a> — source on <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">GitHub</a>.
+    <details><summary>About this viewer</summary>Your CSV is parsed in the browser and kept only in this browser's local storage; nothing is sent to a server. A viewer for Letterboxd exports, simplified from <a href="../films-watched/">Antti's film diary dashboard</a> — source on <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">GitHub</a>.</details>
   </footer>
 </div>
 
