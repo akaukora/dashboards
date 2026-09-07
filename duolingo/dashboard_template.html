@@ -1,0 +1,703 @@
+<title>Duolingo Weekly Progress</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Sora:wght@500;600;700&family=Work+Sans:ital,wght@0,400;0,500;0,600;1,400&display=swap">
+<style>
+:root {
+  --bg: #FBF8F4;
+  --surface: #FFFFFF;
+  --surface-2: #F8E6DA;
+  --border: #E7DDD2;
+  --ink: #1C2420;
+  --ink-secondary: #4B5750;
+  --ink-muted: #8B948E;
+  --accent-green: #004722;
+  --accent-sage: #436F4C;
+  --accent-pink: #C2409A;
+  --accent-pink-fill: #FFA1E7;
+  --accent-pink-soft: #FCD4F4;
+  --accent-amber: #B8752E;
+  --shadow: 0 1px 2px rgba(28,36,32,0.04), 0 4px 16px rgba(28,36,32,0.05);
+}
+
+:root:not([data-theme="light"]) {
+  @media (prefers-color-scheme: dark) {
+    --bg: #0F1512;
+    --surface: #161F1A;
+    --surface-2: #1B2620;
+    --border: #29352E;
+    --ink: #EDF2EE;
+    --ink-secondary: #B7C2BC;
+    --ink-muted: #7C8983;
+    --accent-green: #6FDC9C;
+    --accent-sage: #A9BFB2;
+    --accent-pink: #FFA1E7;
+    --accent-pink-fill: #FFA1E7;
+    --accent-pink-soft: #3A2536;
+    --accent-amber: #B8752E;
+    --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+  }
+}
+:root[data-theme="dark"] {
+  --bg: #0F1512;
+  --surface: #161F1A;
+  --surface-2: #1B2620;
+  --border: #29352E;
+  --ink: #EDF2EE;
+  --ink-secondary: #B7C2BC;
+  --ink-muted: #7C8983;
+  --accent-green: #6FDC9C;
+  --accent-sage: #A9BFB2;
+  --accent-pink: #FFA1E7;
+  --accent-pink-fill: #FFA1E7;
+  --accent-pink-soft: #3A2536;
+  --accent-amber: #B8752E;
+  --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
+}
+
+* { box-sizing: border-box; }
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--ink);
+  font-family: "Work Sans", -apple-system, "Segoe UI", sans-serif;
+  -webkit-font-smoothing: antialiased;
+}
+.wrap {
+  max-width: 1080px;
+  margin: 0 auto;
+  padding: 40px 24px 64px;
+}
+header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-end;
+  gap: 24px;
+  flex-wrap: wrap;
+  margin-bottom: 28px;
+}
+h1 {
+  font-family: "Sora", sans-serif;
+  font-weight: 700;
+  font-size: 28px;
+  letter-spacing: -0.01em;
+  margin: 0 0 6px;
+  text-wrap: balance;
+  color: var(--ink);
+}
+.subtitle {
+  color: var(--ink-secondary);
+  font-size: 14.5px;
+  margin: 0;
+  max-width: 60ch;
+}
+.streak-badge {
+  font-family: "Sora", sans-serif;
+  font-size: 12.5px;
+  font-weight: 600;
+  letter-spacing: 0.02em;
+  text-transform: uppercase;
+  color: var(--accent-green);
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  padding: 7px 14px;
+  border-radius: 100px;
+  white-space: nowrap;
+}
+
+.kpis {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+.kpi {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 16px 18px;
+  box-shadow: var(--shadow);
+}
+.kpi .label {
+  font-size: 12px;
+  color: var(--ink-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  margin: 0 0 8px;
+}
+.kpi .value {
+  font-family: "Sora", sans-serif;
+  font-size: 26px;
+  font-weight: 600;
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  margin: 0;
+}
+.kpi .value.accent { color: var(--accent-green); }
+.kpi .value.pink { color: var(--accent-pink); }
+.kpi .sub { font-size: 12.5px; color: var(--ink-muted); margin-top: 4px; }
+
+.charts {
+  margin-bottom: 12px;
+}
+.card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  padding: 20px 20px 12px;
+  box-shadow: var(--shadow);
+}
+.card h2 {
+  font-family: "Sora", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0 0 2px;
+  color: var(--ink);
+}
+.card .card-sub {
+  font-size: 12.5px;
+  color: var(--ink-muted);
+  margin: 0 0 8px;
+}
+.chart-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  gap: 16px;
+  flex-wrap: wrap;
+  margin-bottom: 14px;
+}
+.toggle-group {
+  display: inline-flex;
+  background: var(--surface-2);
+  border: 1px solid var(--border);
+  border-radius: 9px;
+  padding: 3px;
+  gap: 2px;
+}
+.toggle-group button {
+  font-family: "Work Sans", sans-serif;
+  font-size: 12.5px;
+  font-weight: 500;
+  color: var(--ink-secondary);
+  background: transparent;
+  border: none;
+  border-radius: 6px;
+  padding: 6px 12px;
+  cursor: pointer;
+  transition: background 0.12s ease, color 0.12s ease;
+}
+.toggle-group button:hover { color: var(--ink); }
+.toggle-group button.active {
+  background: var(--surface);
+  color: var(--ink);
+  box-shadow: 0 1px 2px rgba(0,0,0,0.08);
+  font-weight: 600;
+}
+.toggle-group button:focus-visible { outline: 2px solid var(--accent-green); outline-offset: 1px; }
+.toggle-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
+.gridline { stroke: var(--border); stroke-width: 1; }
+.axis-label { fill: var(--ink-muted); font-size: 10.5px; font-family: "Work Sans", sans-serif; }
+.chart-line { fill: none; stroke-linecap: round; stroke-linejoin: round; stroke-width: 2.25; }
+.chart-area { opacity: 0.16; }
+.crosshair { stroke: var(--ink-muted); stroke-width: 1; stroke-dasharray: 3 3; opacity: 0; pointer-events: none; }
+.hover-dot { opacity: 0; pointer-events: none; }
+.hit-layer { fill: transparent; cursor: crosshair; }
+.bar { cursor: pointer; }
+.bar.has-data { }
+.bar.no-data { opacity: 0.35; }
+.bar-hit { fill: transparent; cursor: pointer; }
+
+.tooltip {
+  position: absolute;
+  pointer-events: none;
+  background: var(--ink);
+  color: var(--bg);
+  border-radius: 10px;
+  padding: 9px 12px;
+  font-size: 12.5px;
+  line-height: 1.5;
+  box-shadow: 0 6px 20px rgba(0,0,0,0.25);
+  opacity: 0;
+  transform: translate(-50%, calc(-100% - 12px));
+  transition: opacity 0.08s ease;
+  white-space: nowrap;
+  z-index: 5;
+}
+.tooltip .t-date { font-weight: 600; margin-bottom: 3px; color: var(--bg); }
+.tooltip .t-row { display: flex; align-items: center; gap: 6px; }
+.tooltip .t-key { width: 9px; height: 2px; border-radius: 2px; display: inline-block; }
+.tooltip .t-val { font-variant-numeric: tabular-nums; font-weight: 600; }
+.tooltip .t-name { color: var(--ink-muted); }
+
+.table-card {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 14px;
+  box-shadow: var(--shadow);
+  overflow: hidden;
+}
+.table-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 16px 20px 12px;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+.table-head h2 {
+  font-family: "Sora", sans-serif;
+  font-size: 15px;
+  font-weight: 600;
+  margin: 0;
+}
+.table-scroll { overflow-x: auto; max-height: 420px; overflow-y: auto; }
+table { width: 100%; border-collapse: collapse; font-size: 13px; }
+thead th {
+  position: sticky; top: 0;
+  background: var(--surface-2);
+  text-align: right;
+  font-weight: 600;
+  font-size: 11.5px;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ink-secondary);
+  padding: 9px 16px;
+  border-bottom: 1px solid var(--border);
+  cursor: pointer;
+  user-select: none;
+}
+thead th:first-child, tbody td:first-child { text-align: left; }
+thead th.sorted::after { content: " " attr(data-dir); font-size: 10px; opacity: 0.6; }
+tbody td {
+  padding: 8px 16px;
+  text-align: right;
+  border-bottom: 1px solid var(--border);
+  font-variant-numeric: tabular-nums;
+  color: var(--ink);
+  white-space: nowrap;
+}
+tbody td:first-child { color: var(--ink-secondary); font-variant-numeric: normal; }
+tbody tr:last-child td { border-bottom: none; }
+tbody tr:hover td { background: var(--surface-2); }
+.gap-row td { color: var(--ink-muted); font-style: italic; background: transparent; }
+
+footer {
+  margin-top: 20px;
+  font-size: 12px;
+  color: var(--ink-muted);
+  line-height: 1.6;
+}
+footer a { color: inherit; }
+
+@media (max-width: 720px) {
+  .kpis { grid-template-columns: repeat(2, 1fr); }
+  .charts { grid-template-columns: 1fr; }
+}
+</style>
+
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Duolingo Weekly Progress</h1>
+      <p class="subtitle">Minutes and XP, reconstructed from the weekly progress-report emails in your Proton Mail export — by week, month, or year.</p>
+    </div>
+    <div class="streak-badge" id="rangeBadge">—</div>
+  </header>
+
+  <div class="kpis" id="kpiRow"></div>
+
+  <div class="charts">
+    <div class="card">
+      <div class="chart-head">
+        <div>
+          <h2 id="chartTitle">Minutes per week</h2>
+          <p class="card-sub" id="chartSub">Time spent learning, by report week</p>
+        </div>
+        <div class="toggle-row">
+          <div class="toggle-group" id="metricToggle">
+            <button data-metric="minutes" class="active">Minutes</button>
+            <button data-metric="xp">XP</button>
+            <button data-metric="lessons">Lessons</button>
+          </div>
+          <div class="toggle-group" id="periodToggle">
+            <button data-period="weekly" class="active">Weekly</button>
+            <button data-period="monthly">Monthly</button>
+            <button data-period="annual">Annual</button>
+          </div>
+        </div>
+      </div>
+      <div id="mainChart"></div>
+    </div>
+  </div>
+
+  <div class="table-card">
+    <div class="table-head">
+      <h2>All weeks</h2>
+      <p class="card-sub" style="margin:0;" id="tableSub">weeks with a matching report · click a column to sort</p>
+    </div>
+    <div class="table-scroll">
+      <table id="dataTable">
+        <thead>
+          <tr>
+            <th data-key="week_start">Week</th>
+            <th data-key="minutes">Minutes</th>
+            <th data-key="xp">XP</th>
+            <th data-key="lessons">Lessons</th>
+            <th data-key="xp_per_min">XP / min</th>
+          </tr>
+        </thead>
+        <tbody id="tableBody"></tbody>
+      </table>
+    </div>
+  </div>
+
+  <footer>
+    Source: weekly progress-report emails from hello@duolingo.com, combining the Proton Mail export
+    (<code>mail_20260901_135154</code>) with emails recovered from an old Gmail account for Oct–Dec 2025.
+    Faded bars mark weeks with no matching report email found in either mailbox — not weeks without studying
+    (the streak was unbroken throughout). One recovered week (Oct 19–25, 2024) had no XP figure in its email,
+    so its XP bar is faded even though minutes and lessons are known. One week (Dec 13–19, 2025) still has no
+    matching email in either mailbox and may be permanently lost. The others are single weeks where Duolingo
+    doesn't seem to have sent the full stats template at all: <span id="gapList"></span>.
+  </footer>
+</div>
+
+<div class="tooltip" id="tooltip"></div>
+
+<script>
+const DATA = __DATA_JSON__;
+
+const ink = getComputedStyle(document.documentElement);
+function cssVar(name) { return getComputedStyle(document.body).getPropertyValue(name).trim(); }
+
+const rows = DATA.slice().sort((a, b) => a.week_start.localeCompare(b.week_start));
+
+// ---------- KPIs ----------
+const totalMinutes = rows.reduce((s, r) => s + r.minutes, 0);
+const totalXp = rows.reduce((s, r) => s + r.xp, 0);
+const avgMinutes = Math.round(totalMinutes / rows.length);
+const best = rows.reduce((a, b) => b.minutes > a.minutes ? b : a, rows[0]);
+
+function fmt(n) { return n.toLocaleString('en-US'); }
+
+document.getElementById('rangeBadge').textContent =
+  `${rows[0].week_start} → ${rows[rows.length - 1].week_end}`;
+document.getElementById('tableSub').textContent =
+  `${fmt(rows.length)} weeks with a matching report · click a column to sort`;
+
+const kpiRow = document.getElementById('kpiRow');
+const kpis = [
+  { label: 'Weeks tracked', value: fmt(rows.length), sub: 'weeks with a matching report' },
+  { label: 'Total minutes', value: fmt(totalMinutes), sub: `${fmt(Math.round(totalMinutes/60))} hours studied`, cls: 'accent' },
+  { label: 'Total XP', value: fmt(totalXp), sub: `avg ${fmt(Math.round(totalXp/rows.length))} / week`, cls: 'pink' },
+  { label: 'Best week', value: fmt(best.minutes) + ' min', sub: `week of ${best.week_start} · ${fmt(best.xp)} XP` },
+];
+for (const k of kpis) {
+  const el = document.createElement('div');
+  el.className = 'kpi';
+  el.innerHTML = `<p class="label"></p><p class="value ${k.cls||''}"></p><p class="sub"></p>`;
+  el.querySelector('.label').textContent = k.label;
+  el.querySelector('.value').textContent = k.value;
+  el.querySelector('.sub').textContent = k.sub;
+  kpiRow.appendChild(el);
+}
+
+// ---------- Gap detection (for the footer note + faded bars) ----------
+function isoDate(d) { return d.toISOString().slice(0, 10); }
+function addDays(d, n) { const r = new Date(d); r.setUTCDate(r.getUTCDate() + n); return r; }
+
+const byWeekStart = new Map(rows.map(r => [r.week_start, r]));
+const firstWeek = new Date(rows[0].week_start + 'T00:00:00Z');
+const lastWeek = new Date(rows[rows.length - 1].week_start + 'T00:00:00Z');
+
+const weeklyFull = [];
+for (let d = new Date(firstWeek); d <= lastWeek; d = addDays(d, 7)) {
+  const key = isoDate(d);
+  const r = byWeekStart.get(key);
+  weeklyFull.push(r
+    ? { label: key, minutes: r.minutes, xp: r.xp, lessons: r.lessons, hasData: true, xpMissing: !!r.xp_missing, weekEnd: r.week_end }
+    : { label: key, minutes: 0, xp: 0, lessons: 0, hasData: false, xpMissing: false, weekEnd: isoDate(addDays(d, 6)) });
+}
+
+const gapRanges = [];
+let gapStart = null;
+weeklyFull.forEach((w, i) => {
+  if (!w.hasData && gapStart === null) gapStart = w.label;
+  if (w.hasData && gapStart !== null) {
+    gapRanges.push([gapStart, weeklyFull[i - 1].weekEnd]);
+    gapStart = null;
+  }
+});
+if (gapStart !== null) gapRanges.push([gapStart, weeklyFull[weeklyFull.length - 1].weekEnd]);
+
+document.getElementById('gapList').textContent = gapRanges.length
+  ? gapRanges.map(([a, b]) => `${a} – ${b}`).join('; ')
+  : 'none';
+
+// ---------- Monthly / annual aggregation ----------
+function monthKey(dateStr) { return dateStr.slice(0, 7); } // YYYY-MM
+function addMonths(d, n) { const r = new Date(d); r.setUTCMonth(r.getUTCMonth() + n); return r; }
+
+function aggregateMonthly() {
+  const out = [];
+  let cursor = new Date(Date.UTC(firstWeek.getUTCFullYear(), firstWeek.getUTCMonth(), 1));
+  const end = new Date(Date.UTC(lastWeek.getUTCFullYear(), lastWeek.getUTCMonth(), 1));
+  while (cursor <= end) {
+    const key = monthKey(isoDate(cursor));
+    const weeksIn = rows.filter(r => monthKey(r.week_start) === key);
+    out.push({
+      label: key,
+      minutes: weeksIn.reduce((s, r) => s + r.minutes, 0),
+      xp: weeksIn.reduce((s, r) => s + r.xp, 0),
+      lessons: weeksIn.reduce((s, r) => s + r.lessons, 0),
+      hasData: weeksIn.length > 0,
+      weekCount: weeksIn.length,
+    });
+    cursor = addMonths(cursor, 1);
+  }
+  return out;
+}
+
+function aggregateAnnual() {
+  const out = [];
+  for (let y = firstWeek.getUTCFullYear(); y <= lastWeek.getUTCFullYear(); y++) {
+    const weeksIn = rows.filter(r => r.week_start.slice(0, 4) === String(y));
+    out.push({
+      label: String(y),
+      minutes: weeksIn.reduce((s, r) => s + r.minutes, 0),
+      xp: weeksIn.reduce((s, r) => s + r.xp, 0),
+      lessons: weeksIn.reduce((s, r) => s + r.lessons, 0),
+      hasData: weeksIn.length > 0,
+      weekCount: weeksIn.length,
+    });
+  }
+  return out;
+}
+
+const DATASETS = {
+  weekly: weeklyFull,
+  monthly: aggregateMonthly(),
+  annual: aggregateAnnual(),
+};
+
+function formatLabel(period, label) {
+  if (period === 'weekly') {
+    const d = new Date(label + 'T00:00:00Z');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+  if (period === 'monthly') {
+    const d = new Date(label + '-01T00:00:00Z');
+    return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+  }
+  return label;
+}
+
+function fullLabel(period, item) {
+  if (period === 'weekly') return `Week of ${item.label} – ${item.weekEnd}`;
+  if (period === 'monthly') {
+    const d = new Date(item.label + '-01T00:00:00Z');
+    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }) +
+      (item.hasData ? ` · ${item.weekCount} week${item.weekCount === 1 ? '' : 's'} reported` : ' · no reports');
+  }
+  return `${item.label}` + (item.hasData ? ` · ${item.weekCount} weeks reported` : ' · no reports');
+}
+
+// ---------- Bar chart ----------
+const METRIC_META = {
+  minutes: { unit: 'min', colorVar: '--accent-sage', fallback: '#436F4C', title: 'Minutes', verb: 'Time spent learning' },
+  xp: { unit: 'XP', colorVar: '--accent-pink', fallback: '#C2409A', title: 'XP', verb: 'Experience points earned' },
+  lessons: { unit: 'lessons', colorVar: '--accent-amber', fallback: '#B8752E', title: 'Lessons', verb: 'Lessons completed' },
+};
+const PERIOD_META = {
+  weekly: 'by report week',
+  monthly: 'by month',
+  annual: 'by year',
+};
+
+let currentMetric = 'minutes';
+let currentPeriod = 'weekly';
+
+function buildBarChart() {
+  const container = document.getElementById('mainChart');
+  container.innerHTML = '';
+  const tooltip = document.getElementById('tooltip');
+
+  const items = DATASETS[currentPeriod];
+  const meta = METRIC_META[currentMetric];
+  const color = cssVar(meta.colorVar) || meta.fallback;
+  const mutedColor = cssVar('--ink-muted') || '#8B948E';
+
+  document.getElementById('chartTitle').textContent = `${meta.title} per ${currentPeriod === 'weekly' ? 'week' : currentPeriod === 'monthly' ? 'month' : 'year'}`;
+  document.getElementById('chartSub').textContent = `${meta.verb}, ${PERIOD_META[currentPeriod]}`;
+
+  const n = items.length;
+  const W = 980, H = 300, padL = 46, padR = 12, padT = 14, padB = 30;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const maxVal = Math.max(...items.map(d => d[currentMetric])) * 1.12 || 1;
+
+  const gap = currentPeriod === 'weekly' ? 1.5 : 6;
+  const barW = Math.max(1, plotW / n - gap);
+
+  function xLeft(i) { return padL + i * (plotW / n) + gap / 2; }
+  function y(v) { return padT + plotH - (v / maxVal) * plotH; }
+
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.classList.add("chart-svg");
+
+  const ticks = 4;
+  for (let t = 0; t <= ticks; t++) {
+    const val = (maxVal / ticks) * t;
+    const yy = y(val);
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", padL); line.setAttribute("x2", W - padR);
+    line.setAttribute("y1", yy); line.setAttribute("y2", yy);
+    line.setAttribute("class", "gridline");
+    svg.appendChild(line);
+    const label = document.createElementNS(svgNS, "text");
+    label.setAttribute("x", padL - 8); label.setAttribute("y", yy + 3);
+    label.setAttribute("text-anchor", "end");
+    label.setAttribute("class", "axis-label");
+    label.textContent = Math.round(val).toLocaleString('en-US');
+    svg.appendChild(label);
+  }
+
+  const maxTicks = currentPeriod === 'weekly' ? 12 : currentPeriod === 'monthly' ? 14 : n;
+  const xTickEvery = Math.max(1, Math.ceil(n / maxTicks));
+
+  items.forEach((d, i) => {
+    const bx = xLeft(i);
+    const metricKnown = d.hasData && !(currentMetric === 'xp' && d.xpMissing);
+    const bh = (d[currentMetric] / maxVal) * plotH;
+    const rect = document.createElementNS(svgNS, "rect");
+    rect.setAttribute("x", bx);
+    rect.setAttribute("y", y(d[currentMetric]));
+    rect.setAttribute("width", barW);
+    rect.setAttribute("height", Math.max(bh, metricKnown ? 1.5 : 1));
+    rect.setAttribute("rx", Math.min(3, barW / 2));
+    rect.setAttribute("fill", metricKnown ? color : mutedColor);
+    rect.setAttribute("class", "bar " + (metricKnown ? "has-data" : "no-data"));
+    svg.appendChild(rect);
+
+    if (i % xTickEvery === 0 || i === n - 1) {
+      const label = document.createElementNS(svgNS, "text");
+      label.setAttribute("x", bx + barW / 2); label.setAttribute("y", H - 8);
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("class", "axis-label");
+      label.textContent = formatLabel(currentPeriod, d.label);
+      svg.appendChild(label);
+    }
+
+    // hit target: full column height, bigger than the bar itself
+    const hit = document.createElementNS(svgNS, "rect");
+    hit.setAttribute("x", bx - gap / 2);
+    hit.setAttribute("y", padT);
+    hit.setAttribute("width", barW + gap);
+    hit.setAttribute("height", plotH);
+    hit.setAttribute("class", "bar-hit");
+    hit.addEventListener('pointerenter', () => rect.style.opacity = 0.8);
+    hit.addEventListener('pointerleave', () => { rect.style.opacity = 1; tooltip.style.opacity = 0; });
+    hit.addEventListener('pointermove', (e) => {
+      const rectBounds = svg.getBoundingClientRect();
+      tooltip.innerHTML = '';
+      const dateEl = document.createElement('div');
+      dateEl.className = 't-date';
+      dateEl.textContent = fullLabel(currentPeriod, d);
+      tooltip.appendChild(dateEl);
+      const metricKnown = d.hasData && !(currentMetric === 'xp' && d.xpMissing);
+      if (d.hasData && !metricKnown) {
+        const note = document.createElement('div');
+        note.className = 't-row';
+        note.style.color = 'var(--bg)';
+        note.textContent = `Report had no ${meta.title.toLowerCase()} figure (${fmt(d.minutes)} min · ${fmt(d.lessons)} lessons known)`;
+        tooltip.appendChild(note);
+      } else if (metricKnown) {
+        const row = document.createElement('div');
+        row.className = 't-row';
+        const key = document.createElement('span');
+        key.className = 't-key';
+        key.style.background = color;
+        const val = document.createElement('span');
+        val.className = 't-val';
+        val.textContent = fmt(d[currentMetric]) + ' ' + meta.unit;
+        const name = document.createElement('span');
+        name.className = 't-name';
+        name.textContent = currentMetric === 'minutes' ? `· ${fmt(d.xp)} XP · ${fmt(d.lessons)} lessons`
+          : currentMetric === 'xp' ? `· ${fmt(d.minutes)} min · ${fmt(d.lessons)} lessons`
+          : `· ${fmt(d.minutes)} min · ${fmt(d.xp)} XP`;
+        row.appendChild(key); row.appendChild(val); row.appendChild(name);
+        tooltip.appendChild(row);
+      }
+      tooltip.style.left = (e.clientX - rectBounds.left) + 'px';
+      tooltip.style.top = (e.clientY - rectBounds.top) + 'px';
+      tooltip.style.opacity = 1;
+    });
+    svg.appendChild(hit);
+  });
+
+  container.appendChild(svg);
+}
+
+document.getElementById('metricToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-metric]');
+  if (!btn) return;
+  currentMetric = btn.dataset.metric;
+  document.querySelectorAll('#metricToggle button').forEach(b => b.classList.toggle('active', b === btn));
+  buildBarChart();
+});
+document.getElementById('periodToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-period]');
+  if (!btn) return;
+  currentPeriod = btn.dataset.period;
+  document.querySelectorAll('#periodToggle button').forEach(b => b.classList.toggle('active', b === btn));
+  buildBarChart();
+});
+
+buildBarChart();
+
+// ---------- Table ----------
+const tableRows = rows.map(r => ({
+  ...r,
+  xp_per_min: r.minutes > 0 ? Math.round((r.xp / r.minutes) * 10) / 10 : 0,
+}));
+
+let sortKey = 'week_start', sortDir = -1;
+function renderTable() {
+  const sorted = tableRows.slice().sort((a, b) => {
+    if (a[sortKey] < b[sortKey]) return -1 * sortDir;
+    if (a[sortKey] > b[sortKey]) return 1 * sortDir;
+    return 0;
+  });
+  const tbody = document.getElementById('tableBody');
+  tbody.innerHTML = '';
+  sorted.forEach(r => {
+    const tr = document.createElement('tr');
+    const cells = [
+      `${r.week_start} – ${r.week_end}`,
+      fmt(r.minutes),
+      fmt(r.xp),
+      fmt(r.lessons),
+      r.xp_per_min.toFixed(1),
+    ];
+    cells.forEach((c, idx) => {
+      const td = document.createElement('td');
+      td.textContent = c;
+      tr.appendChild(td);
+    });
+    tbody.appendChild(tr);
+  });
+  document.querySelectorAll('#dataTable thead th').forEach(th => {
+    th.classList.toggle('sorted', th.dataset.key === sortKey);
+    th.setAttribute('data-dir', sortDir === 1 ? '▲' : '▼');
+  });
+}
+document.querySelectorAll('#dataTable thead th').forEach(th => {
+  th.addEventListener('click', () => {
+    const key = th.dataset.key;
+    if (sortKey === key) { sortDir *= -1; } else { sortKey = key; sortDir = key === 'week_start' ? -1 : -1; }
+    renderTable();
+  });
+});
+renderTable();
+</script>
