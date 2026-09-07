@@ -300,6 +300,10 @@ footer a { color: inherit; }
 @media (max-width: 720px) {
   .kpis { grid-template-columns: repeat(2, 1fr); }
   .charts { grid-template-columns: 1fr; }
+  .card { padding: 16px 14px 10px; }
+  .chart-head { gap: 10px; margin-bottom: 10px; }
+  .toggle-group { padding: 2px; gap: 1px; }
+  .toggle-group button { padding: 5px 9px; font-size: 11.5px; }
 }
 </style></head>
 <body>
@@ -549,7 +553,17 @@ function buildBarChart() {
   document.getElementById('chartSub').textContent = `${meta.verb}, ${PERIOD_META[currentPeriod]}`;
 
   const n = items.length;
-  const W = 980, H = 300, padL = 46, padR = 12, padT = 14, padB = 30;
+  const isNarrow = window.matchMedia('(max-width: 720px)').matches;
+  // Render the SVG's viewBox in real, on-screen pixel units (the container's
+  // actual measured width) instead of a fixed 980-unit canvas. With a fixed
+  // viewBox, text sized in "SVG units" shrinks along with everything else
+  // once the container is much narrower than 980px -- exactly what made the
+  // axis labels unreadable on phones. 1 viewBox unit == 1 real px this way,
+  // so a 13px label is always a true 13px, whatever the screen width.
+  const W = Math.max(280, Math.round(container.getBoundingClientRect().width || 940));
+  const H = isNarrow ? 560 : 300;
+  const fontSize = isNarrow ? 13 : 10.5;
+  const padL = isNarrow ? 56 : 46, padR = 12, padT = 14, padB = isNarrow ? 34 : 30;
   const plotW = W - padL - padR, plotH = H - padT - padB;
   const maxVal = Math.max(...items.map(d => d[currentMetric])) * 1.12 || 1;
 
@@ -577,11 +591,14 @@ function buildBarChart() {
     label.setAttribute("x", padL - 8); label.setAttribute("y", yy + 3);
     label.setAttribute("text-anchor", "end");
     label.setAttribute("class", "axis-label");
+    label.setAttribute("style", `font-size:${fontSize}px`);
     label.textContent = currentMetric === 'minutes' ? fmtDuration(Math.round(val)) : Math.round(val).toLocaleString('en-US');
     svg.appendChild(label);
   }
 
-  const maxTicks = currentPeriod === 'weekly' ? 12 : currentPeriod === 'monthly' ? 14 : n;
+  const maxTicks = isNarrow
+    ? (currentPeriod === 'weekly' ? 5 : currentPeriod === 'monthly' ? 6 : n)
+    : (currentPeriod === 'weekly' ? 12 : currentPeriod === 'monthly' ? 14 : n);
   const xTickEvery = Math.max(1, Math.ceil(n / maxTicks));
 
   items.forEach((d, i) => {
@@ -600,9 +617,10 @@ function buildBarChart() {
 
     if (i % xTickEvery === 0 || i === n - 1) {
       const label = document.createElementNS(svgNS, "text");
-      label.setAttribute("x", bx + barW / 2); label.setAttribute("y", H - 8);
+      label.setAttribute("x", bx + barW / 2); label.setAttribute("y", H - (isNarrow ? 10 : 8));
       label.setAttribute("text-anchor", "middle");
       label.setAttribute("class", "axis-label");
+      label.setAttribute("style", `font-size:${fontSize}px`);
       label.textContent = formatLabel(currentPeriod, d.label);
       svg.appendChild(label);
     }
@@ -617,7 +635,6 @@ function buildBarChart() {
     hit.addEventListener('pointerenter', () => rect.style.opacity = 0.8);
     hit.addEventListener('pointerleave', () => { rect.style.opacity = 1; tooltip.style.opacity = 0; });
     hit.addEventListener('pointermove', (e) => {
-      const rectBounds = svg.getBoundingClientRect();
       tooltip.innerHTML = '';
       const dateEl = document.createElement('div');
       dateEl.className = 't-date';
@@ -647,8 +664,13 @@ function buildBarChart() {
         row.appendChild(key); row.appendChild(val); row.appendChild(name);
         tooltip.appendChild(row);
       }
-      tooltip.style.left = (e.clientX - rectBounds.left) + 'px';
-      tooltip.style.top = (e.clientY - rectBounds.top) + 'px';
+      // The tooltip is absolutely positioned with no positioned ancestor, so
+      // its left/top are relative to the whole document -- use page
+      // coordinates (which already include scroll offset), not coordinates
+      // relative to the SVG's viewport position, or the box lands far from
+      // the cursor as soon as the page is scrolled at all.
+      tooltip.style.left = e.pageX + 'px';
+      tooltip.style.top = e.pageY + 'px';
       tooltip.style.opacity = 1;
     });
     svg.appendChild(hit);
@@ -673,6 +695,12 @@ document.getElementById('periodToggle').addEventListener('click', (e) => {
 });
 
 buildBarChart();
+
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(buildBarChart, 150);
+});
 
 // ---------- Table ----------
 const tableRows = rows.map(r => ({
