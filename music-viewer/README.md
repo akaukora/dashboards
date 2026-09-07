@@ -12,9 +12,9 @@ visit. *Forget my data* removes them.
 
 ## Files
 
-- `index.html` — the viewer. Generated from `../music/index.html` by `make_music_viewer.py` (kept in
-  the repository root next to the other generators); edit the personal page and regenerate rather
-  than editing the viewer by hand.
+- `index.html` — the viewer. Generated from `../music/index.html` by `make_music_viewer.py` in this
+  folder; edit the personal page and regenerate rather than editing the viewer by hand.
+- `make_music_viewer.py` — the generator.
 - `README.md` — this file.
 
 ## Accepted exports
@@ -54,7 +54,7 @@ described in [`music/README.md`](../music/README.md).
 ## Regenerating
 
 ```
-python3 make_music_viewer.py      # reads music/index.html, writes music-viewer/index.html
+python3 music-viewer/make_music_viewer.py      # reads music/index.html, writes music-viewer/index.html
 ```
 
 The generator does asserted string replacements, so it fails loudly if the personal page changed
