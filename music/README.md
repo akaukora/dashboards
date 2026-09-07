@@ -135,6 +135,14 @@ Other config constants sit next to it: `TOP_COUNT`, `RECENT_COUNT`, `FAV_PAGE`, 
 `BUBBLE_MIN_PLAYS`, `DEFAULTS` for the favorites controls, `RECENCY` (months → pill color), and
 `localDate()` which converts UTC to Helsinki time without the slow `Intl` path (EET/EEST rules).
 
+## The drop-in viewer
+
+`music-viewer/` is a version of this page for other people's data: it accepts Last.fm exporter files
+(Last.fm to CSV, lastfmstats.com, ghan.nl), Spotify's extended streaming history JSON and Apple
+Music's play-activity CSV, parses them in the browser and keeps them in IndexedDB. It is generated
+from this page by `make_music_viewer.py` (repository root) — regenerate it after editing
+`index.html` here. See `music-viewer/README.md`.
+
 ## One-time setup
 
 1. Create a Last.fm API account at <https://www.last.fm/api/account/create> (any application
