@@ -45,6 +45,9 @@
   .nav > a:not(.profile), .nav .soon { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
   .nav > a:not(.profile).active { background: var(--green-mark); border-color: var(--green-mark); color: #fff; font-weight: 600; }
   .nav .soon { color: var(--text-3); }
+.nav > a.own { border-color: var(--green-mark); color: var(--green-mark); font-weight: 600; }
+.nav > a.own:hover { background: var(--green-mark); color: #fff; }
+footer details { display: inline; } footer summary { display: inline; cursor: pointer; color: var(--text-3); text-decoration: underline dotted; } footer summary::-webkit-details-marker { display: none; } footer details[open] summary { display: block; margin-bottom: 4px; }
 
   /* ---------- filter row ---------- */
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
@@ -117,6 +120,12 @@
   .active .f button { all: unset; cursor: pointer; width: 18px; height: 18px; border-radius: 50%; display: inline-grid; place-items: center; font-size: 13px; line-height: 1; color: var(--text-2); }
   .active .f button:hover { background: var(--line-2); color: var(--text); }
   .active .clear { margin-left: auto; padding: 4px 10px; font-size: 12px; }
+  #activeBar { background: #10261a; border-color: var(--green-mark); box-shadow: 0 6px 18px rgba(0,0,0,.35), 0 0 0 1px rgba(0,168,63,.25); }
+  #activeBar .label { color: var(--green); }
+  #activeBar .f { background: #0d1f16; border: 1px solid rgba(0,168,63,.45); }
+  #activeBar .f .k { color: #7fc99a; }
+  #activeBar .f button:hover { background: var(--green-mark); color: #fff; }
+  #activeBar .clear { border-color: var(--green-mark); color: var(--green); } #activeBar .clear:hover { background: var(--green-mark); color: #fff; }
   .chart.clickable canvas { cursor: pointer; }
   .card .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 999px; overflow: hidden; }
@@ -214,11 +223,12 @@
       <a href="../books-read/">Books</a>
       <a href="../music/">Music</a>
       <span class="soon" title="Coming later">Games</span>
+      <a class="own" href="../letterboxd-viewer/" title="Drop your own Letterboxd export into this dashboard — nothing is uploaded">Try it with your own data →</a>
       <a class="profile" href="https://letterboxd.com/farbeach/" target="_blank" rel="noopener">letterboxd.com/farbeach ↗</a>
     </nav>
   </header>
 
-  <p class="intro"><a href="https://letterboxd.com" target="_blank" rel="noopener">Letterboxd</a> is a film diary and social network: each film watched is logged with a date, a rating out of five stars, optional tags and a review. This page reads that diary.</p>
+  <p class="intro"><a href="https://letterboxd.com" target="_blank" rel="noopener">Letterboxd</a> is a film diary and social network: each film watched is logged with a date, a rating out of five stars, optional tags and a review. This page reads that diary — and <a href="../letterboxd-viewer/">you can drop your own Letterboxd export into the same dashboard</a>.</p>
 
   <div id="status"></div>
 
@@ -330,9 +340,8 @@
   </section>
 
   <footer>
-    Data: <code>films.csv</code> in the same repository (title, release year, watched date, rating, tags, review, link), read live on every visit — a commit to the CSV is on the page within a minute or so.
     <span id="fetchedAt"></span>
-    Have a Letterboxd account? <a href="../letterboxd-viewer/">Drop your own export into a simplified version of this dashboard</a> — nothing is uploaded.
+    <details><summary>About the data</summary>Data: <code>films.csv</code> in the same repository (title, release year, watched date, rating, tags, review, link), read live on every visit — a commit to the CSV is on the page within a minute or so. Have a Letterboxd account? <a href="../letterboxd-viewer/">Drop your own export into a simplified version of this dashboard</a> — nothing is uploaded.</details>
   </footer>
 </div>
 
@@ -1032,7 +1041,7 @@ async function load() {
     const dated = ALL.filter((f) => f.date);
     const reviews = ALL.filter((f) => f.review).length;
     $("#subtitle").innerHTML = `${ALL.length} diary entries<span class="dot">·</span>${fmtDate(dated[0]?.date)} – ${fmtDate(dated.at(-1)?.date)}${reviews ? `<span class="dot">·</span>${reviews} written reviews` : ""}`;
-    $("#fetchedAt").textContent = ` Loaded ${new Date().toLocaleString("en-GB", { dateStyle: "medium", timeStyle: "short" })}.`;
+    $("#fetchedAt").textContent = `Latest entry ${fmtDate(dated.at(-1)?.date)} · loaded ${(d => `${fmtDate(d)} ${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`)(new Date())}. `;
     $("#status").classList.remove("show");
     render();
   } catch (err) {
