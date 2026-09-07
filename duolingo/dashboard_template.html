@@ -105,7 +105,7 @@ h1 {
 
 .kpis {
   display: grid;
-  grid-template-columns: repeat(4, 1fr);
+  grid-template-columns: repeat(5, 1fr);
   gap: 12px;
   margin-bottom: 24px;
 }
@@ -289,6 +289,9 @@ footer {
 }
 footer a { color: inherit; }
 
+@media (max-width: 900px) {
+  .kpis { grid-template-columns: repeat(3, 1fr); }
+}
 @media (max-width: 720px) {
   .kpis { grid-template-columns: repeat(2, 1fr); }
   .charts { grid-template-columns: 1fr; }
@@ -299,7 +302,7 @@ footer a { color: inherit; }
   <header>
     <div>
       <h1>Duolingo Weekly Progress</h1>
-      <p class="subtitle">Minutes and XP, reconstructed from the weekly progress-report emails in your Proton Mail export — by week, month, or year.</p>
+      <p class="subtitle">Time, XP, and lessons, reconstructed from Duolingo's weekly progress-report emails — by week, month, or year.</p>
     </div>
     <div class="streak-badge" id="rangeBadge">—</div>
   </header>
@@ -310,7 +313,7 @@ footer a { color: inherit; }
     <div class="card">
       <div class="chart-head">
         <div>
-          <h2 id="chartTitle">Minutes per week</h2>
+          <h2 id="chartTitle">Time per week</h2>
           <p class="card-sub" id="chartSub">Time spent learning, by report week</p>
         </div>
         <div class="toggle-row">
@@ -340,7 +343,7 @@ footer a { color: inherit; }
         <thead>
           <tr>
             <th data-key="week_start">Week</th>
-            <th data-key="minutes">Minutes</th>
+            <th data-key="minutes">Time</th>
             <th data-key="xp">XP</th>
             <th data-key="lessons">Lessons</th>
             <th data-key="xp_per_min">XP / min</th>
@@ -379,6 +382,13 @@ const avgMinutes = Math.round(totalMinutes / rows.length);
 const best = rows.reduce((a, b) => b.minutes > a.minutes ? b : a, rows[0]);
 
 function fmt(n) { return n.toLocaleString('en-US'); }
+function fmtDuration(totalMin) {
+  const h = Math.floor(totalMin / 60);
+  const m = Math.round(totalMin % 60);
+  if (h === 0) return `${m}m`;
+  if (m === 0) return `${h}h`;
+  return `${h}h ${m}m`;
+}
 
 document.getElementById('rangeBadge').textContent =
   `${rows[0].week_start} → ${rows[rows.length - 1].week_end}`;
@@ -388,9 +398,10 @@ document.getElementById('tableSub').textContent =
 const kpiRow = document.getElementById('kpiRow');
 const kpis = [
   { label: 'Weeks tracked', value: fmt(rows.length), sub: 'weeks with a matching report' },
-  { label: 'Total minutes', value: fmt(totalMinutes), sub: `${fmt(Math.round(totalMinutes/60))} hours studied`, cls: 'accent' },
+  { label: 'Total time', value: fmtDuration(totalMinutes), sub: `across ${fmt(rows.length)} weeks`, cls: 'accent' },
+  { label: 'Avg per week', value: fmtDuration(avgMinutes), sub: 'time spent learning', cls: 'accent' },
   { label: 'Total XP', value: fmt(totalXp), sub: `avg ${fmt(Math.round(totalXp/rows.length))} / week`, cls: 'pink' },
-  { label: 'Best week', value: fmt(best.minutes) + ' min', sub: `week of ${best.week_start} · ${fmt(best.xp)} XP` },
+  { label: 'Best week', value: fmtDuration(best.minutes), sub: `week of ${best.week_start} · ${fmt(best.xp)} XP` },
 ];
 for (const k of kpis) {
   const el = document.createElement('div');
@@ -504,9 +515,9 @@ function fullLabel(period, item) {
 
 // ---------- Bar chart ----------
 const METRIC_META = {
-  minutes: { unit: 'min', colorVar: '--accent-sage', fallback: '#436F4C', title: 'Minutes', verb: 'Time spent learning' },
-  xp: { unit: 'XP', colorVar: '--accent-pink', fallback: '#C2409A', title: 'XP', verb: 'Experience points earned' },
-  lessons: { unit: 'lessons', colorVar: '--accent-amber', fallback: '#B8752E', title: 'Lessons', verb: 'Lessons completed' },
+  minutes: { colorVar: '--accent-sage', fallback: '#436F4C', title: 'Time', verb: 'Time spent learning', format: fmtDuration },
+  xp: { colorVar: '--accent-pink', fallback: '#C2409A', title: 'XP', verb: 'Experience points earned', format: v => fmt(v) + ' XP' },
+  lessons: { colorVar: '--accent-amber', fallback: '#B8752E', title: 'Lessons', verb: 'Lessons completed', format: v => fmt(v) + ' lessons' },
 };
 const PERIOD_META = {
   weekly: 'by report week',
@@ -559,7 +570,7 @@ function buildBarChart() {
     label.setAttribute("x", padL - 8); label.setAttribute("y", yy + 3);
     label.setAttribute("text-anchor", "end");
     label.setAttribute("class", "axis-label");
-    label.textContent = Math.round(val).toLocaleString('en-US');
+    label.textContent = currentMetric === 'minutes' ? fmtDuration(Math.round(val)) : Math.round(val).toLocaleString('en-US');
     svg.appendChild(label);
   }
 
@@ -610,7 +621,7 @@ function buildBarChart() {
         const note = document.createElement('div');
         note.className = 't-row';
         note.style.color = 'var(--bg)';
-        note.textContent = `Report had no ${meta.title.toLowerCase()} figure (${fmt(d.minutes)} min · ${fmt(d.lessons)} lessons known)`;
+        note.textContent = `Report had no ${meta.title.toLowerCase()} figure (${fmtDuration(d.minutes)} · ${fmt(d.lessons)} lessons known)`;
         tooltip.appendChild(note);
       } else if (metricKnown) {
         const row = document.createElement('div');
@@ -620,12 +631,12 @@ function buildBarChart() {
         key.style.background = color;
         const val = document.createElement('span');
         val.className = 't-val';
-        val.textContent = fmt(d[currentMetric]) + ' ' + meta.unit;
+        val.textContent = meta.format(d[currentMetric]);
         const name = document.createElement('span');
         name.className = 't-name';
         name.textContent = currentMetric === 'minutes' ? `· ${fmt(d.xp)} XP · ${fmt(d.lessons)} lessons`
-          : currentMetric === 'xp' ? `· ${fmt(d.minutes)} min · ${fmt(d.lessons)} lessons`
-          : `· ${fmt(d.minutes)} min · ${fmt(d.xp)} XP`;
+          : currentMetric === 'xp' ? `· ${fmtDuration(d.minutes)} · ${fmt(d.lessons)} lessons`
+          : `· ${fmtDuration(d.minutes)} · ${fmt(d.xp)} XP`;
         row.appendChild(key); row.appendChild(val); row.appendChild(name);
         tooltip.appendChild(row);
       }
@@ -675,7 +686,7 @@ function renderTable() {
     const tr = document.createElement('tr');
     const cells = [
       `${r.week_start} – ${r.week_end}`,
-      fmt(r.minutes),
+      fmtDuration(r.minutes),
       fmt(r.xp),
       fmt(r.lessons),
       r.xp_per_min.toFixed(1),
