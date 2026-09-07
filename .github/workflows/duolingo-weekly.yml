@@ -1,0 +1,41 @@
+name: Update Duolingo weekly dashboard
+
+on:
+  schedule:
+    # Mondays 06:00 UTC -- adjust to taste. Duolingo's weekly report usually
+    # lands within a day or two of the week ending, so Monday morning
+    # comfortably catches last week's email.
+    - cron: "0 6 * * 1"
+  workflow_dispatch: {}   # lets you trigger a run manually from the Actions tab
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch new Duolingo emails and update data
+        id: parse
+        env:
+          IMAP_HOST: imap.gmail.com
+          IMAP_USER: ${{ secrets.DUOLINGO_MAILBOX_USER }}
+          IMAP_PASSWORD: ${{ secrets.DUOLINGO_MAILBOX_APP_PASSWORD }}
+        run: python duolingo_tracker/parse_duolingo.py
+
+      - name: Rebuild dashboard
+        run: python duolingo_tracker/build_dashboard.py
+
+      - name: Commit and push if changed
+        run: |
+          git config user.name "duolingo-tracker-bot"
+          git config user.email "actions@users.noreply.github.com"
+          git add duolingo_tracker/data docs/index.html
+          git diff --cached --quiet || git commit -m "Update Duolingo weekly progress"
+          git push
