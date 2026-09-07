@@ -22,18 +22,33 @@ repository as `music/`.
 - `scrobbles.csv` — one row per scrobble: `uts, datetime_utc, artist, album, track, loved`.
   Sorted oldest first. `loved` is `1` for tracks marked loved on Last.fm, blank otherwise (kept
   in the data, not shown on the page).
+- `corrections.csv` — fixes applied to the scrobbles on every write, because Last.fm's own data can't
+  be edited through the API. Columns `match_artist, match_track, artist, album, track, note`: a row
+  matches scrobbles by artist + track (case-insensitive; `match_track` `*` or blank means every track
+  of that artist) and overwrites the non-blank target columns. It starts with the 218 iTunes-era
+  scrobbles logged under the non-existent artist "Disney", re-credited to their performers (Phil
+  Collins, Lea Salonga, Samuel E. Wright, …) and film soundtrack albums; where a song has a film
+  version and a pop single (Circle of Life, A Whole New World, Beauty and the Beast…) the film
+  version was assumed and the note says so. Add rows for any other cleanup; run the workflow to
+  apply them (the file is rewritten in full on every run).
 - `artists.csv` — one row per artist, most played first: `artist, plays, first_played,
   last_played, tracks, loved_tracks, years` where `years` is `2019:120|2020:33|…`. A compact
   summary for other uses (the dashboard computes the same from the raw scrobbles).
 
 ## The dashboard
 
-The centerpiece is **Forgotten favorites**: artists you played at least *N* times (20 / 50 /
-100 / 250) from at least *M* different tracks (any / 5 / 10 / 15 — the old Tableau definition was
-50 plays and 15 tracks) but haven't heard for 6 / 12 / 24 / 36 months, sortable by plays, by
-silence, or by both (plays × log of the silence). An **Artists / Tracks** toggle switches the
-whole card — and the bubble chart below it — to individual tracks (threshold 10 / 15 / 25 / 50
-plays), where the plays button still filters to the track's artist. Each row has plays-per-year bars over your whole history, the
+What counts as a favorite is a dashboard-level setting, in the pinned bar under the years, and
+reads as a sentence: *Favorite artist = 50+ plays, from 10+ tracks played 3+ times each; forgotten
+after 1 yr.* Each number is a button group (plays 20 / 50 / 100 / 250; tracks any / 5 / 10 / 15;
+plays per track 1 / 2 / 3 / 5; silence 6 mo / 1 / 2 / 3 yrs). The "played 3+ times each" clause is
+what keeps an artist with three heavily played songs and twenty one-offs out of the list — Antti
+Tuisku (240 plays, 28 tracks, only 3 of them played 3+ times) is not a favorite, Tapio Rautavaara
+(446 plays, 15 tracks with 3+ plays) is. With the defaults there are 237 favorite artists. The
+same row switches between **Artist** and **Track** favorites (tracks: 10 / 15 / 25 / 50 plays).
+
+The centerpiece is **Forgotten favorites**: the favorites you haven't heard for the chosen
+silence, sortable by plays, by silence, or by both (plays × log of the silence). In Track mode the card — and the bubble
+chart below it — show individual tracks, and the plays button filters to the track's artist. Each row has plays-per-year bars over your whole history, the
 peak year, a recency pill, a link to the artist in your Last.fm library and a plays button that
 filters the whole dashboard to that artist. The **Rediscovered** toggle shows the mirror image:
 favorites you came back to in the last twelve months after a gap of at least the chosen length
@@ -48,15 +63,29 @@ favorites are green outlines with no fill, favorites still heard solid green, ev
 faint gray; the big bubbles far from the right
 edge are the ones to rediscover. Hover for the artist, click to filter.
 
-Around it: six KPI tiles (scrobbles; this year vs the same point last year with a background
-sparkline; favorite artists heard this year out of all favorites, shaded to that share;
-forgotten favorites out of all favorites, gray for the forgotten share, with how many are silent
-3+ years; new artists this year, shaded to their share of the year's artists; the last 7 days vs the 7 days before, with the weekly totals of the last 12 weeks as a background line);
+The KPI row is the executive summary, in the order of the sections below it: scrobbles; this
+year vs the same point last year (background sparkline: cumulative by month); the last 7 days as
+a percentage change against the 7 days before, with weekly totals of the last 12 weeks as the
+background line; concentration — the share of the period's plays that went to its top 10 artists,
+shaded to that share, with the Herfindahl–Hirschman index of artist shares and its inverse, the
+number of equally-played artists it corresponds to; new artists out of all artists heard in the period, shaded; forgotten
+favorites out of all favorites, gray for the forgotten share.
+
+The page is organized in three collapsible groups. **Rediscover** holds the favorites list and the
+bubble chart. **Discover** holds *New artists per year* and **How favorites were made** — one
+cumulative-plays line per favorite artist over the whole history on a log scale, the selected
+artist highlighted in green against the muted rest, with the favorite threshold drawn as a dashed
+line so you can see when an artist crossed from occasional listen to favorite (Taylor Swift: first
+heard 2008, crossed 50 plays in 2019). Its *Count* mode shows per year how many of today's
+favorites were first heard and how many crossed the line, with the running total. **Listening**
+holds the rest:
 scrobbles per year with a Columns / Lines / Per artist toggle (Per artist = scrobbles ÷ distinct
 artists that year — the old "average times listened per artist"); one heatmap card with a **Months / Time of day**
-toggle (scrobbles per month, or weekday × hour in Helsinki time); **Top artists** with a recency
-pill each and **Top tracks** side by side (with an artist selected they become that artist's
-*Albums* and *Top tracks*); **New artists per year** with the share of the year's scrobbles that
+toggle (scrobbles per month, or weekday × hour in Helsinki time); **Top artists** and **Top tracks** side by side,
+for the current selection or — via the Selection / 7 days / 30 days / Last *N* weeks control — for
+a recent window regardless of year filters, so "what was that thing I played a lot last week" has
+an answer; in window mode the pill marks artists heard for the first time in that window (with an
+artist selected the two cards become that artist's *Albums* and *Top tracks*); **New artists per year** with the share of the year's scrobbles that
 went to artists heard for the first time (for a selected artist: their plays by month of the year,
 a seasonal profile); **Now vs before** — paired bars for scrobbles, artists, tracks, albums and
 days with music, the last 7 or 30 days against the period before, or this year to date against
@@ -69,10 +98,11 @@ chart compares to a global average, which we don't have; and a table view capped
 Cross-filtering works as on the film page: year buttons (click several to combine them —
 `#y=2012,2013`; *Last 12 months* is a rolling window, `#l=1`), heatmap cells and artist names all add filters. On desktop the year buttons and the active-filter bar stay pinned to the top of the
 window while scrolling (on phones they scroll away, to save space); filters show with an × each, and kept in the URL hash (`#y=2016&a=Sigur%20R%C3%B3s`).
-The **Artists / Tracks** switch sits in the pinned top bar because it drives two cards. The
-favorites controls (silence, minimum plays, sort, tab), the chart toggles and the two collapsible
-groups (**Rediscover** — favorites and the bubble chart; **Listening** — everything else) are
-remembered in the browser. Each favorites row has a small × that hides that artist or track from
+The pinned top bar also has a **Find an artist** box: two letters bring suggestions (most played
+first), Enter or a pick filters the page to that artist — the way to reach anyone outside the top
+lists, including in the favorites-growth chart, where a selected non-favorite still gets its line.
+The favorite definition, the kids' setting, the sort, the chart toggles and the three collapsible
+groups are remembered in the browser. Each favorites row has a small × that hides that artist or track from
 the favorites lists (browser-only, undone with the "hidden · show again" link) — handy for the
 kids' playlist era. In *Recent scrobbles*, favorites carry a tag, and a favorite heard again after
 the chosen silence is highlighted green with "back after …". Artist names that differ only by case or a leading "The"
@@ -85,6 +115,15 @@ always band names (Amadou & Mariam, Of Monsters and Men). `KEEP_TOGETHER` lists 
 are single acts. The full credit is kept for the table and the recent list ("Fortnight (with Post
 Malone)"), and the footer reports how many scrobbles were re-credited. Set `SPLIT_CREDITS = false`
 to turn this off.
+
+**Kids' songs.** `KIDS_TRACKS` in the page holds the kids' playlist as `[artist, track, liked]`
+(64 songs, from the Kids playlist spreadsheet). Songs are matched to scrobbles by artist and title
+with bracketed parts and " - …" suffixes ignored (56 of 64 match; the footer lists the ones that
+don't, mostly titles spelled differently by the service). The *Kids' songs* control in the
+definition row has three states: include everything, hide the kids' songs you don't like (the
+`liked = false` ones), or hide all kids' songs. Hiding rebuilds the data, so it applies everywhere —
+favorites, tops, charts and KPIs — and the subtitle says when it's on. With unliked songs hidden,
+Ikuinen vappu and Sata salamaa leave the top tracks while Rosvo-Roope and Señorita stay.
 
 A one-paragraph intro under the title says what Last.fm is for visitors who don't know it.
 

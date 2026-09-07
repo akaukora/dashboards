@@ -106,6 +106,31 @@ def write_scrobbles(path: Path, rows):
     tmp.replace(path)
 
 
+CORRECTIONS_FILE = "corrections.csv"
+
+
+def apply_corrections(rows, path: Path):
+    """Rewrite artist / album / track for rows matching corrections.csv (case-insensitive artist + track;
+    match_track "*" = every track of that artist; blank target columns keep the old value). Last.fm itself
+    cannot be edited through the API, so this is where scrobbles logged under a wrong artist get fixed."""
+    if not path.exists():
+        return 0
+    with path.open(encoding="utf-8", newline="") as f:
+        rules = [r for r in csv.DictReader(f) if (r.get("match_artist") or "").strip()]
+    exact = {(r["match_artist"].strip().lower(), (r.get("match_track") or "").strip().lower()): r for r in rules if (r.get("match_track") or "").strip() not in ("", "*")}
+    whole = {r["match_artist"].strip().lower(): r for r in rules if (r.get("match_track") or "").strip() in ("", "*")}
+    n = 0
+    for row in rows:
+        rule = exact.get((row["artist"].lower(), row["track"].lower())) or whole.get(row["artist"].lower())
+        if not rule:
+            continue
+        for col in ("artist", "album", "track"):
+            if (rule.get(col) or "").strip():
+                row[col] = rule[col].strip()
+        n += 1
+    return n
+
+
 def dedupe(rows):
     seen, out = set(), []
     for r in rows:
@@ -247,6 +272,9 @@ def main():
                 log(f"  retry {datetime.fromtimestamp(t0, timezone.utc):%Y-%m-%d} failed again: {e}"); still.append([t0, t1])
         failed = still
 
+    fixed = apply_corrections(rows, data / CORRECTIONS_FILE)
+    if fixed:
+        log(f"  corrections.csv: {fixed} scrobbles re-credited")
     write_scrobbles(scrobbles_path, rows)
     artists = write_artists(artists_path, rows)
     save_state(state_path, {"failed": failed, "completed_through": until if not failed else None, "run": datetime.now(timezone.utc).isoformat(timespec="seconds")})
