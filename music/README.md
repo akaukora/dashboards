@@ -72,12 +72,18 @@ number of equally-played artists it corresponds to; new artists out of all artis
 favorites out of all favorites, gray for the forgotten share.
 
 The page is organized in three collapsible groups. **Rediscover** holds the favorites list and the
-bubble chart. **Discover** holds *New artists per year* and **How favorites were made** — one
+bubble chart. **Discover** holds *New artists per year* (its tooltip also says how many of that
+year's new artists are favorites today); **Favorites discovered per year** — of today's favorites,
+how many were heard for the first time each year (blue) and how many crossed the play threshold that
+year (green), with the running total; its *Growth lines* mode is the earlier view — one
 cumulative-plays line per favorite artist over the whole history on a log scale, the selected
 artist highlighted in green against the muted rest, with the favorite threshold drawn as a dashed
 line so you can see when an artist crossed from occasional listen to favorite (Taylor Swift: first
-heard 2008, crossed 50 plays in 2019). Its *Count* mode shows per year how many of today's
-favorites were first heard and how many crossed the line, with the running total. **Listening**
+heard 2008, crossed 50 plays in 2019); and **Newest favorites** — today's favorites (artists or
+tracks, following the Artist/Track switch) by the date you first heard them, newest first, each row
+showing the first play and how long it took to reach the threshold. With a year filter it becomes
+"favorites first heard in 2016", i.e. that year's discoveries that stuck; the first year of the
+history holds everything already known when scrobbling began, and the note says so. **Listening**
 holds the rest:
 scrobbles per year with a Columns / Lines / Per artist toggle (Per artist = scrobbles ÷ distinct
 artists that year — the old "average times listened per artist"); one heatmap card with a **Months / Time of day**
@@ -97,7 +103,8 @@ chart compares to a global average, which we don't have; and a table view capped
 
 Cross-filtering works as on the film page: year buttons (click several to combine them —
 `#y=2012,2013`; *Last 12 months* is a rolling window, `#l=1`), heatmap cells and artist names all add filters. On desktop the year buttons and the active-filter bar stay pinned to the top of the
-window while scrolling (on phones they scroll away, to save space); filters show with an × each, and kept in the URL hash (`#y=2016&a=Sigur%20R%C3%B3s`).
+window while scrolling (on phones they scroll away, to save space); the bar turns green whenever a
+filter is on, so a filtered view is hard to mistake for the whole; filters show with an × each, and are kept in the URL hash (`#y=2016&a=Sigur%20R%C3%B3s`).
 The pinned top bar also has a **Find an artist** box: two letters bring suggestions (most played
 first), Enter or a pick filters the page to that artist — the way to reach anyone outside the top
 lists, including in the favorites-growth chart, where a selected non-favorite still gets its line.
@@ -125,7 +132,10 @@ definition row has three states: include everything, hide the kids' songs you do
 favorites, tops, charts and KPIs — and the subtitle says when it's on. With unliked songs hidden,
 Ikuinen vappu and Sata salamaa leave the top tracks while Rosvo-Roope and Señorita stay.
 
-A one-paragraph intro under the title says what Last.fm is for visitors who don't know it.
+A one-paragraph intro under the title says what Last.fm is for visitors who don't know it and
+links to the drop-in viewer, as does the green *Try it with your own data →* button in the nav. The
+footer shows only the latest scrobble's time and when the page loaded; the notes about where the
+data comes from sit behind an *About the data* toggle (the same pattern on the film and book pages).
 
 `MILESTONES` at the top of the script draws thin dashed lines with a label on the time charts —
 it starts with 11 Jan 2009, the switch from owned music in iTunes to streaming; add moves, jobs
