@@ -137,6 +137,13 @@ a{color:var(--ac)}
 
 .blk.gh{border-style:dotted;opacity:.6}
 .fc.gh{opacity:.55;border-style:dashed}
+
+.daynav{flex-wrap:nowrap;margin-bottom:6px}
+.daynav select{flex:1;min-width:0}
+.pill.nav{flex:0 0 auto;width:38px;padding:6px 0;text-align:center;font-size:16px;line-height:1}
+.pill.nav:disabled{opacity:.35;cursor:default}
+.scopes{margin-bottom:.9rem}
+@media (max-width:600px){ .scopes .pill{flex:1;min-width:0;text-align:center} }
 textarea{width:100%;min-height:70px;font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
 </style>
 </head>
@@ -277,10 +284,12 @@ function filmState(n){
   const picked=opts.filter(o=>picks.has(o.id));
   const free=opts.filter(o=>!blockedBy(o) && !soldOut(o.id));
   const out=opts.filter(o=>soldOut(o.id)).length;
-  if(picked.length) return {k:'done',picked,free,opts,out};
-  if(!free.length) return {k:'urgent',picked,free,opts,out,msg: out===opts.length?'all sold out':'no free slot'};
-  if(free.length===1) return {k:'soon',picked,free,opts,out,msg:'1 slot left'};
-  return {k:'ok',picked,free,opts,out,msg:free.length+' slots free'};
+  const only=opts.length===1;
+  if(picked.length) return {k:'done',picked,free,opts,out,only};
+  if(!free.length) return {k:'urgent',picked,free,opts,out,only,msg: out===opts.length?'all sold out':'no free time slot'};
+  if(free.length===1) return {k:'soon',picked,free,opts,out,only,
+    msg: only?'screens once only':`1 of ${opts.length} time slots left`};
+  return {k:'ok',picked,free,opts,out,only,msg:free.length+' time slots free'};
 }
 function gridPick(id){
   const f=get(id); if(!f) return;
@@ -309,7 +318,7 @@ function toggleShort(n){
 
 function infoBox(){
   if(view==='cat') return `<div class="bn info"><b>Step 1 \u2014 what do you want to see?</b> All ${ALL_FILMS.length} titles with the festival's own descriptions. Tick a film to shortlist it; you don't choose times here. ${shortlist.size} shortlisted so far.</div>`;
-  if(view==='film') return `<div class="bn info"><b>Step 2 \u2014 when will you see them?</b> Your ${shortlist.size} shortlisted film${shortlist.size===1?'':'s'}, each with every screening it has. Pick one time per film. Films with the fewest slots left come first. Use the \u25cb dot to mark a screening sold out.</div>`;
+  if(view==='film') return `<div class="bn info"><b>Step 2 \u2014 when will you see them?</b> Your ${shortlist.size} shortlisted film${shortlist.size===1?'':'s'}, each with every screening it has. Pick one time per film. Films with the fewest time slots left come first. Use the \u25cb dot to mark a screening sold out.</div>`;
   if(view==='grid') return `<div class="bn info"><b>The day laid out.</b> Venues across the top, clock down the side; scroll sideways for more venues. Clicking a film cycles it: shortlist and pick \u2192 unpick \u2192 off the shortlist. A film you just changed stays visible (dotted) until you switch day or scope.</div>`;
   return `<div class="bn info"><b>Your festival.</b> Every pick in order, with the gap and any venue change between them.</div>`;
 }
@@ -333,11 +342,10 @@ function renderIssues(){
   if(!shortlist.size){ el.innerHTML=''; return; }
   const fl=pickFlags(), it=[...picks].map(get).filter(Boolean);
   const names=[...shortlist];
-  const urgent=[], soon=[];
+  const urgent=[];
   names.forEach(n=>{
     const s=filmState(n);
     if(s.k==='urgent') urgent.push([n, s.out===s.opts.length?'all sold out':'blocked by your picks']);
-    else if(s.k==='soon') soon.push(n);
   });
   const clashes=[], tights=[];
   for(let i=0;i<it.length;i++) for(let j=i+1;j<it.length;j++){
@@ -351,10 +359,8 @@ function renderIssues(){
   const dups=[...new Set(it.filter(f=>fl[f.id].dup).map(f=>f.film))];
   const so=it.filter(f=>soldOut(f.id));
   const rows=[];
-  if(urgent.length) rows.push(`<div class="issrow"><span class="isslab bad">No slot left</span>
+  if(urgent.length) rows.push(`<div class="issrow"><span class="isslab bad">No time slot left</span>
     <span class="issnames">${urgent.map(([n,w])=>fb(n)+`<span style="color:var(--t3)">(${w})</span>`).join(' ')}</span></div>`);
-  if(soon.length) rows.push(`<div class="issrow"><span class="isslab wn">Down to 1 slot</span>
-    <span class="issnames">${soon.map(fb).join(' ')}</span></div>`);
   if(clashes.length) rows.push(`<div class="issrow"><span class="isslab bad">Overlapping picks</span>
     <span class="issnames">${clashes.map(([a,b])=>`<span>${fb(a.film)} ${a.start}\u2013${a.end} vs ${fb(b.film)} ${b.start}\u2013${b.end}, ${a.dateLabel}</span>`).join('; ')}</span></div>`);
   if(tights.length) rows.push(`<div class="issrow"><span class="isslab wn">Tight changeover</span>
@@ -478,8 +484,12 @@ function vGrid(){
   if(gridScope==='short') pool=dayAll.filter(f=>shortlist.has(f.film)||touchedS.has(f.id));
   else if(gridScope==='picks') pool=dayAll.filter(f=>picks.has(f.id)||touchedS.has(f.id));
   const inScope=f=>gridScope==='short'?shortlist.has(f.film):gridScope==='picks'?picks.has(f.id):true;
-  let h=`<div class="ctrl">
+  const di=DAYS.findIndex(([k])=>k===gridDay);
+  let h=`<div class="ctrl daynav">
+    <button class="pill nav" id="prevDay"${di<=0?' disabled':''} aria-label="Previous day">\u2039</button>
     <select id="gday">${DAYS.map(([k,l])=>`<option value="${k}"${k===gridDay?' selected':''}>${l}</option>`).join('')}</select>
+    <button class="pill nav" id="nextDay"${di>=DAYS.length-1?' disabled':''} aria-label="Next day">\u203a</button></div>
+    <div class="ctrl scopes">
     <button class="pill${gridScope==='short'?' active':''}" data-scope="short">Shortlist</button>
     <button class="pill${gridScope==='picks'?' active':''}" data-scope="picks">My picks</button>
     <button class="pill${gridScope==='all'?' active':''}" data-scope="all">Whole programme</button></div>`;
@@ -584,6 +594,13 @@ function render(){
     gridScope=el.dataset.scope; touchedS.clear(); render();}));
   const gd=document.getElementById('gday');
   if(gd) gd.addEventListener('change',e=>{gridDay=+e.target.value; touchedS.clear(); render();});
+  const step=d=>{
+    const i=DAYS.findIndex(([k])=>k===gridDay)+d;
+    if(i>=0&&i<DAYS.length){ gridDay=DAYS[i][0]; touchedS.clear(); render(); }
+  };
+  const pv=document.getElementById('prevDay'), nx=document.getElementById('nextDay');
+  if(pv) pv.addEventListener('click',()=>step(-1));
+  if(nx) nx.addEventListener('click',()=>step(1));
   const th=document.getElementById('theme');
   if(th) th.addEventListener('change',e=>{theme=e.target.value;render();});
   const kwe=document.getElementById('kw');
