@@ -143,6 +143,14 @@ a{color:var(--ac)}
 .pill.nav:disabled{opacity:.35;cursor:default}
 .scopes{margin-bottom:.9rem}
 @media (max-width:600px){ .scopes .pill{flex:1;min-width:0;text-align:center} }
+
+#shareLink{font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
+
+#planbar{gap:6px}
+#planbar select{flex:1;min-width:120px}
+#planbar .pill{padding:6px 10px;font-size:12px}
+.planwho{font-size:11.5px;color:var(--t2);width:100%}
+.planwho b{color:var(--tx)}
 textarea{width:100%;min-height:70px;font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
 </style>
 </head>
@@ -151,8 +159,9 @@ textarea{width:100%;min-height:70px;font-size:11.5px;font-family:ui-monospace,Me
  <h1>HIFF 2026 &mdash; Rakkautta &amp; Anarkiaa planner</h1>
  <p class="sub" id="sub"></p>
 
+ <div class="presetbar" id="planbar"></div>
  <div class="presetbar">
-  <button class="pill" id="shareBtn">Share / restore picks</button>
+  <button class="pill" id="shareBtn">Send to phone / restore</button>
   <span id="storeMsg" style="font-size:11.5px;width:100%"></span>
  </div>
  <div id="shareBox" style="display:none"></div>
@@ -175,6 +184,46 @@ const DATA = {"s":[{"title":"Opening Gala: La bola negra","start":"16:45","end":
 const S = DATA.s, PRESET = DATA.preset || [], META = DATA.meta;
 const PRESET_NAME = DATA.presetName || '';
 const SKEY = 'hiff2026-' + (DATA.build || 'shared');
+
+function encodeState(){
+  const o={v:2, n:active, i:[...shortlist].map(n=>ALL_FILMS.indexOf(n)).filter(i=>i>=0),
+           p:[...picks], a:avail};
+  return btoa(unescape(encodeURIComponent(JSON.stringify(o))));
+}
+function decodeState(code){
+  const o=JSON.parse(decodeURIComponent(escape(atob(code.trim()))));
+  const names = o.v===2
+    ? (o.i||[]).map(i=>ALL_FILMS[i]).filter(Boolean)     // compact form
+    : (o.s||[]).filter(n=>BY_FILM[n]);                   // older name-based codes
+  return {names, picks:(o.p||[]).filter(i=>get(i)), avail:o.a||{}, label:(o.n||'').slice(0,40)};
+}
+function snapshot(){ return {s:[...shortlist], p:[...picks], a:avail}; }
+function adopt(name){
+  active=name;
+  const p=plans[name]||{s:[],p:[],a:{}};
+  shortlist=new Set((p.s||[]).filter(n=>BY_FILM[n]));
+  picks=new Set((p.p||[]).filter(i=>get(i)));
+  avail=p.a||{};
+}
+function uniqueName(n){
+  n=(n||'').trim()||'Imported plan';
+  let k=n,i=2; while(plans[k]) k=n+' '+(i++);
+  return k;
+}
+function switchPlan(name){
+  if(!plans[name]) return;
+  persist(); adopt(name); persist(); render();
+}
+// an imported plan is saved alongside, never over the top of, what is already here
+function importPlan(st, suggested){
+  const raw = prompt('Save this plan as:', suggested || st.label || 'Imported plan');
+  if(raw===null) return false;
+  persist();
+  const k=uniqueName(raw);
+  plans[k]={s:st.names, p:st.picks, a:st.avail};
+  adopt(k); persist();
+  return true;
+}
 const SEED_SOLDOUT = DATA.soldout || [];
 const BY_FILM = {};
 S.forEach(f => { (BY_FILM[f.film] = BY_FILM[f.film] || []).push(f); });
@@ -188,6 +237,7 @@ const AV = ['unknown','available','limited','sold out'];
 const AVC = ['var(--t3)','var(--ok)','var(--wn)','var(--dg)'];
 
 let shortlist = new Set(), picks = new Set(), avail = {};
+let plans = {}, active = 'My plan';
 let view='film', query='', theme='', kw='', gridScope='short';
 let gridDay = DAYS[1] ? DAYS[1][0] : DAYS[0][0];
 let catOnlyIn=false, ready=false;
@@ -224,20 +274,40 @@ async function probeStore(){
 async function load(){
   const raw = await store.get(SKEY+'-state');
   let st=null; try{ st = raw?JSON.parse(raw):null; }catch(e){}
-  if(st && st.shortlist){
-    shortlist = new Set(st.shortlist.filter(n=>BY_FILM[n]));
-    picks = new Set((st.picks||[]).filter(i=>get(i)));
-    avail = st.avail || {};
+  if(st && st.v===2 && st.plans && Object.keys(st.plans).length){
+    plans = st.plans;
+    adopt(plans[st.active] ? st.active : Object.keys(plans)[0]);
+  } else if(st && st.shortlist){                       // migrate the single-plan format
+    plans = {'My plan': {s:st.shortlist, p:st.picks||[], a:st.avail||{}}};
+    adopt('My plan');
   } else {
-    shortlist = new Set(PRESET);
-    SEED_SOLDOUT.forEach(i => { if(get(i)) avail[i] = 3; });
+    const a={}; SEED_SOLDOUT.forEach(i => { if(get(i)) a[i]=3; });
+    plans = {'My plan': {s:[...PRESET], p:[], a}};
+    adopt('My plan');
   }
   storeOk = await probeStore();
+  const m = location.hash.match(/[#&]p=([^&]+)/);
+  if(m){
+    try{
+      const inc = decodeState(decodeURIComponent(m[1]));
+      const only = Object.keys(plans).length===1 && !shortlist.size && !picks.size;
+      if(only){                                        // nothing here yet: just take it
+        plans={}; const k=uniqueName(inc.label||'Shared plan');
+        plans[k]={s:inc.names,p:inc.picks,a:inc.avail}; adopt(k);
+      } else {
+        importPlan(inc, inc.label || 'Shared plan');
+      }
+    }catch(e){}
+    history.replaceState(null,'',location.href.split('#')[0]);
+  }
   ready=true;
   setView(shortlist.size ? 'film' : 'cat');
   render();
 }
-function persist(){ store.set(SKEY+'-state', JSON.stringify({shortlist:[...shortlist],picks:[...picks],avail})); }
+function persist(){
+  plans[active]=snapshot();
+  store.set(SKEY+'-state', JSON.stringify({v:2, active, plans}));
+}
 
 const av = id => avail[id] || 0;
 function cycleAv(id){ avail[id] = (av(id)+1)%4; if(avail[id]===0) delete avail[id]; persist(); render(); }
@@ -309,6 +379,43 @@ function toggleShort(n){
   if(shortlist.has(n)){ shortlist.delete(n); BY_FILM[n].forEach(o=>picks.delete(o.id)); }
   else shortlist.add(n);
   persist(); render();
+}
+
+function renderPlanBar(){
+  const el=document.getElementById('planbar');
+  if(!el) return;
+  const names=Object.keys(plans).sort((a,b)=>a.localeCompare(b,'fi'));
+  const p=plans[active]||{s:[],p:[]};
+  el.innerHTML=`<label for="planSel">Plan</label>
+    <select id="planSel">${names.map(n=>`<option value="${esc(n)}"${n===active?' selected':''}>${esc(n)}</option>`).join('')}</select>
+    <button class="pill" id="planNew">New</button>
+    <button class="pill" id="planRen">Rename</button>
+    <button class="pill" id="planDel"${names.length<2?' disabled':''}>Delete</button>
+    <span class="planwho">Viewing <b>${esc(active)}</b> \u2014 ${(p.s||[]).length} films, ${(p.p||[]).length} times picked. ${names.length>1?'Edits apply to this plan only.':'Import a friend\'s link to keep theirs alongside yours.'}</span>`;
+  document.getElementById('planSel').addEventListener('change',e=>switchPlan(e.target.value));
+  document.getElementById('planNew').addEventListener('click',()=>{
+    const raw=prompt('Name for the new, empty plan:','My plan');
+    if(raw===null) return;
+    persist();
+    const k=uniqueName(raw);
+    const a={}; SEED_SOLDOUT.forEach(i=>{ if(get(i)) a[i]=3; });
+    plans[k]={s:[],p:[],a};
+    adopt(k); persist(); render();
+  });
+  document.getElementById('planRen').addEventListener('click',()=>{
+    const raw=prompt('Rename this plan:',active);
+    if(raw===null) return;
+    const k=(raw||'').trim(); if(!k||k===active) return;
+    persist();
+    const data=plans[active]; delete plans[active];
+    const nk=uniqueName(k); plans[nk]=data; adopt(nk); persist(); render();
+  });
+  document.getElementById('planDel').addEventListener('click',()=>{
+    if(Object.keys(plans).length<2) return;
+    if(!confirm(`Delete the plan "${active}"? This cannot be undone.`)) return;
+    delete plans[active];
+    adopt(Object.keys(plans)[0]); persist(); render();
+  });
 }
 
 function infoBox(){
@@ -552,8 +659,21 @@ function vMine(){
 }
 
 function shareBox(){
-  const code=btoa(unescape(encodeURIComponent(JSON.stringify({s:[...shortlist],p:[...picks],a:avail}))));
-  return `<div class="bn"><p class="mt" style="margin:0 0 5px">Copy this code to move your shortlist, picks and availability notes to another device, or paste a friend's code to view theirs.</p>
+  const code=encodeState();
+  const base=location.href.split('#')[0];
+  const link=base+'#p='+code;
+  const canLink = location.protocol.startsWith('http');
+  // the fragment is portable between builds, so a friend can be sent the public one
+  const pub = base.includes('/mine/') ? base.replace('/mine/','/') + '#p=' + code : null;
+  return `<div class="bn">
+    ${canLink?`<p class="mt" style="margin:0 0 4px"><b>Share "${esc(active)}".</b> Copy the link and send it to your phone or to a friend. It carries this shortlist, these picks and these sold-out marks.</p>
+    <div class="ctrl" style="margin:0 0 8px"><input type="text" id="shareLink" value="${esc(link)}" readonly>
+    <button class="pill" id="copyLink">Copy link</button></div>
+    ${pub?`<p class="mt" style="margin:0 0 4px"><b>Send it to a friend.</b> Same plan, pointed at the public version. It arrives as a plan named "${esc(active)}" next to their own \u2014 it will not overwrite anything.</p>
+    <div class="ctrl" style="margin:0 0 8px"><input type="text" id="pubLink" value="${esc(pub)}" readonly>
+    <button class="pill" id="copyPub">Copy link</button></div>`:''}`
+    :`<p class="mt" style="margin:0 0 6px">This copy is opened as a local file, so a link won't work. Use the code below.</p>`}
+    <p class="mt" style="margin:0 0 4px">Or paste a code \u2014 it is saved as a separate plan, not merged into this one:</p>
     <textarea id="shareTa">${esc(code)}</textarea>
     <div class="ctrl" style="margin:6px 0 0"><button class="pill" id="loadShare">Load pasted code</button>
     <button class="pill" id="closeShare">Close</button></div></div>`;
@@ -572,6 +692,7 @@ function render(){
   if(ss) ss.innerHTML = storeOk===false
     ? '<span class="warnmsg">This browser is not saving your choices \u2014 copy the share code before you close the tab.</span>'
     : '<span class="okmsg">Saved in this browser</span>';
+  renderPlanBar();
   document.getElementById('info').innerHTML=infoBox();
   renderStats();
   const b=document.getElementById('body');
@@ -634,13 +755,20 @@ document.getElementById('shareBtn').addEventListener('click',()=>{
   if(sbx.style.display==='none'){
     sbx.style.display='block'; sbx.innerHTML=shareBox();
     document.getElementById('closeShare').addEventListener('click',()=>{sbx.style.display='none';sbx.innerHTML='';});
+    const copy=async(btn,inpId)=>{
+      const inp=document.getElementById(inpId);
+      try{ await navigator.clipboard.writeText(inp.value); btn.textContent='Copied'; }
+      catch(e){ inp.select(); btn.textContent='Press \u2318/Ctrl+C'; }
+      setTimeout(()=>{btn.textContent='Copy link';},2500);
+    };
+    const cl=document.getElementById('copyLink');
+    if(cl) cl.addEventListener('click',()=>copy(cl,'shareLink'));
+    const cp=document.getElementById('copyPub');
+    if(cp) cp.addEventListener('click',()=>copy(cp,'pubLink'));
     document.getElementById('loadShare').addEventListener('click',()=>{
       try{
-        const o=JSON.parse(decodeURIComponent(escape(atob(document.getElementById('shareTa').value.trim()))));
-        shortlist=new Set((o.s||[]).filter(n=>BY_FILM[n]));
-        picks=new Set((o.p||[]).filter(i=>get(i)));
-        avail=o.a||{};
-        persist(); sbx.style.display='none'; sbx.innerHTML=''; render();
+        const inc=decodeState(document.getElementById('shareTa').value);
+        if(importPlan(inc)){ sbx.style.display='none'; sbx.innerHTML=''; render(); }
       }catch(e){ alert('That code could not be read. Paste the whole thing, with no line breaks.'); }
     });
   } else { sbx.style.display='none'; sbx.innerHTML=''; }
