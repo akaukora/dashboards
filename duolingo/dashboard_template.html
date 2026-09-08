@@ -210,6 +210,43 @@ h1 {
     rgba(255,255,255,0.55) 0 1.6px, rgba(255,255,255,0) 1.6px 3.6px);
 }
 .swatch-none { background: var(--ink-muted); opacity: 0.35; }
+
+.tag-modeled {
+  font-family: "Work Sans", sans-serif;
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--accent-estimate);
+  border: 1px solid var(--accent-estimate);
+  border-radius: 4px; padding: 1px 5px; margin-left: 6px; vertical-align: 2px;
+}
+.band-label { fill: var(--ink-muted); font-size: 10px; font-family: "Work Sans", sans-serif; }
+.path-line { fill: none; stroke: var(--accent-estimate); stroke-width: 2; stroke-dasharray: 5 3; }
+.path-dot { fill: var(--surface); stroke: var(--accent-estimate); stroke-width: 2; }
+.milestones {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(132px, 1fr));
+  gap: 8px; margin: 14px 0 4px;
+}
+.ms {
+  border: 1px solid var(--border); border-radius: 9px; padding: 8px 10px;
+  background: var(--surface-2);
+}
+.ms .ms-lvl { font-family: "Sora", sans-serif; font-size: 13px; font-weight: 600; color: var(--ink); }
+.ms .ms-date { font-size: 12px; color: var(--ink-secondary); font-variant-numeric: tabular-nums; margin-top: 2px; }
+.ms .ms-sub { font-size: 11px; color: var(--ink-muted); margin-top: 1px; }
+.ms.ms-future { background: transparent; }
+.ms.ms-future .ms-lvl, .ms.ms-future .ms-date { color: var(--ink-muted); }
+.path-note { font-size: 11.5px; color: var(--ink-muted); line-height: 1.6; margin: 10px 0 6px; }
+.now-strip {
+  display: flex; flex-wrap: wrap; gap: 6px 22px;
+  padding: 10px 12px; margin: 0 0 14px;
+  border: 1px solid var(--accent-green); border-radius: 10px;
+  background: var(--surface-2);
+}
+.now-strip .now-label {
+  font-size: 10.5px; font-weight: 600; letter-spacing: 0.04em; text-transform: uppercase;
+  color: var(--accent-green); align-self: center; margin-right: 2px;
+}
+.now-item { font-size: 12.5px; color: var(--ink-secondary); }
+.now-item b { font-family: "Sora", sans-serif; color: var(--ink); font-variant-numeric: tabular-nums; }
 .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
 .gridline { stroke: var(--border); stroke-width: 1; }
 .axis-label { fill: var(--ink-muted); font-size: 10.5px; font-family: "Work Sans", sans-serif; }
@@ -357,6 +394,34 @@ footer a { color: inherit; }
         </div>
       </div>
       <div id="mainChart"></div>
+    </div>
+  </div>
+
+  <div class="charts">
+    <div class="card">
+      <div class="chart-head">
+        <div>
+          <h2>Progress along the path <span class="tag-modeled">modeled</span></h2>
+          <p class="card-sub">Position in the French course over time, reconstructed from cumulative XP — not recorded data</p>
+        </div>
+      </div>
+      <div class="now-strip" id="nowStrip"></div>
+      <div id="pathChart"></div>
+      <div class="milestones" id="milestones"></div>
+      <p class="path-note">
+        Duolingo records only where you are <em>now</em>, with no history of when you passed each unit —
+        and the report emails never mention level at all. So the line is reconstructed: your units spread
+        across the weeks in proportion to the XP you earned, anchored to end on your recorded position.
+        <br><br>
+        <strong>It does survive one real test.</strong> Duolingo's own Score for the course is
+        <strong>91 of 129</strong>, and mapping unit 499 through the published CEFR score bands
+        (A1 0–29, A2 30–59, B1 60–99, B2 100–129) predicts 89.6 — within 1.4 points. That check is
+        why the shape is trustworthy even though the model is simple. Its weak point is timing rather
+        than position: early units are shorter than later ones, so the late-2024 dates likely run ahead
+        of reality. Read any single date as ±a few weeks, and note the curve ends on the position from
+        the data export (unit 494, Score ≈89) rather than the slightly newer duome figure above, so its
+        final point or two is a touch conservative.
+      </p>
     </div>
   </div>
 
@@ -836,10 +901,240 @@ document.getElementById('periodToggle').addEventListener('click', (e) => {
 
 buildBarChart();
 
+// ---------- Path progress (modeled) ----------
+// Duolingo's export records only the current position, with no per-unit
+// history, and the emails carry no level information at all. So this spreads
+// the known 494 units across the weeks in proportion to XP earned, anchored so
+// the series ends exactly on the recorded position. Monotonic by construction.
+const CURRENT_UNIT = 493;              // unit_index, 0-based
+const COURSE_UNITS = 994;              // French from English, 2026/03 build
+// section number, CEFR label, first unit index, unit count
+const SECTIONS = [[1,'Intro',0,10],[2,'A1',10,30],[3,'A1',40,29],[4,'A2',69,60],
+                  [5,'B1',129,255],[6,'B1',384,245],[7,'B2',629,180],[8,'B2',809,185]];
+// Adjacent sections sharing a CEFR label are drawn as one band.
+const CEFR_BANDS = [['Intro',0,10],['A1',10,69],['A2',69,129],['B1',129,629],['B2',629,COURSE_UNITS]];
+
+// Measured, not modeled: read off Duolingo (data export) and duome on the
+// dates shown. These anchor the reconstruction and are what validates it.
+const NOW = {
+  score: 91, scoreMax: 129, unit: 499, units: COURSE_UNITS,
+  streak: 677, skills: '203/302', lessons: '4495/6970', lexemes: '9650/14616',
+  asOf: '2026-09-08',
+};
+// Duolingo's published CEFR score bands, paired with the unit range each level
+// spans in this course. Score is interpolated linearly inside a band.
+const SCORE_BANDS = [['A1',10,69,0,29],['A2',69,129,30,59],['B1',129,629,60,99],['B2',629,COURSE_UNITS,100,129]];
+function unitToScore(u) {
+  if (u < 10) return 0;
+  for (const [name, u0, u1, s0, s1] of SCORE_BANDS) {
+    if (u < u1 || name === 'B2') {
+      const f = Math.min(1, Math.max(0, (u - u0) / (u1 - u0)));
+      return s0 + f * (s1 - s0 + 1);
+    }
+  }
+  return 129;
+}
+
+const pathTotalXp = rows.reduce((s, r) => s + (metricValue(r, 'xp') || 0), 0);
+let pathCum = 0;
+const pathSeries = rows.map(r => {
+  pathCum += metricValue(r, 'xp') || 0;
+  return { weekStart: r.week_start, weekEnd: r.week_end,
+           unit: CURRENT_UNIT * pathCum / pathTotalXp, estimated: !!r.estimated };
+});
+
+function unitReached(u) {
+  const hit = pathSeries.find(p => p.unit >= u);
+  return hit ? hit.weekEnd : null;
+}
+
+function buildPathChart() {
+  const container = document.getElementById('pathChart');
+  container.innerHTML = '';
+  const tooltip = document.getElementById('tooltip');
+  const isNarrow = window.matchMedia('(max-width: 720px)').matches;
+  const W = Math.max(280, Math.round(container.getBoundingClientRect().width || 940));
+  const H = isNarrow ? 380 : 260;
+  const fontSize = isNarrow ? 12 : 10.5;
+  const padL = isNarrow ? 46 : 40, padR = isNarrow ? 34 : 42, padT = 10, padB = isNarrow ? 30 : 26;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  const estColor = cssVar('--accent-estimate') || '#748DA3';
+  const svgNS = "http://www.w3.org/2000/svg";
+  const svg = document.createElementNS(svgNS, "svg");
+  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
+  svg.classList.add("chart-svg");
+
+  const yTop = COURSE_UNITS;
+  const y = v => padT + plotH - (v / yTop) * plotH;
+  const x = i => padL + (pathSeries.length === 1 ? 0 : (i / (pathSeries.length - 1)) * plotW);
+
+  // CEFR bands: a sequential ramp, since the levels are ordered. Kept very
+  // faint so the progress line stays the figure and these stay ground.
+  // Intro/A1/A2 together are only the first 13% of the course, so on a linear
+  // axis their bands are a few pixels tall. Draw every band, but only label
+  // the ones with room -- the milestone cards below carry the thin ones, and
+  // colliding labels would be worse than none.
+  const labelled = [];
+  CEFR_BANDS.forEach(([label, from, to], k) => {
+    const yFrom = y(from), yTo = y(to);
+    const r = document.createElementNS(svgNS, "rect");
+    r.setAttribute("x", padL); r.setAttribute("width", plotW);
+    r.setAttribute("y", yTo); r.setAttribute("height", Math.max(1, yFrom - yTo));
+    r.setAttribute("fill", cssVar('--accent-green') || '#004722');
+    r.setAttribute("opacity", 0.04 + k * 0.025);
+    svg.appendChild(r);
+
+    if (yFrom - yTo >= 15) {
+      const mid = (yFrom + yTo) / 2;
+      if (labelled.every(v => Math.abs(v - mid) >= 13)) {
+        const t = document.createElementNS(svgNS, "text");
+        t.setAttribute("x", W - padR + 6);
+        t.setAttribute("y", mid + 3.5);
+        t.setAttribute("class", "band-label");
+        t.setAttribute("style", `font-size:${fontSize}px`);
+        t.textContent = label;
+        svg.appendChild(t);
+        labelled.push(mid);
+      }
+    }
+    const line = document.createElementNS(svgNS, "line");
+    line.setAttribute("x1", padL); line.setAttribute("x2", W - padR);
+    line.setAttribute("y1", yFrom); line.setAttribute("y2", yFrom);
+    line.setAttribute("class", "gridline");
+    svg.appendChild(line);
+  });
+
+  // y labels: unit numbers, thinned the same way
+  const placed = [];
+  [0, 129, 629, COURSE_UNITS].forEach(u => {
+    const yy = y(u);
+    if (placed.some(v => Math.abs(v - yy) < 12)) return;
+    const t = document.createElementNS(svgNS, "text");
+    t.setAttribute("x", padL - 6); t.setAttribute("y", yy + 3.5);
+    t.setAttribute("text-anchor", "end");
+    t.setAttribute("class", "axis-label");
+    t.setAttribute("style", `font-size:${fontSize}px`);
+    t.textContent = u;
+    svg.appendChild(t);
+    placed.push(yy);
+  });
+
+  const path = document.createElementNS(svgNS, "path");
+  path.setAttribute("d", pathSeries.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.unit).toFixed(1)}`).join(' '));
+  path.setAttribute("class", "path-line");
+  svg.appendChild(path);
+
+  // x labels
+  const every = Math.max(1, Math.ceil(pathSeries.length / (isNarrow ? 4 : 9)));
+  pathSeries.forEach((p, i) => {
+    if (i % every && i !== pathSeries.length - 1) return;
+    const t = document.createElementNS(svgNS, "text");
+    t.setAttribute("x", x(i)); t.setAttribute("y", H - 8);
+    t.setAttribute("text-anchor", "middle");
+    t.setAttribute("class", "axis-label");
+    t.setAttribute("style", `font-size:${fontSize}px`);
+    t.textContent = formatLabel('weekly', p.weekStart);
+    svg.appendChild(t);
+  });
+
+  // a dot where the line first enters each section actually reached
+  SECTIONS.forEach(([n, cefr, start]) => {
+    if (start === 0 || start > CURRENT_UNIT) return;
+    const i = pathSeries.findIndex(p => p.unit >= start);
+    if (i < 0) return;
+    const c = document.createElementNS(svgNS, "circle");
+    c.setAttribute("cx", x(i)); c.setAttribute("cy", y(start)); c.setAttribute("r", 3.5);
+    c.setAttribute("class", "path-dot");
+    svg.appendChild(c);
+  });
+
+  // hover: one hit column per week
+  const colW = plotW / pathSeries.length;
+  pathSeries.forEach((p, i) => {
+    const hit = document.createElementNS(svgNS, "rect");
+    hit.setAttribute("x", x(i) - colW / 2); hit.setAttribute("y", padT);
+    hit.setAttribute("width", colW); hit.setAttribute("height", plotH);
+    hit.setAttribute("class", "bar-hit");
+    hit.addEventListener('pointerleave', () => tooltip.style.opacity = 0);
+    hit.addEventListener('pointermove', (e) => {
+      const unit = Math.round(p.unit);
+      const sec = SECTIONS.slice().reverse().find(s => unit >= s[2]) || SECTIONS[0];
+      tooltip.innerHTML = '';
+      const d1 = document.createElement('div');
+      d1.className = 't-date';
+      d1.textContent = `Week of ${p.weekStart} – ${p.weekEnd}`;
+      tooltip.appendChild(d1);
+      const d2 = document.createElement('div');
+      d2.className = 't-row';
+      d2.innerHTML = `<span class="t-val">≈ unit ${unit + 1}</span>` +
+        `<span class="t-name">· ≈ Score ${Math.round(unitToScore(p.unit))} · section ${sec[0]} · ${sec[1]}</span>`;
+      tooltip.appendChild(d2);
+      tooltip.style.left = e.pageX + 'px';
+      tooltip.style.top = e.pageY + 'px';
+      tooltip.style.opacity = 1;
+    });
+    svg.appendChild(hit);
+  });
+
+  container.appendChild(svg);
+}
+
+function buildMilestones() {
+  const el = document.getElementById('milestones');
+  el.innerHTML = '';
+  // One card per CEFR level, at the unit where that level's content begins.
+  const firstOfLevel = [];
+  CEFR_BANDS.forEach(([label, from]) => {
+    const sec = SECTIONS.find(s => s[2] === from) || SECTIONS[0];
+    firstOfLevel.push([label, from, sec[0]]);
+  });
+  firstOfLevel.forEach(([label, from, secNo]) => {
+    const reached = from <= CURRENT_UNIT ? unitReached(from) : null;
+    const band = SCORE_BANDS.find(b => b[0] === label);
+    const d = document.createElement('div');
+    d.className = 'ms' + (reached ? '' : ' ms-future');
+    d.innerHTML = `<div class="ms-lvl"></div><div class="ms-date"></div><div class="ms-sub"></div>`;
+    d.querySelector('.ms-lvl').textContent = label;
+    d.querySelector('.ms-date').textContent = reached ? `≈ ${reached}` : 'not yet reached';
+    d.querySelector('.ms-sub').textContent =
+      `unit ${from + 1}` + (band ? ` · Score ${band[3]}+` : '');
+    el.appendChild(d);
+  });
+}
+
+function buildNowStrip() {
+  const el = document.getElementById('nowStrip');
+  el.innerHTML = '';
+  const lab = document.createElement('span');
+  lab.className = 'now-label';
+  lab.textContent = `measured ${NOW.asOf}`;
+  el.appendChild(lab);
+  const level = SCORE_BANDS.find(b => NOW.score >= b[3] && NOW.score <= b[4]);
+  const items = [
+    [`Score`, `${NOW.score}/${NOW.scoreMax}`, level ? ` (${level[0]})` : ''],
+    [`Unit`, `${NOW.unit}/${NOW.units}`, ` (${Math.round(100 * NOW.unit / NOW.units)}% of course)`],
+    [`Streak`, `${fmt(NOW.streak)} days`, ''],
+    [`Lessons`, NOW.lessons, ''],
+    [`Words`, NOW.lexemes, ''],
+  ];
+  items.forEach(([k, v, extra]) => {
+    const s = document.createElement('span');
+    s.className = 'now-item';
+    s.innerHTML = `${k} <b></b><span class="ms-sub" style="display:inline"></span>`;
+    s.querySelector('b').textContent = v;
+    s.querySelector('span').textContent = extra;
+    el.appendChild(s);
+  });
+}
+
+buildNowStrip();
+buildPathChart();
+buildMilestones();
+
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(buildBarChart, 150);
+  resizeTimer = setTimeout(() => { buildBarChart(); buildPathChart(); }, 150);
 });
 
 // ---------- Table ----------

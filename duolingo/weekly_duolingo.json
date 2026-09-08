@@ -1,0 +1,1001 @@
+[
+  {
+    "week_start": "2024-08-03",
+    "week_end": "2024-08-09",
+    "minutes": 19,
+    "xp": 0,
+    "lessons": 2,
+    "sent_date": "2024-08-10",
+    "subject": "📆 Your first progress report is ready",
+    "xp_missing": true,
+    "streak": 2
+  },
+  {
+    "week_start": "2024-08-10",
+    "week_end": "2024-08-16",
+    "minutes": 49,
+    "xp": 120,
+    "lessons": 5,
+    "sent_date": "2024-08-17",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 5
+  },
+  {
+    "week_start": "2024-08-17",
+    "week_end": "2024-08-23",
+    "minutes": 21,
+    "xp": 147,
+    "lessons": 5,
+    "sent_date": "2024-08-24",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 5
+  },
+  {
+    "week_start": "2024-08-24",
+    "week_end": "2024-08-30",
+    "minutes": 31,
+    "xp": 210,
+    "lessons": 8,
+    "sent_date": "2024-08-31",
+    "subject": "💪 Did you beat last week? See your stats:",
+    "streak": 11
+  },
+  {
+    "week_start": "2024-08-31",
+    "week_end": "2024-09-06",
+    "minutes": 36,
+    "xp": 274,
+    "lessons": 10,
+    "sent_date": "2024-09-07",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 15
+  },
+  {
+    "week_start": "2024-09-07",
+    "week_end": "2024-09-13",
+    "minutes": 19,
+    "xp": 160,
+    "lessons": 8,
+    "sent_date": "2024-09-14",
+    "subject": "📆 This week’s stats are in",
+    "streak": 15
+  },
+  {
+    "week_start": "2024-09-14",
+    "week_end": "2024-09-20",
+    "minutes": 41,
+    "xp": 542,
+    "lessons": 18,
+    "sent_date": "2024-09-21",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 20
+  },
+  {
+    "week_start": "2024-09-21",
+    "week_end": "2024-09-27",
+    "minutes": 5,
+    "xp": 75,
+    "lessons": 3,
+    "sent_date": "2024-09-28",
+    "subject": "📈 Your progress report is ready",
+    "streak": 1
+  },
+  {
+    "week_start": "2024-09-28",
+    "week_end": "2024-10-04",
+    "minutes": 39,
+    "xp": 641,
+    "lessons": 14,
+    "sent_date": "2024-10-05",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 2
+  },
+  {
+    "week_start": "2024-10-05",
+    "week_end": "2024-10-11",
+    "minutes": 4,
+    "xp": 30,
+    "lessons": 1,
+    "sent_date": "2024-10-12",
+    "subject": "📈 Your progress report is ready"
+  },
+  {
+    "week_start": "2024-10-19",
+    "week_end": "2024-10-25",
+    "minutes": 523,
+    "xp": 0,
+    "lessons": 160,
+    "sent_date": "2024-10-26",
+    "subject": "📈 Your progress report is ready",
+    "xp_missing": true,
+    "streak": 7
+  },
+  {
+    "week_start": "2024-10-26",
+    "week_end": "2024-11-01",
+    "minutes": 536,
+    "xp": 6077,
+    "lessons": 155,
+    "sent_date": "2024-11-02",
+    "subject": "💪 Did you beat last week? See your stats:",
+    "streak": 13
+  },
+  {
+    "week_start": "2024-11-02",
+    "week_end": "2024-11-08",
+    "minutes": 612,
+    "xp": 6431,
+    "lessons": 144,
+    "sent_date": "2024-11-09",
+    "subject": "💪 Did you beat last week? See your stats:",
+    "streak": 21
+  },
+  {
+    "week_start": "2024-11-09",
+    "week_end": "2024-11-15",
+    "minutes": 883,
+    "xp": 6949,
+    "lessons": 181,
+    "sent_date": "2024-11-16",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 27
+  },
+  {
+    "week_start": "2024-11-16",
+    "week_end": "2024-11-22",
+    "minutes": 670,
+    "xp": 7635,
+    "lessons": 146,
+    "sent_date": "2024-11-23",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 34
+  },
+  {
+    "week_start": "2024-11-23",
+    "week_end": "2024-11-29",
+    "minutes": 520,
+    "xp": 5350,
+    "lessons": 91,
+    "sent_date": "2024-11-30",
+    "subject": "📝 This week’s stats are in",
+    "streak": 41
+  },
+  {
+    "week_start": "2024-11-30",
+    "week_end": "2024-12-06",
+    "minutes": 249,
+    "xp": 3280,
+    "lessons": 53,
+    "sent_date": "2024-12-07",
+    "subject": "📖 This week’s stats are in",
+    "streak": 48
+  },
+  {
+    "week_start": "2024-12-07",
+    "week_end": "2024-12-13",
+    "minutes": 392,
+    "xp": 5704,
+    "lessons": 86,
+    "sent_date": "2024-12-14",
+    "subject": "💪 Did you beat last week? See your stats:",
+    "streak": 55
+  },
+  {
+    "week_start": "2024-12-14",
+    "week_end": "2024-12-20",
+    "minutes": 153,
+    "xp": 1918,
+    "lessons": 35,
+    "sent_date": "2024-12-21",
+    "subject": "📬 This week’s stats are in",
+    "streak": 62
+  },
+  {
+    "week_start": "2024-12-21",
+    "week_end": "2024-12-27",
+    "minutes": 150,
+    "xp": 881,
+    "lessons": 23,
+    "sent_date": "2024-12-28",
+    "subject": "📈 This week’s stats are in",
+    "streak": 69
+  },
+  {
+    "week_start": "2024-12-28",
+    "week_end": "2025-01-03",
+    "minutes": 167,
+    "xp": 1394,
+    "lessons": 28,
+    "sent_date": "2025-01-04",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 76
+  },
+  {
+    "week_start": "2025-01-04",
+    "week_end": "2025-01-10",
+    "minutes": 107,
+    "xp": 520,
+    "lessons": 13,
+    "sent_date": "2025-01-11",
+    "subject": "📈 This week’s stats are in",
+    "streak": 83
+  },
+  {
+    "week_start": "2025-01-11",
+    "week_end": "2025-01-17",
+    "minutes": 114,
+    "xp": 1158,
+    "lessons": 21,
+    "sent_date": "2025-01-18",
+    "subject": "💪 Did you beat last week? See your stats:",
+    "streak": 90
+  },
+  {
+    "week_start": "2025-01-18",
+    "week_end": "2025-01-24",
+    "minutes": 81,
+    "xp": 620,
+    "lessons": 13,
+    "sent_date": "2025-01-25",
+    "subject": "🗞 This week’s stats are in",
+    "streak": 97
+  },
+  {
+    "week_start": "2025-01-25",
+    "week_end": "2025-01-31",
+    "minutes": 106,
+    "xp": 601,
+    "lessons": 14,
+    "sent_date": "2025-02-01",
+    "subject": "📝 This week’s stats are in",
+    "streak": 104
+  },
+  {
+    "week_start": "2025-02-01",
+    "week_end": "2025-02-07",
+    "minutes": 60,
+    "xp": 648,
+    "lessons": 12,
+    "sent_date": "2025-02-08",
+    "subject": "💪 Did you beat last week? See your stats:",
+    "streak": 111
+  },
+  {
+    "week_start": "2025-02-08",
+    "week_end": "2025-02-14",
+    "minutes": 44,
+    "xp": 377,
+    "lessons": 9,
+    "sent_date": "2025-02-15",
+    "subject": "📝 Your progress report is ready",
+    "streak": 118
+  },
+  {
+    "week_start": "2025-02-15",
+    "week_end": "2025-02-21",
+    "minutes": 87,
+    "xp": 583,
+    "lessons": 13,
+    "sent_date": "2025-02-22",
+    "subject": "💪 Did you beat last week? See your stats:",
+    "streak": 125
+  },
+  {
+    "week_start": "2025-02-22",
+    "week_end": "2025-02-28",
+    "minutes": 129,
+    "xp": 992,
+    "lessons": 20,
+    "sent_date": "2025-03-01",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 133
+  },
+  {
+    "week_start": "2025-03-01",
+    "week_end": "2025-03-07",
+    "minutes": 155,
+    "xp": 1512,
+    "lessons": 24,
+    "sent_date": "2025-03-08",
+    "subject": "🏁 You made progress! See your stats:",
+    "streak": 139
+  },
+  {
+    "week_start": "2025-03-08",
+    "week_end": "2025-03-14",
+    "minutes": 112,
+    "xp": 828,
+    "lessons": 16,
+    "sent_date": "2025-03-15",
+    "subject": "📈 Your progress report is ready",
+    "streak": 146
+  },
+  {
+    "week_start": "2025-03-15",
+    "week_end": "2025-03-21",
+    "minutes": 85,
+    "xp": 680,
+    "lessons": 13,
+    "sent_date": "2025-03-22",
+    "subject": "📆 Your progress report is ready",
+    "streak": 153
+  },
+  {
+    "week_start": "2025-03-22",
+    "week_end": "2025-03-28",
+    "minutes": 96,
+    "xp": 512,
+    "lessons": 12,
+    "sent_date": "2025-03-29",
+    "subject": "📬 This week’s stats are in",
+    "streak": 160
+  },
+  {
+    "week_start": "2025-03-29",
+    "week_end": "2025-04-04",
+    "minutes": 142,
+    "xp": 1348,
+    "lessons": 22,
+    "sent_date": "2025-04-05",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 165
+  },
+  {
+    "week_start": "2025-04-05",
+    "week_end": "2025-04-11",
+    "minutes": 76,
+    "xp": 678,
+    "lessons": 12,
+    "sent_date": "2025-04-12",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 172
+  },
+  {
+    "week_start": "2025-04-12",
+    "week_end": "2025-04-18",
+    "minutes": 105,
+    "xp": 816,
+    "lessons": 16,
+    "sent_date": "2025-04-19",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 179
+  },
+  {
+    "week_start": "2025-04-19",
+    "week_end": "2025-04-25",
+    "minutes": 143,
+    "xp": 1114,
+    "lessons": 26,
+    "sent_date": "2025-04-26",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 186
+  },
+  {
+    "week_start": "2025-04-26",
+    "week_end": "2025-05-02",
+    "minutes": 199,
+    "xp": 2052,
+    "lessons": 33,
+    "sent_date": "2025-05-03",
+    "subject": "👀 Duo sees you with that French progress!",
+    "streak": 193
+  },
+  {
+    "week_start": "2025-05-03",
+    "week_end": "2025-05-09",
+    "minutes": 88,
+    "xp": 523,
+    "lessons": 14,
+    "sent_date": "2025-05-10",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 200
+  },
+  {
+    "week_start": "2025-05-10",
+    "week_end": "2025-05-16",
+    "minutes": 71,
+    "xp": 470,
+    "lessons": 10,
+    "sent_date": "2025-05-17",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 206
+  },
+  {
+    "week_start": "2025-05-17",
+    "week_end": "2025-05-23",
+    "minutes": 87,
+    "xp": 1283,
+    "lessons": 21,
+    "sent_date": "2025-05-24",
+    "subject": "👀 Duo sees you with that French progress!",
+    "streak": 213
+  },
+  {
+    "week_start": "2025-05-24",
+    "week_end": "2025-05-30",
+    "minutes": 104,
+    "xp": 1043,
+    "lessons": 19,
+    "sent_date": "2025-05-31",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 219
+  },
+  {
+    "week_start": "2025-05-31",
+    "week_end": "2025-06-06",
+    "minutes": 58,
+    "xp": 456,
+    "lessons": 9,
+    "sent_date": "2025-06-07",
+    "subject": "📆 Weekly insights unlocked",
+    "streak": 227
+  },
+  {
+    "week_start": "2025-06-07",
+    "week_end": "2025-06-13",
+    "minutes": 56,
+    "xp": 330,
+    "lessons": 8,
+    "sent_date": "2025-06-14",
+    "subject": "📈 On track this week?",
+    "streak": 233
+  },
+  {
+    "week_start": "2025-06-14",
+    "week_end": "2025-06-20",
+    "minutes": 52,
+    "xp": 447,
+    "lessons": 10,
+    "sent_date": "2025-06-21",
+    "subject": "👀 Did you beat last week?",
+    "streak": 240
+  },
+  {
+    "week_start": "2025-06-21",
+    "week_end": "2025-06-27",
+    "minutes": 141,
+    "xp": 959,
+    "lessons": 18,
+    "sent_date": "2025-06-28",
+    "subject": "🫣 Antti, did you make progress?",
+    "streak": 247
+  },
+  {
+    "week_start": "2025-06-28",
+    "week_end": "2025-07-04",
+    "minutes": 133,
+    "xp": 1619,
+    "lessons": 23,
+    "sent_date": "2025-07-05",
+    "subject": "👀 Duo sees you with that French progress!",
+    "streak": 254
+  },
+  {
+    "week_start": "2025-07-05",
+    "week_end": "2025-07-11",
+    "minutes": 98,
+    "xp": 1059,
+    "lessons": 20,
+    "sent_date": "2025-07-12",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 261
+  },
+  {
+    "week_start": "2025-07-12",
+    "week_end": "2025-07-18",
+    "minutes": 153,
+    "xp": 1593,
+    "lessons": 26,
+    "sent_date": "2025-07-19",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 269
+  },
+  {
+    "week_start": "2025-07-19",
+    "week_end": "2025-07-25",
+    "minutes": 86,
+    "xp": 687,
+    "lessons": 16,
+    "sent_date": "2025-07-26",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 275
+  },
+  {
+    "week_start": "2025-07-26",
+    "week_end": "2025-08-01",
+    "minutes": 76,
+    "xp": 570,
+    "lessons": 12,
+    "sent_date": "2025-08-02",
+    "subject": "👀 Duo sees you with that French progress!",
+    "streak": 282
+  },
+  {
+    "week_start": "2025-08-02",
+    "week_end": "2025-08-08",
+    "minutes": 6,
+    "xp": 44,
+    "lessons": 3,
+    "sent_date": "2025-08-09",
+    "subject": "Weekly stats! Uh oh, you missed 6 days 📉"
+  },
+  {
+    "week_start": "2025-08-09",
+    "week_end": "2025-08-15",
+    "minutes": 174,
+    "xp": 1554,
+    "lessons": 28,
+    "sent_date": "2025-08-16",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 295
+  },
+  {
+    "week_start": "2025-08-16",
+    "week_end": "2025-08-22",
+    "minutes": 201,
+    "xp": 1790,
+    "lessons": 33,
+    "sent_date": "2025-08-23",
+    "subject": "👀 Duo sees you with that French progress!",
+    "streak": 302
+  },
+  {
+    "week_start": "2025-08-23",
+    "week_end": "2025-08-29",
+    "minutes": 170,
+    "xp": 2703,
+    "lessons": 34,
+    "sent_date": "2025-08-30",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 309
+  },
+  {
+    "week_start": "2025-08-30",
+    "week_end": "2025-09-05",
+    "minutes": 113,
+    "xp": 876,
+    "lessons": 17,
+    "sent_date": "2025-09-06",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 316
+  },
+  {
+    "week_start": "2025-09-06",
+    "week_end": "2025-09-12",
+    "minutes": 125,
+    "xp": 1332,
+    "lessons": 23,
+    "sent_date": "2025-09-13",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 323
+  },
+  {
+    "week_start": "2025-09-13",
+    "week_end": "2025-09-19",
+    "minutes": 83,
+    "xp": 919,
+    "lessons": 16,
+    "sent_date": "2025-09-20",
+    "subject": "👀 Duo sees you with that French progress!",
+    "streak": 330
+  },
+  {
+    "week_start": "2025-09-20",
+    "week_end": "2025-09-26",
+    "minutes": 109,
+    "xp": 1527,
+    "lessons": 21,
+    "sent_date": "2025-09-27",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 337
+  },
+  {
+    "week_start": "2025-09-27",
+    "week_end": "2025-10-03",
+    "minutes": 89,
+    "xp": 1071,
+    "lessons": 15,
+    "sent_date": "2025-10-04",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 344
+  },
+  {
+    "week_start": "2025-10-04",
+    "week_end": "2025-10-10",
+    "minutes": 68,
+    "xp": 828,
+    "lessons": 13,
+    "sent_date": "2025-10-11",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 350
+  },
+  {
+    "week_start": "2025-10-11",
+    "week_end": "2025-10-17",
+    "minutes": 90,
+    "xp": 590,
+    "lessons": 14,
+    "sent_date": "2025-10-18",
+    "subject": "👀 Duo sees you with that French progress!",
+    "streak": 357
+  },
+  {
+    "week_start": "2025-10-18",
+    "week_end": "2025-10-24",
+    "minutes": 98,
+    "xp": 935,
+    "lessons": 16,
+    "sent_date": "2025-10-25",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 364
+  },
+  {
+    "week_start": "2025-10-25",
+    "week_end": "2025-10-31",
+    "minutes": 112,
+    "xp": 928,
+    "lessons": 18,
+    "sent_date": "2025-11-01",
+    "subject": "👀 Duo sees you with that French progress!",
+    "streak": 371
+  },
+  {
+    "week_start": "2025-11-01",
+    "week_end": "2025-11-07",
+    "minutes": 107,
+    "xp": 997,
+    "lessons": 19,
+    "sent_date": "2025-11-08",
+    "subject": "Antti, your French progress can't be stopped!"
+  },
+  {
+    "week_start": "2025-11-08",
+    "week_end": "2025-11-14",
+    "minutes": 184,
+    "xp": 1948,
+    "lessons": 33,
+    "sent_date": "2025-11-15",
+    "subject": "Progress report! You did great 🥰",
+    "streak": 384
+  },
+  {
+    "week_start": "2025-11-15",
+    "week_end": "2025-11-21",
+    "minutes": 117,
+    "xp": 1315,
+    "lessons": 21,
+    "sent_date": "2025-11-22",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 391
+  },
+  {
+    "week_start": "2025-11-22",
+    "week_end": "2025-11-28",
+    "minutes": 186,
+    "xp": 1697,
+    "lessons": 28,
+    "sent_date": "2025-11-29",
+    "subject": "Antti, your French progress can’t be stopped!",
+    "streak": 398
+  },
+  {
+    "week_start": "2025-11-29",
+    "week_end": "2025-12-05",
+    "minutes": 88,
+    "xp": 966,
+    "lessons": 17,
+    "sent_date": "2025-12-06",
+    "subject": "👀 Duo sees you with that French progress!",
+    "streak": 405
+  },
+  {
+    "week_start": "2025-12-06",
+    "week_end": "2025-12-12",
+    "minutes": 180,
+    "xp": 1860,
+    "lessons": 32,
+    "sent_date": "2025-12-13",
+    "subject": "🤩 Your French progress!!!",
+    "streak": 412
+  },
+  {
+    "week_start": "2025-12-20",
+    "week_end": "2025-12-26",
+    "minutes": 154,
+    "xp": 1753,
+    "lessons": 27,
+    "sent_date": "2025-12-27",
+    "subject": "📈 Whoa, Antti… Look at all that French progress!",
+    "streak": 426
+  },
+  {
+    "week_start": "2025-12-27",
+    "week_end": "2026-01-02",
+    "minutes": 99,
+    "xp": 1495,
+    "lessons": 24,
+    "sent_date": "2026-01-03",
+    "subject": "🚀 French progress unlocked",
+    "streak": 434
+  },
+  {
+    "week_start": "2026-01-03",
+    "week_end": "2026-01-09",
+    "minutes": 141,
+    "xp": 1680,
+    "lessons": 26,
+    "sent_date": "2026-01-10",
+    "subject": "🚀 French progress unlocked",
+    "streak": 440
+  },
+  {
+    "week_start": "2026-01-24",
+    "week_end": "2026-01-30",
+    "minutes": 159,
+    "xp": 1691,
+    "lessons": 27,
+    "sent_date": "2026-01-31",
+    "subject": "Antti, stop showing off. Or don’t 😊",
+    "streak": 460
+  },
+  {
+    "week_start": "2026-01-31",
+    "week_end": "2026-02-06",
+    "minutes": 110,
+    "xp": 1181,
+    "lessons": 23,
+    "sent_date": "2026-02-07",
+    "subject": "🤯 Your French stats? Just wow.",
+    "streak": 467
+  },
+  {
+    "week_start": "2026-02-14",
+    "week_end": "2026-02-20",
+    "minutes": 117,
+    "xp": 945,
+    "lessons": 17,
+    "sent_date": "2026-02-21",
+    "subject": "You’re crushing French ✨",
+    "streak": 482
+  },
+  {
+    "week_start": "2026-02-21",
+    "week_end": "2026-02-27",
+    "minutes": 112,
+    "xp": 1639,
+    "lessons": 21,
+    "sent_date": "2026-02-28",
+    "subject": "🤩 Your French progress!!!",
+    "streak": 488
+  },
+  {
+    "week_start": "2026-03-14",
+    "week_end": "2026-03-20",
+    "minutes": 172,
+    "xp": 1632,
+    "lessons": 31,
+    "sent_date": "2026-03-21",
+    "subject": "💪 Crushing it, one French lesson at a time",
+    "streak": 509
+  },
+  {
+    "week_start": "2026-03-21",
+    "week_end": "2026-03-27",
+    "minutes": 148,
+    "xp": 1730,
+    "lessons": 25,
+    "sent_date": "2026-03-28",
+    "subject": "🤯 Your French stats? Just wow.",
+    "streak": 516
+  },
+  {
+    "week_start": "2026-03-28",
+    "week_end": "2026-04-03",
+    "minutes": 153,
+    "xp": 2081,
+    "lessons": 31,
+    "sent_date": "2026-04-04",
+    "subject": "🚀 French progress unlocked",
+    "streak": 523
+  },
+  {
+    "week_start": "2026-04-04",
+    "week_end": "2026-04-10",
+    "minutes": 103,
+    "xp": 1088,
+    "lessons": 19,
+    "sent_date": "2026-04-11",
+    "subject": "📈 Whoa, ‎Antti‎… Look at all that French progress!",
+    "streak": 531
+  },
+  {
+    "week_start": "2026-04-11",
+    "week_end": "2026-04-17",
+    "minutes": 145,
+    "xp": 2009,
+    "lessons": 34,
+    "sent_date": "2026-04-18",
+    "subject": "Someone’s 👏 been 👏 busy 👏",
+    "streak": 537
+  },
+  {
+    "week_start": "2026-04-18",
+    "week_end": "2026-04-24",
+    "minutes": 82,
+    "xp": 684,
+    "lessons": 18,
+    "sent_date": "2026-04-25",
+    "subject": "Gold star for ‎Antti‎ ⭐",
+    "streak": 543
+  },
+  {
+    "week_start": "2026-04-25",
+    "week_end": "2026-05-01",
+    "minutes": 62,
+    "xp": 487,
+    "lessons": 14,
+    "sent_date": "2026-05-02",
+    "subject": "Gold star for ‎Antti‎ ⭐",
+    "streak": 549
+  },
+  {
+    "week_start": "2026-05-02",
+    "week_end": "2026-05-08",
+    "minutes": 62,
+    "xp": 813,
+    "lessons": 16,
+    "sent_date": "2026-05-09",
+    "subject": "😭 Keep this up and Duo might happy-cry",
+    "streak": 556
+  },
+  {
+    "week_start": "2026-05-09",
+    "week_end": "2026-05-15",
+    "minutes": 77,
+    "xp": 885,
+    "lessons": 19,
+    "sent_date": "2026-05-16",
+    "subject": "You’re crushing French ✨",
+    "streak": 563
+  },
+  {
+    "week_start": "2026-05-16",
+    "week_end": "2026-05-22",
+    "minutes": 69,
+    "xp": 708,
+    "lessons": 16,
+    "sent_date": "2026-05-23",
+    "subject": "French? Nailed it ✔️",
+    "streak": 570
+  },
+  {
+    "week_start": "2026-05-23",
+    "week_end": "2026-05-29",
+    "minutes": 47,
+    "xp": 1051,
+    "lessons": 15,
+    "sent_date": "2026-05-30",
+    "subject": "Weekly French results are in. Nice work 🎉",
+    "streak": 576
+  },
+  {
+    "week_start": "2026-05-30",
+    "week_end": "2026-06-05",
+    "minutes": 51,
+    "xp": 573,
+    "lessons": 12,
+    "sent_date": "2026-06-06",
+    "subject": "🚀 French progress unlocked",
+    "streak": 582
+  },
+  {
+    "week_start": "2026-06-06",
+    "week_end": "2026-06-12",
+    "minutes": 84,
+    "xp": 1330,
+    "lessons": 21,
+    "sent_date": "2026-06-13",
+    "subject": "📈 Whoa, ‎Antti‎… Look at all that French progress!",
+    "streak": 589
+  },
+  {
+    "week_start": "2026-06-13",
+    "week_end": "2026-06-19",
+    "minutes": 104,
+    "xp": 924,
+    "lessons": 19,
+    "sent_date": "2026-06-20",
+    "subject": "🚀 French progress unlocked",
+    "streak": 596
+  },
+  {
+    "week_start": "2026-06-20",
+    "week_end": "2026-06-26",
+    "minutes": 233,
+    "xp": 3181,
+    "lessons": 44,
+    "sent_date": "2026-06-27",
+    "subject": "📈 You’re making serious French progress",
+    "streak": 603
+  },
+  {
+    "week_start": "2026-06-27",
+    "week_end": "2026-07-03",
+    "minutes": 245,
+    "xp": 3985,
+    "lessons": 52,
+    "sent_date": "2026-07-04",
+    "subject": "🤩 Your French progress!!!",
+    "streak": 610
+  },
+  {
+    "week_start": "2026-07-04",
+    "week_end": "2026-07-10",
+    "minutes": 193,
+    "xp": 3286,
+    "lessons": 44,
+    "sent_date": "2026-07-11",
+    "subject": "📈 You’re making serious French progress",
+    "streak": 617
+  },
+  {
+    "week_start": "2026-07-18",
+    "week_end": "2026-07-24",
+    "minutes": 122,
+    "xp": 1828,
+    "lessons": 32,
+    "sent_date": "2026-07-25",
+    "subject": "😭 Keep this up and Duo might happy-cry",
+    "streak": 631
+  },
+  {
+    "week_start": "2026-07-25",
+    "week_end": "2026-07-31",
+    "minutes": 101,
+    "xp": 1380,
+    "lessons": 23,
+    "sent_date": "2026-08-01",
+    "subject": "You’re in your French era ✨",
+    "streak": 639
+  },
+  {
+    "week_start": "2026-08-01",
+    "week_end": "2026-08-07",
+    "minutes": 62,
+    "xp": 823,
+    "lessons": 12,
+    "sent_date": "2026-08-08",
+    "subject": "Someone’s 👏 been 👏 busy 👏",
+    "streak": 645
+  },
+  {
+    "week_start": "2026-08-08",
+    "week_end": "2026-08-14",
+    "minutes": 34,
+    "xp": 287,
+    "lessons": 8,
+    "sent_date": "2026-08-15",
+    "subject": "Duo’s impressed. That’s rare 👀",
+    "streak": 653
+  },
+  {
+    "week_start": "2026-08-15",
+    "week_end": "2026-08-21",
+    "minutes": 54,
+    "xp": 484,
+    "lessons": 11,
+    "sent_date": "2026-08-22",
+    "subject": "💪 French stats looking strong",
+    "streak": 660
+  },
+  {
+    "week_start": "2026-08-22",
+    "week_end": "2026-08-28",
+    "minutes": 53,
+    "xp": 446,
+    "lessons": 10,
+    "sent_date": "2026-08-29",
+    "subject": "Duo’s impressed. That’s rare 👀",
+    "streak": 667
+  }
+]

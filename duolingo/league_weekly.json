@@ -1,0 +1,644 @@
+[
+  {
+    "window_start": "2024-08-13",
+    "window_end": "2024-08-19",
+    "xp": 243,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-08-20",
+    "window_end": "2024-08-26",
+    "xp": 195,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-08-29",
+    "window_end": "2024-09-04",
+    "xp": 738,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-09-07",
+    "window_end": "2024-09-13",
+    "xp": 459,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-09-10",
+    "window_end": "2024-09-16",
+    "xp": 172,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-09-19",
+    "window_end": "2024-09-25",
+    "xp": 127,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-09-26",
+    "window_end": "2024-10-02",
+    "xp": 569,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-10-12",
+    "window_end": "2024-10-18",
+    "xp": 621,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-10-14",
+    "window_end": "2024-10-20",
+    "xp": 4797,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-10-21",
+    "window_end": "2024-10-27",
+    "xp": 6659,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-10-28",
+    "window_end": "2024-11-03",
+    "xp": 7171,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-11-04",
+    "window_end": "2024-11-10",
+    "xp": 7124,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-11-11",
+    "window_end": "2024-11-17",
+    "xp": 6966,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-11-18",
+    "window_end": "2024-11-24",
+    "xp": 3864,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-11-25",
+    "window_end": "2024-12-01",
+    "xp": 4992,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-12-03",
+    "window_end": "2024-12-09",
+    "xp": 4768,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-12-10",
+    "window_end": "2024-12-16",
+    "xp": 1516,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-12-16",
+    "window_end": "2024-12-22",
+    "xp": 686,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-12-23",
+    "window_end": "2024-12-29",
+    "xp": 1277,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2024-12-30",
+    "window_end": "2025-01-05",
+    "xp": 519,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-01-06",
+    "window_end": "2025-01-12",
+    "xp": 1414,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-01-14",
+    "window_end": "2025-01-20",
+    "xp": 618,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-01-21",
+    "window_end": "2025-01-27",
+    "xp": 388,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-01-28",
+    "window_end": "2025-02-03",
+    "xp": 665,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-02-04",
+    "window_end": "2025-02-10",
+    "xp": 417,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-02-11",
+    "window_end": "2025-02-17",
+    "xp": 892,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-02-18",
+    "window_end": "2025-02-24",
+    "xp": 587,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-02-25",
+    "window_end": "2025-03-03",
+    "xp": 1569,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-03-04",
+    "window_end": "2025-03-10",
+    "xp": 770,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-03-11",
+    "window_end": "2025-03-17",
+    "xp": 682,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-03-18",
+    "window_end": "2025-03-24",
+    "xp": 928,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-03-25",
+    "window_end": "2025-03-31",
+    "xp": 1148,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-04-01",
+    "window_end": "2025-04-07",
+    "xp": 472,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-04-08",
+    "window_end": "2025-04-14",
+    "xp": 1312,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-04-15",
+    "window_end": "2025-04-21",
+    "xp": 674,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-04-22",
+    "window_end": "2025-04-28",
+    "xp": 1973,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-04-29",
+    "window_end": "2025-05-05",
+    "xp": 482,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-05-06",
+    "window_end": "2025-05-12",
+    "xp": 883,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-05-13",
+    "window_end": "2025-05-19",
+    "xp": 855,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-05-19",
+    "window_end": "2025-05-25",
+    "xp": 1150,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-05-26",
+    "window_end": "2025-06-01",
+    "xp": 418,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-06-03",
+    "window_end": "2025-06-09",
+    "xp": 329,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-06-10",
+    "window_end": "2025-06-16",
+    "xp": 450,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-06-17",
+    "window_end": "2025-06-23",
+    "xp": 1131,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-06-23",
+    "window_end": "2025-06-29",
+    "xp": 1844,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-06-30",
+    "window_end": "2025-07-06",
+    "xp": 809,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-07-07",
+    "window_end": "2025-07-13",
+    "xp": 1478,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-07-14",
+    "window_end": "2025-07-20",
+    "xp": 736,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-07-22",
+    "window_end": "2025-07-28",
+    "xp": 448,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-07-29",
+    "window_end": "2025-08-04",
+    "xp": 1199,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-08-05",
+    "window_end": "2025-08-11",
+    "xp": 1600,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-08-12",
+    "window_end": "2025-08-18",
+    "xp": 2822,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-08-19",
+    "window_end": "2025-08-25",
+    "xp": 1175,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-08-25",
+    "window_end": "2025-08-31",
+    "xp": 915,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-09-01",
+    "window_end": "2025-09-07",
+    "xp": 1465,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-09-08",
+    "window_end": "2025-09-14",
+    "xp": 1217,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-09-16",
+    "window_end": "2025-09-22",
+    "xp": 1639,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-09-23",
+    "window_end": "2025-09-29",
+    "xp": 479,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-09-30",
+    "window_end": "2025-10-06",
+    "xp": 824,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-10-07",
+    "window_end": "2025-10-13",
+    "xp": 558,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-10-13",
+    "window_end": "2025-10-19",
+    "xp": 1290,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-10-21",
+    "window_end": "2025-10-27",
+    "xp": 651,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-10-27",
+    "window_end": "2025-11-02",
+    "xp": 1232,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-11-04",
+    "window_end": "2025-11-10",
+    "xp": 1761,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-11-10",
+    "window_end": "2025-11-16",
+    "xp": 1352,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-11-17",
+    "window_end": "2025-11-23",
+    "xp": 1579,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-11-25",
+    "window_end": "2025-12-01",
+    "xp": 966,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-12-02",
+    "window_end": "2025-12-08",
+    "xp": 1881,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-12-08",
+    "window_end": "2025-12-14",
+    "xp": 2792,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-12-15",
+    "window_end": "2025-12-21",
+    "xp": 2106,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-12-23",
+    "window_end": "2025-12-29",
+    "xp": 997,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2025-12-30",
+    "window_end": "2026-01-05",
+    "xp": 1321,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-01-06",
+    "window_end": "2026-01-12",
+    "xp": 624,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-01-13",
+    "window_end": "2026-01-19",
+    "xp": 696,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-01-19",
+    "window_end": "2026-01-25",
+    "xp": 1672,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-01-26",
+    "window_end": "2026-02-01",
+    "xp": 1603,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-02-03",
+    "window_end": "2026-02-09",
+    "xp": 684,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-02-09",
+    "window_end": "2026-02-15",
+    "xp": 840,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-02-16",
+    "window_end": "2026-02-22",
+    "xp": 1590,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-02-23",
+    "window_end": "2026-03-01",
+    "xp": 1290,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-03-02",
+    "window_end": "2026-03-08",
+    "xp": 2111,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-03-09",
+    "window_end": "2026-03-15",
+    "xp": 1462,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-03-17",
+    "window_end": "2026-03-23",
+    "xp": 1645,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-03-24",
+    "window_end": "2026-03-30",
+    "xp": 2384,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-03-31",
+    "window_end": "2026-04-06",
+    "xp": 812,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-04-07",
+    "window_end": "2026-04-13",
+    "xp": 1998,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-04-14",
+    "window_end": "2026-04-20",
+    "xp": 505,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-04-20",
+    "window_end": "2026-04-26",
+    "xp": 535,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-04-28",
+    "window_end": "2026-05-04",
+    "xp": 828,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-05-05",
+    "window_end": "2026-05-11",
+    "xp": 825,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-05-11",
+    "window_end": "2026-05-17",
+    "xp": 705,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-05-19",
+    "window_end": "2026-05-25",
+    "xp": 1169,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-05-26",
+    "window_end": "2026-06-01",
+    "xp": 803,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-06-02",
+    "window_end": "2026-06-08",
+    "xp": 1125,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-06-09",
+    "window_end": "2026-06-15",
+    "xp": 1352,
+    "competition": "diamond-tournament"
+  },
+  {
+    "window_start": "2026-06-16",
+    "window_end": "2026-06-22",
+    "xp": 4198,
+    "competition": "diamond-tournament"
+  },
+  {
+    "window_start": "2026-06-23",
+    "window_end": "2026-06-29",
+    "xp": 4728,
+    "competition": "diamond-tournament"
+  },
+  {
+    "window_start": "2026-06-30",
+    "window_end": "2026-07-06",
+    "xp": 1041,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-07-07",
+    "window_end": "2026-07-13",
+    "xp": 1389,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-07-13",
+    "window_end": "2026-07-19",
+    "xp": 1126,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-07-21",
+    "window_end": "2026-07-27",
+    "xp": 1219,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-07-27",
+    "window_end": "2026-08-02",
+    "xp": 609,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-08-03",
+    "window_end": "2026-08-09",
+    "xp": 356,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-08-11",
+    "window_end": "2026-08-17",
+    "xp": 411,
+    "competition": "leagues"
+  },
+  {
+    "window_start": "2026-08-17",
+    "window_end": "2026-08-23",
+    "xp": 765,
+    "competition": "diamond-tournament"
+  },
+  {
+    "window_start": "2026-08-25",
+    "window_end": "2026-08-31",
+    "xp": 342,
+    "competition": "diamond-tournament"
+  },
+  {
+    "window_start": "2026-08-31",
+    "window_end": "2026-09-06",
+    "xp": 265,
+    "competition": "leagues"
+  }
+]
