@@ -472,7 +472,7 @@ function renderPlanBar(){
 function infoBox(){
   if(view==='cat') return `<div class="bn info"><b>Step 1 \u2014 what do you want to see?</b> All ${ALL_FILMS.length} titles with the festival's own descriptions. Tick a film to shortlist it; you don't choose times here. ${shortlist.size} shortlisted so far.</div>`;
   if(view==='film') return `<div class="bn info"><b>Step 2 \u2014 when will you see them?</b> Your ${shortlist.size} shortlisted film${shortlist.size===1?'':'s'}, each with every screening it has. Pick one time per film. Films with the fewest time slots left come first. Use the \u25cb dot to mark a screening sold out.</div>`;
-  if(view==='grid') return `<div class="bn info"><b>The day laid out.</b> Venues across the top, clock down the side; scroll sideways for more venues. Clicking a film cycles it: shortlist and pick \u2192 unpick \u2192 off the shortlist. Hover a film for its description; one you just changed stays visible (dotted) until you switch day or scope.</div>`;
+  if(view==='grid') return `<div class="bn info"><b>The day laid out.</b> Venues across the top, clock down the side; scroll sideways for more venues. Clicking a film cycles it: shortlist and pick \u2192 unpick \u2192 off the shortlist. Hover a film for its description. Filters narrow what is shown; a film you just changed stays visible (dotted) until you switch day, scope or filter.</div>`;
   return `<div class="bn info"><b>Your festival.</b> Every pick in order, with the gap and any venue change between them.</div>`;
 }
 
@@ -570,18 +570,21 @@ function rowHtml(f, fl){
     <button class="sbtn${on?' on':''}" data-pick="${f.id}" aria-label="Toggle pick">${on?'\u2605':'\u2606'}</button></div>`;
 }
 
-function filterNames(names){
-  if(theme) names=names.filter(n=>meta(n).t===theme);
-  if(kw) names=names.filter(n=>meta(n).k.includes(kw));
-  if(country) names=names.filter(n=>(meta(n).c||[]).includes(country));
-  if(lang) names=names.filter(n=>(meta(n).l||[]).includes(lang));
-  if(query) names=names.filter(n => n.toLowerCase().includes(query)
-    || (meta(n).d||'').toLowerCase().includes(query)
-    || (meta(n).x||'').toLowerCase().includes(query)
-    || (meta(n).c||[]).some(v=>v.toLowerCase().includes(query))
-    || (meta(n).l||[]).some(v=>v.toLowerCase().includes(query)));
-  return names;
+function dropMatch(n){
+  const m=meta(n);
+  if(theme && m.t!==theme) return false;
+  if(kw && !m.k.includes(kw)) return false;
+  if(country && !(m.c||[]).includes(country)) return false;
+  if(lang && !(m.l||[]).includes(lang)) return false;
+  return true;
 }
+function queryMatch(n, extra){
+  if(!query) return true;
+  const m=meta(n);
+  return [n, m.d||'', m.x||'', (m.c||[]).join(' '), (m.l||[]).join(' '), extra||'']
+    .join(' ').toLowerCase().includes(query);
+}
+function filterNames(names){ return names.filter(n=>dropMatch(n)&&queryMatch(n)); }
 function cnt(n){ return `<option value="${esc(n)}"`; }
 function filterBar(ph){
   const opts=(list,sel)=>list.map(v=>`<option value="${esc(v)}"${v===sel?' selected':''}>${esc(v)}</option>`).join('');
@@ -655,10 +658,9 @@ const PXM=1.15;
 function vGrid(){
   const fl=pickFlags();
   const dayAll=S.filter(f=>f.dateKey===gridDay);
-  let pool=dayAll;
-  if(gridScope==='short') pool=dayAll.filter(f=>shortlist.has(f.film)||touchedS.has(f.id));
-  else if(gridScope==='picks') pool=dayAll.filter(f=>picks.has(f.id)||touchedS.has(f.id));
-  const inScope=f=>gridScope==='short'?shortlist.has(f.film):gridScope==='picks'?picks.has(f.id):true;
+  const scopeOk=f=>gridScope==='short'?shortlist.has(f.film):gridScope==='picks'?picks.has(f.id):true;
+  const inScope=f=>scopeOk(f)&&dropMatch(f.film)&&queryMatch(f.film,f.venue);
+  const pool=dayAll.filter(f=>inScope(f)||touchedS.has(f.id));
   const di=DAYS.findIndex(([k])=>k===gridDay);
   let h=`<div class="ctrl daynav">
     <button class="pill nav" id="prevDay"${di<=0?' disabled':''} aria-label="Previous day">\u2039</button>
@@ -668,6 +670,7 @@ function vGrid(){
     <button class="pill${gridScope==='short'?' active':''}" data-scope="short">Shortlist</button>
     <button class="pill${gridScope==='picks'?' active':''}" data-scope="picks">My picks</button>
     <button class="pill${gridScope==='all'?' active':''}" data-scope="all">Whole programme</button></div>`;
+  h+=filterBar('Search film, director, venue\u2026');
   h+=`<div class="leg"><span><i style="background:var(--acb);border-color:var(--ac)"></i>shortlist</span>
     <span><i style="background:var(--sb);border-color:var(--sbr)"></i>picked</span>
     <span><i style="background:var(--dgb);border-color:var(--dg)"></i>overlapping</span>
@@ -705,7 +708,8 @@ function vGrid(){
   h+=`<div class="gwrap"><div class="ginner">
     <div class="gutter"><div class="ghead"></div><div class="gtrack" style="height:${H}px">${labs}</div></div>
     ${cols}</div></div>`;
-  h+=`<p class="mt">${pool.length} screening${pool.length>1?'s':''} across ${venues.length} venue${venues.length>1?'s':''}. Tap a block to pick or unpick.</p>`;
+  const hidden=dayAll.length-pool.length;
+  h+=`<p class="mt">${pool.length} screening${pool.length===1?'':'s'} across ${venues.length} venue${venues.length===1?'':'s'}${hidden>0?` \u00b7 ${hidden} hidden by scope or filters`:''}.</p>`;
   return h;
 }
 
