@@ -43,6 +43,11 @@ H2_MIN_RE = re.compile(r">\s*(\d+)\s*minutes?\s*</h2>")
 H2_LESS_RE = re.compile(r">\s*(\d+)\s*lessons?\s*</h2>")
 FAMILY2_RE = re.compile(r"(\d[\d,]*)\s*XP.{0,40}?(\d[\d,]*)\s*minutes?.{0,40}?(\d[\d,]*)\s*lessons?", re.S)
 LESSON_MIN_RE = re.compile(r"(\d[\d,]*)\s*lessons?.{0,120}?(\d[\d,]*)\s*minutes?", re.S)
+# The streak identifies WHICH course a report is for: Duolingo sends one
+# weekly report per course, and only the primary course carries the account's
+# long streak. Secondary courses show small streaks, and their much smaller
+# figures must not be mistaken for the week's real total.
+STREAK_RE = re.compile(r"(\d[\d,]*)\s*day streak")
 DATE_RANGE_RE = re.compile(
     r"((?:January|February|March|April|May|June|July|August|September|October|November|December)\s+\d{1,2})"
     r"\s*[-–—]\s*"
@@ -54,6 +59,18 @@ def to_int(s):
     return int(s.replace(",", "")) if s else None
 
 
+# Duolingo's 2026 templates pad the figures with invisible Unicode marks --
+# "‎172‎ minutes" rather than "172 minutes" -- which silently breaks
+# every regex below, since they expect a digit to sit next to its unit. Strip
+# these before matching anything. Without this, parsing stops finding weeks
+# altogether the next time Duolingo reskins the email.
+INVISIBLE_RE = re.compile("[​-‏‪-‮⁦-⁩﻿­]")
+
+
+def de_invisible(s):
+    return INVISIBLE_RE.sub("", s)
+
+
 def strip_html(raw):
     plain = re.sub("<[^>]+>", " ", raw)
     plain = re.sub(r"\s+", " ", plain)
@@ -61,11 +78,12 @@ def strip_html(raw):
 
 
 def extract_stats(raw_html):
-    """Returns (xp, minutes, lessons, date_range) or (None, None, None, None)
-    if this doesn't look like a weekly-report email."""
+    """Returns (xp, minutes, lessons, date_range, streak), all None if this
+    doesn't look like a weekly-report email."""
+    raw_html = de_invisible(raw_html)
     lower = raw_html.lower()
     if "weekly report" not in lower and "weekly progress" not in lower:
-        return None, None, None, None
+        return None, None, None, None, None
 
     xp = minutes = lessons = None
 
@@ -102,7 +120,10 @@ def extract_stats(raw_html):
     dr = DATE_RANGE_RE.search(plain)
     date_range = f"{dr.group(1)} - {dr.group(2)} {dr.group(3) or ''}".strip() if dr else None
 
-    return to_int(xp), to_int(minutes), to_int(lessons), date_range
+    st = STREAK_RE.search(plain)
+    streak = to_int(st.group(1)) if st else None
+
+    return to_int(xp), to_int(minutes), to_int(lessons), date_range, streak
 
 
 def week_start_from(date_range, sent_dt):
@@ -144,7 +165,7 @@ def main():
 
     data = load_json(DATA_PATH, [])
     seen = set(load_json(SEEN_PATH, []))
-    existing_weeks = {r["week_start"] for r in data}
+    existing_weeks = {r["week_start"]: r for r in data}
 
     since_date = (datetime.now(timezone.utc) - timedelta(days=lookback_days)).strftime("%d-%b-%Y")
 
@@ -189,7 +210,7 @@ def main():
         if not body:
             continue
 
-        xp, minutes, lessons, date_range = extract_stats(body)
+        xp, minutes, lessons, date_range, streak = extract_stats(body)
         if minutes is None:
             continue  # not a full weekly stats email (or a template we don't recognize yet)
         # A few templates (e.g. "Your progress report is ready") report minutes and
@@ -207,8 +228,6 @@ def main():
             sent_dt = datetime.now(timezone.utc)
 
         week_start, week_end = week_start_from(date_range, sent_dt.replace(tzinfo=None))
-        if week_start in existing_weeks:
-            continue  # already have this week (e.g. from another template variant)
 
         subject = str(email.header.make_header(email.header.decode_header(msg.get("Subject", ""))))
 
@@ -223,8 +242,29 @@ def main():
         }
         if xp_missing:
             row["xp_missing"] = True
+        if streak:
+            row["streak"] = streak
+
+        # Duolingo sends a separate weekly report per course, so the same week
+        # can arrive several times with wildly different figures -- one 2025
+        # week showed up as both 201 min / 1790 XP and 1 min / 5 XP. The
+        # primary course is the one carrying the account's long streak, so the
+        # highest streak wins; failing that, prefer a report that states XP,
+        # then the most minutes. Picking by size alone gets this wrong: a
+        # secondary course occasionally logs more minutes than French did.
+        def rank(r):
+            return (r.get("streak") or 0, 0 if r.get("xp_missing") else 1, r.get("minutes") or 0)
+
+        prior = existing_weeks.get(week_start)
+        if prior is not None:
+            if rank(row) <= rank(prior):
+                continue
+            data.remove(prior)
+            print(f"Replaced week {week_start}: {prior.get('minutes')} min / "
+                  f"streak {prior.get('streak')} -> {minutes} min / streak {streak}")
+
         data.append(row)
-        existing_weeks.add(week_start)
+        existing_weeks[week_start] = row
         new_rows += 1
         xp_note = f"{xp} XP" if not xp_missing else "XP not reported"
         print(f"Added week {week_start}: {minutes} min, {xp_note}, {lessons} lessons")

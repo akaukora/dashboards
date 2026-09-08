@@ -20,6 +20,7 @@
   --accent-pink-fill: #FFA1E7;
   --accent-pink-soft: #FCD4F4;
   --accent-amber: #B8752E;
+  --accent-estimate: #748DA3;
   --shadow: 0 1px 2px rgba(28,36,32,0.04), 0 4px 16px rgba(28,36,32,0.05);
 }
 
@@ -38,6 +39,7 @@
     --accent-pink-fill: #FFA1E7;
     --accent-pink-soft: #3A2536;
     --accent-amber: #B8752E;
+    --accent-estimate: #6FA3D6;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
   }
 }
@@ -55,6 +57,7 @@
   --accent-pink-fill: #FFA1E7;
   --accent-pink-soft: #3A2536;
   --accent-amber: #B8752E;
+  --accent-estimate: #6FA3D6;
   --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
 }
 
@@ -199,6 +202,19 @@ h1 {
 }
 .toggle-group button:focus-visible { outline: 2px solid var(--accent-green); outline-offset: 1px; }
 .toggle-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.chart-legend {
+  display: flex; flex-wrap: wrap; gap: 4px 14px;
+  margin-top: 8px; font-size: 11.5px; color: var(--ink-muted);
+}
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-item[hidden], [hidden] { display: none !important; }
+.swatch { width: 11px; height: 11px; border-radius: 2.5px; display: inline-block; flex: none; }
+.swatch-est {
+  background: var(--accent-estimate);
+  background-image: repeating-linear-gradient(45deg,
+    rgba(255,255,255,0.55) 0 1.6px, rgba(255,255,255,0) 1.6px 3.6px);
+}
+.swatch-none { background: var(--ink-muted); opacity: 0.35; }
 .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
 .gridline { stroke: var(--border); stroke-width: 1; }
 .axis-label { fill: var(--ink-muted); font-size: 10.5px; font-family: "Work Sans", sans-serif; }
@@ -285,6 +301,8 @@ tbody td:first-child { color: var(--ink-secondary); font-variant-numeric: normal
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface-2); }
 .gap-row td { color: var(--ink-muted); font-style: italic; background: transparent; }
+.est-row td { color: var(--ink-muted); }
+.est-row td:first-child { font-style: italic; }
 
 footer {
   margin-top: 20px;
@@ -313,7 +331,7 @@ footer a { color: inherit; }
   <header>
     <div>
       <h1>Duolingo Weekly Progress</h1>
-      <p class="subtitle">Time, XP, and lessons, reconstructed from Duolingo's weekly progress-report emails — by week, month, or year.</p>
+      <p class="subtitle">Time, XP, and lessons, reconstructed from Duolingo's weekly progress-report emails and account data export — by week, month, or year.</p>
     </div>
     <div class="streak-badge" id="rangeBadge">—</div>
   </header>
@@ -326,6 +344,11 @@ footer a { color: inherit; }
         <div>
           <h2 id="chartTitle">Time per week</h2>
           <p class="card-sub" id="chartSub">Time spent learning, by report week</p>
+          <div class="chart-legend" id="chartLegend" hidden>
+            <span class="legend-item"><span class="swatch swatch-solid" id="swatchSolid"></span>from report email</span>
+            <span class="legend-item"><span class="swatch swatch-est"></span>estimated from league score</span>
+            <span class="legend-item"><span class="swatch swatch-none"></span>no data</span>
+          </div>
         </div>
         <div class="toggle-row">
           <div class="toggle-group" id="metricToggle">
@@ -366,31 +389,51 @@ footer a { color: inherit; }
   </div>
 
   <footer>
-    Source: weekly progress-report emails from hello@duolingo.com, combining the Proton Mail export
-    (<code>mail_20260901_135154</code>) with emails recovered from an old Gmail account for Oct–Dec 2025.
-    Faded bars mark weeks with no matching report email found in either mailbox — not weeks without studying
-    (the streak was unbroken throughout). One recovered week (Oct 19–25, 2024) had no XP figure in its email,
-    so its XP bar is faded even though minutes and lessons are known. One week (Dec 13–19, 2025) still has no
-    matching email in either mailbox and may be permanently lost. The others are single weeks where Duolingo
-    doesn't seem to have sent the full stats template at all: <span id="gapList"></span>.
+    <strong>Time and lessons</strong> come from Duolingo's weekly progress-report emails
+    (<code>hello@duolingo.com</code>) — a Proton Mail export plus reports recovered from an old Gmail
+    account. Duolingo sends one report per course, so a week often arrives several times over with
+    very different figures; the one kept is whichever carries the account's long French streak, since
+    a secondary course's report covers only a sliver of the week and sometimes logs more minutes than
+    French did. Faded bars mark weeks no report covers, which is a gap in the mail rather than a week
+    without studying. One week (Oct 19–25, 2024) used a template that stated no XP at all, so only
+    its XP is unknown.
+    <br><br>
+    <strong>Hatched slate bars</strong> are estimates, shown in their own color so they never pass
+    for measured data. They cover the weeks with no report email: <span id="estList"></span>. Their
+    XP comes from Duolingo's own league scores (<code>leaderboards.csv</code> in the account data
+    export); since the league week ends about three days off from the report week, treat these as
+    close approximations rather than exact figures. Their <em>time</em> is derived from that XP using
+    the median XP-per-minute of the twelve nearest reported weeks — local rather than lifetime,
+    because the rate climbs from about 7.9 in early 2025 to 13.8 by mid-2026, and a lifetime average
+    would overstate the recent gaps by roughly a third. Lessons are left blank, as nothing in the
+    league data implies them. Every estimate is replaced by real figures automatically once a report
+    email for that week turns up.
   </footer>
 </div>
 
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-const DATA = [{"week_start": "2024-08-10", "week_end": "2024-08-16", "minutes": 49, "xp": 120, "lessons": 5, "sent_date": "2024-08-17", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2024-08-17", "week_end": "2024-08-23", "minutes": 31, "xp": 449, "lessons": 12, "sent_date": "2024-08-24", "subject": "💪 Did you beat last week? See your stats:"}, {"week_start": "2024-08-24", "week_end": "2024-08-30", "minutes": 31, "xp": 210, "lessons": 8, "sent_date": "2024-08-31", "subject": "💪 Did you beat last week? See your stats:"}, {"week_start": "2024-08-31", "week_end": "2024-09-06", "minutes": 42, "xp": 647, "lessons": 21, "sent_date": "2024-09-07", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2024-09-07", "week_end": "2024-09-13", "minutes": 21, "xp": 214, "lessons": 7, "sent_date": "2024-09-14", "subject": "🗞 Your progress report is ready"}, {"week_start": "2024-09-14", "week_end": "2024-09-20", "minutes": 41, "xp": 542, "lessons": 18, "sent_date": "2024-09-21", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2024-09-21", "week_end": "2024-09-27", "minutes": 21, "xp": 270, "lessons": 7, "sent_date": "2024-09-28", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2024-09-28", "week_end": "2024-10-04", "minutes": 39, "xp": 641, "lessons": 14, "sent_date": "2024-10-05", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2024-10-05", "week_end": "2024-10-11", "minutes": 4, "xp": 30, "lessons": 1, "sent_date": "2024-10-12", "subject": "📈 Your progress report is ready"}, {"week_start": "2024-10-19", "week_end": "2024-10-25", "minutes": 523, "xp": 0, "lessons": 160, "sent_date": "2024-10-26", "subject": "📈 Your progress report is ready", "xp_missing": true}, {"week_start": "2024-10-26", "week_end": "2024-11-01", "minutes": 536, "xp": 6077, "lessons": 155, "sent_date": "2024-11-02", "subject": "💪 Did you beat last week? See your stats:"}, {"week_start": "2024-11-02", "week_end": "2024-11-08", "minutes": 612, "xp": 6431, "lessons": 144, "sent_date": "2024-11-09", "subject": "💪 Did you beat last week? See your stats:"}, {"week_start": "2024-11-09", "week_end": "2024-11-15", "minutes": 883, "xp": 6949, "lessons": 181, "sent_date": "2024-11-16", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2024-11-16", "week_end": "2024-11-22", "minutes": 670, "xp": 7635, "lessons": 146, "sent_date": "2024-11-23", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2024-11-23", "week_end": "2024-11-29", "minutes": 520, "xp": 5350, "lessons": 91, "sent_date": "2024-11-30", "subject": "📝 This week's stats are in"}, {"week_start": "2024-11-30", "week_end": "2024-12-06", "minutes": 249, "xp": 3280, "lessons": 53, "sent_date": "2024-12-07", "subject": "📖 This week's stats are in"}, {"week_start": "2024-12-07", "week_end": "2024-12-13", "minutes": 392, "xp": 5704, "lessons": 86, "sent_date": "2024-12-14", "subject": "💪 Did you beat last week? See your stats:"}, {"week_start": "2024-12-14", "week_end": "2024-12-20", "minutes": 153, "xp": 1918, "lessons": 35, "sent_date": "2024-12-21", "subject": "📬 This week's stats are in"}, {"week_start": "2024-12-21", "week_end": "2024-12-27", "minutes": 150, "xp": 881, "lessons": 23, "sent_date": "2024-12-28", "subject": "📈 This week's stats are in"}, {"week_start": "2024-12-28", "week_end": "2025-01-03", "minutes": 167, "xp": 1394, "lessons": 28, "sent_date": "2025-01-04", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2025-01-04", "week_end": "2025-01-10", "minutes": 107, "xp": 520, "lessons": 13, "sent_date": "2025-01-11", "subject": "📈 This week's stats are in"}, {"week_start": "2025-01-11", "week_end": "2025-01-17", "minutes": 114, "xp": 1158, "lessons": 21, "sent_date": "2025-01-18", "subject": "💪 Did you beat last week? See your stats:"}, {"week_start": "2025-01-18", "week_end": "2025-01-24", "minutes": 81, "xp": 620, "lessons": 13, "sent_date": "2025-01-25", "subject": "🗞 This week's stats are in"}, {"week_start": "2025-01-25", "week_end": "2025-01-31", "minutes": 106, "xp": 601, "lessons": 14, "sent_date": "2025-02-01", "subject": "📝 This week's stats are in"}, {"week_start": "2025-02-01", "week_end": "2025-02-07", "minutes": 60, "xp": 648, "lessons": 12, "sent_date": "2025-02-08", "subject": "💪 Did you beat last week? See your stats:"}, {"week_start": "2025-02-08", "week_end": "2025-02-14", "minutes": 44, "xp": 377, "lessons": 9, "sent_date": "2025-02-15", "subject": "📝 Your progress report is ready"}, {"week_start": "2025-02-15", "week_end": "2025-02-21", "minutes": 87, "xp": 583, "lessons": 13, "sent_date": "2025-02-22", "subject": "💪 Did you beat last week? See your stats:"}, {"week_start": "2025-02-22", "week_end": "2025-02-28", "minutes": 129, "xp": 992, "lessons": 20, "sent_date": "2025-03-01", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2025-03-01", "week_end": "2025-03-07", "minutes": 155, "xp": 1512, "lessons": 24, "sent_date": "2025-03-08", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2025-03-08", "week_end": "2025-03-14", "minutes": 112, "xp": 828, "lessons": 16, "sent_date": "2025-03-15", "subject": "📈 Your progress report is ready"}, {"week_start": "2025-03-15", "week_end": "2025-03-21", "minutes": 85, "xp": 680, "lessons": 13, "sent_date": "2025-03-22", "subject": "📆 Your progress report is ready"}, {"week_start": "2025-03-22", "week_end": "2025-03-28", "minutes": 96, "xp": 512, "lessons": 12, "sent_date": "2025-03-29", "subject": "📬 This week's stats are in"}, {"week_start": "2025-03-29", "week_end": "2025-04-04", "minutes": 142, "xp": 1348, "lessons": 22, "sent_date": "2025-04-05", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-04-05", "week_end": "2025-04-11", "minutes": 76, "xp": 678, "lessons": 12, "sent_date": "2025-04-12", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-04-12", "week_end": "2025-04-18", "minutes": 105, "xp": 816, "lessons": 16, "sent_date": "2025-04-19", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-04-19", "week_end": "2025-04-25", "minutes": 13, "xp": 121, "lessons": 5, "sent_date": "2025-04-26", "subject": "👀 Duo sees you with that Swedish progress!"}, {"week_start": "2025-04-26", "week_end": "2025-05-02", "minutes": 8, "xp": 44, "lessons": 2, "sent_date": "2025-05-03", "subject": "🏁 You made progress! See your stats:"}, {"week_start": "2025-05-03", "week_end": "2025-05-09", "minutes": 13, "xp": 215, "lessons": 4, "sent_date": "2025-05-10", "subject": "Your weekly stats are looking… fine."}, {"week_start": "2025-05-10", "week_end": "2025-05-16", "minutes": 71, "xp": 470, "lessons": 10, "sent_date": "2025-05-17", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-05-17", "week_end": "2025-05-23", "minutes": 21, "xp": 332, "lessons": 13, "sent_date": "2025-05-24", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-05-24", "week_end": "2025-05-30", "minutes": 220, "xp": 1670, "lessons": 132, "sent_date": "2025-05-31", "subject": "👀 Duo sees you with that Music progress!"}, {"week_start": "2025-05-31", "week_end": "2025-06-06", "minutes": 90, "xp": 451, "lessons": 54, "sent_date": "2025-06-07", "subject": "🤓 I crunched the numbers"}, {"week_start": "2025-06-07", "week_end": "2025-06-13", "minutes": 46, "xp": 1096, "lessons": 25, "sent_date": "2025-06-14", "subject": "🫣 Sofia, did you make progress?"}, {"week_start": "2025-06-14", "week_end": "2025-06-20", "minutes": 39, "xp": 836, "lessons": 21, "sent_date": "2025-06-21", "subject": "📊 Numbers don't lie. Check your stats."}, {"week_start": "2025-06-21", "week_end": "2025-06-27", "minutes": 35, "xp": 267, "lessons": 7, "sent_date": "2025-06-28", "subject": "🚧 Weekly performance check-in"}, {"week_start": "2025-06-28", "week_end": "2025-07-04", "minutes": 73, "xp": 888, "lessons": 29, "sent_date": "2025-07-05", "subject": "👀 Duo sees you with that Music progress!"}, {"week_start": "2025-07-05", "week_end": "2025-07-11", "minutes": 18, "xp": 235, "lessons": 7, "sent_date": "2025-07-12", "subject": "Sofia, your Swedish progress can't be stopped!"}, {"week_start": "2025-07-12", "week_end": "2025-07-18", "minutes": 6, "xp": 93, "lessons": 3, "sent_date": "2025-07-19", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-07-19", "week_end": "2025-07-25", "minutes": 13, "xp": 71, "lessons": 6, "sent_date": "2025-07-26", "subject": "👀 Duo sees you with that Swedish progress!"}, {"week_start": "2025-07-26", "week_end": "2025-08-01", "minutes": 76, "xp": 570, "lessons": 12, "sent_date": "2025-08-02", "subject": "👀 Duo sees you with that French progress!"}, {"week_start": "2025-08-02", "week_end": "2025-08-08", "minutes": 6, "xp": 44, "lessons": 3, "sent_date": "2025-08-09", "subject": "Weekly stats! Uh oh, you missed 6 days 📉"}, {"week_start": "2025-08-09", "week_end": "2025-08-15", "minutes": 174, "xp": 1554, "lessons": 28, "sent_date": "2025-08-16", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-08-16", "week_end": "2025-08-22", "minutes": 1, "xp": 5, "lessons": 1, "sent_date": "2025-08-23", "subject": "Weekly stats! Uh oh, you missed 6 days 📉"}, {"week_start": "2025-08-23", "week_end": "2025-08-29", "minutes": 170, "xp": 2703, "lessons": 34, "sent_date": "2025-08-30", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-08-30", "week_end": "2025-09-05", "minutes": 5, "xp": 40, "lessons": 3, "sent_date": "2025-09-06", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-09-06", "week_end": "2025-09-12", "minutes": 125, "xp": 1332, "lessons": 23, "sent_date": "2025-09-13", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-09-13", "week_end": "2025-09-19", "minutes": 83, "xp": 919, "lessons": 16, "sent_date": "2025-09-20", "subject": "👀 Duo sees you with that French progress!"}, {"week_start": "2025-09-20", "week_end": "2025-09-26", "minutes": 109, "xp": 1527, "lessons": 21, "sent_date": "2025-09-27", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-09-27", "week_end": "2025-10-03", "minutes": 89, "xp": 1071, "lessons": 15, "sent_date": "2025-10-04", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-10-04", "week_end": "2025-10-10", "minutes": 68, "xp": 828, "lessons": 13, "sent_date": "2025-10-11", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-10-11", "week_end": "2025-10-17", "minutes": 90, "xp": 590, "lessons": 14, "sent_date": "2025-10-18", "subject": "👀 Duo sees you with that French progress!"}, {"week_start": "2025-10-18", "week_end": "2025-10-24", "minutes": 98, "xp": 935, "lessons": 16, "sent_date": "2025-10-25", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-10-25", "week_end": "2025-10-31", "minutes": 112, "xp": 928, "lessons": 18, "sent_date": "2025-11-01", "subject": "👀 Duo sees you with that French progress!"}, {"week_start": "2025-11-01", "week_end": "2025-11-07", "minutes": 107, "xp": 997, "lessons": 19, "sent_date": "2025-11-08", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-11-08", "week_end": "2025-11-14", "minutes": 184, "xp": 1948, "lessons": 33, "sent_date": "2025-11-15", "subject": "Progress report! You did great 🥰"}, {"week_start": "2025-11-15", "week_end": "2025-11-21", "minutes": 117, "xp": 1315, "lessons": 21, "sent_date": "2025-11-22", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-11-22", "week_end": "2025-11-28", "minutes": 186, "xp": 1697, "lessons": 28, "sent_date": "2025-11-29", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-11-29", "week_end": "2025-12-05", "minutes": 88, "xp": 966, "lessons": 17, "sent_date": "2025-12-06", "subject": "👀 Duo sees you with that French progress!"}, {"week_start": "2025-12-06", "week_end": "2025-12-12", "minutes": 180, "xp": 1860, "lessons": 32, "sent_date": "2025-12-13", "subject": "🤩 Your French progress!!!"}, {"week_start": "2025-12-20", "week_end": "2025-12-26", "minutes": 154, "xp": 1753, "lessons": 27, "sent_date": "2025-12-27", "subject": "📈 Whoa, Antti… Look at all that French progress!"}, {"week_start": "2025-12-27", "week_end": "2026-01-02", "minutes": 99, "xp": 1495, "lessons": 24, "sent_date": "2026-01-03", "subject": "🚀 French progress unlocked"}, {"week_start": "2026-01-03", "week_end": "2026-01-09", "minutes": 141, "xp": 1680, "lessons": 26, "sent_date": "2026-01-10", "subject": "🚀 French progress unlocked"}, {"week_start": "2026-01-24", "week_end": "2026-01-30", "minutes": 159, "xp": 1691, "lessons": 27, "sent_date": "2026-01-31", "subject": "Antti, stop showing off. Or don't 😊"}, {"week_start": "2026-01-31", "week_end": "2026-02-06", "minutes": 110, "xp": 1181, "lessons": 23, "sent_date": "2026-02-07", "subject": "🤯 Your French stats? Just wow."}, {"week_start": "2026-02-14", "week_end": "2026-02-20", "minutes": 117, "xp": 945, "lessons": 17, "sent_date": "2026-02-21", "subject": "You're crushing French ✨"}, {"week_start": "2026-02-21", "week_end": "2026-02-27", "minutes": 112, "xp": 1639, "lessons": 21, "sent_date": "2026-02-28", "subject": "🤩 Your French progress!!!"}];
+const DATA = [{"week_start": "2024-08-03", "week_end": "2024-08-09", "minutes": 19, "xp": 0, "lessons": 2, "sent_date": "2024-08-10", "subject": "📆 Your first progress report is ready", "xp_missing": true, "streak": 2}, {"week_start": "2024-08-10", "week_end": "2024-08-16", "minutes": 49, "xp": 120, "lessons": 5, "sent_date": "2024-08-17", "subject": "🏁 You made progress! See your stats:", "streak": 5}, {"week_start": "2024-08-17", "week_end": "2024-08-23", "minutes": 21, "xp": 147, "lessons": 5, "sent_date": "2024-08-24", "subject": "🏁 You made progress! See your stats:", "streak": 5}, {"week_start": "2024-08-24", "week_end": "2024-08-30", "minutes": 31, "xp": 210, "lessons": 8, "sent_date": "2024-08-31", "subject": "💪 Did you beat last week? See your stats:", "streak": 11}, {"week_start": "2024-08-31", "week_end": "2024-09-06", "minutes": 36, "xp": 274, "lessons": 10, "sent_date": "2024-09-07", "subject": "🏁 You made progress! See your stats:", "streak": 15}, {"week_start": "2024-09-07", "week_end": "2024-09-13", "minutes": 19, "xp": 160, "lessons": 8, "sent_date": "2024-09-14", "subject": "📆 This week’s stats are in", "streak": 15}, {"week_start": "2024-09-14", "week_end": "2024-09-20", "minutes": 41, "xp": 542, "lessons": 18, "sent_date": "2024-09-21", "subject": "🏁 You made progress! See your stats:", "streak": 20}, {"week_start": "2024-09-21", "week_end": "2024-09-27", "minutes": 5, "xp": 75, "lessons": 3, "sent_date": "2024-09-28", "subject": "📈 Your progress report is ready", "streak": 1}, {"week_start": "2024-09-28", "week_end": "2024-10-04", "minutes": 39, "xp": 641, "lessons": 14, "sent_date": "2024-10-05", "subject": "🏁 You made progress! See your stats:", "streak": 2}, {"week_start": "2024-10-05", "week_end": "2024-10-11", "minutes": 4, "xp": 30, "lessons": 1, "sent_date": "2024-10-12", "subject": "📈 Your progress report is ready"}, {"week_start": "2024-10-12", "week_end": "2024-10-18", "minutes": 60, "xp": 621, "lessons": null, "source": "league", "estimated": true, "league_window": "2024-10-12 to 2024-10-18", "competition": "leagues", "xp_per_min_used": 10.4}, {"week_start": "2024-10-19", "week_end": "2024-10-25", "minutes": 523, "xp": 0, "lessons": 160, "sent_date": "2024-10-26", "subject": "📈 Your progress report is ready", "xp_missing": true, "streak": 7}, {"week_start": "2024-10-26", "week_end": "2024-11-01", "minutes": 536, "xp": 6077, "lessons": 155, "sent_date": "2024-11-02", "subject": "💪 Did you beat last week? See your stats:", "streak": 13}, {"week_start": "2024-11-02", "week_end": "2024-11-08", "minutes": 612, "xp": 6431, "lessons": 144, "sent_date": "2024-11-09", "subject": "💪 Did you beat last week? See your stats:", "streak": 21}, {"week_start": "2024-11-09", "week_end": "2024-11-15", "minutes": 883, "xp": 6949, "lessons": 181, "sent_date": "2024-11-16", "subject": "🏁 You made progress! See your stats:", "streak": 27}, {"week_start": "2024-11-16", "week_end": "2024-11-22", "minutes": 670, "xp": 7635, "lessons": 146, "sent_date": "2024-11-23", "subject": "🏁 You made progress! See your stats:", "streak": 34}, {"week_start": "2024-11-23", "week_end": "2024-11-29", "minutes": 520, "xp": 5350, "lessons": 91, "sent_date": "2024-11-30", "subject": "📝 This week’s stats are in", "streak": 41}, {"week_start": "2024-11-30", "week_end": "2024-12-06", "minutes": 249, "xp": 3280, "lessons": 53, "sent_date": "2024-12-07", "subject": "📖 This week’s stats are in", "streak": 48}, {"week_start": "2024-12-07", "week_end": "2024-12-13", "minutes": 392, "xp": 5704, "lessons": 86, "sent_date": "2024-12-14", "subject": "💪 Did you beat last week? See your stats:", "streak": 55}, {"week_start": "2024-12-14", "week_end": "2024-12-20", "minutes": 153, "xp": 1918, "lessons": 35, "sent_date": "2024-12-21", "subject": "📬 This week’s stats are in", "streak": 62}, {"week_start": "2024-12-21", "week_end": "2024-12-27", "minutes": 150, "xp": 881, "lessons": 23, "sent_date": "2024-12-28", "subject": "📈 This week’s stats are in", "streak": 69}, {"week_start": "2024-12-28", "week_end": "2025-01-03", "minutes": 167, "xp": 1394, "lessons": 28, "sent_date": "2025-01-04", "subject": "🏁 You made progress! See your stats:", "streak": 76}, {"week_start": "2025-01-04", "week_end": "2025-01-10", "minutes": 107, "xp": 520, "lessons": 13, "sent_date": "2025-01-11", "subject": "📈 This week’s stats are in", "streak": 83}, {"week_start": "2025-01-11", "week_end": "2025-01-17", "minutes": 114, "xp": 1158, "lessons": 21, "sent_date": "2025-01-18", "subject": "💪 Did you beat last week? See your stats:", "streak": 90}, {"week_start": "2025-01-18", "week_end": "2025-01-24", "minutes": 81, "xp": 620, "lessons": 13, "sent_date": "2025-01-25", "subject": "🗞 This week’s stats are in", "streak": 97}, {"week_start": "2025-01-25", "week_end": "2025-01-31", "minutes": 106, "xp": 601, "lessons": 14, "sent_date": "2025-02-01", "subject": "📝 This week’s stats are in", "streak": 104}, {"week_start": "2025-02-01", "week_end": "2025-02-07", "minutes": 60, "xp": 648, "lessons": 12, "sent_date": "2025-02-08", "subject": "💪 Did you beat last week? See your stats:", "streak": 111}, {"week_start": "2025-02-08", "week_end": "2025-02-14", "minutes": 44, "xp": 377, "lessons": 9, "sent_date": "2025-02-15", "subject": "📝 Your progress report is ready", "streak": 118}, {"week_start": "2025-02-15", "week_end": "2025-02-21", "minutes": 87, "xp": 583, "lessons": 13, "sent_date": "2025-02-22", "subject": "💪 Did you beat last week? See your stats:", "streak": 125}, {"week_start": "2025-02-22", "week_end": "2025-02-28", "minutes": 129, "xp": 992, "lessons": 20, "sent_date": "2025-03-01", "subject": "🏁 You made progress! See your stats:", "streak": 133}, {"week_start": "2025-03-01", "week_end": "2025-03-07", "minutes": 155, "xp": 1512, "lessons": 24, "sent_date": "2025-03-08", "subject": "🏁 You made progress! See your stats:", "streak": 139}, {"week_start": "2025-03-08", "week_end": "2025-03-14", "minutes": 112, "xp": 828, "lessons": 16, "sent_date": "2025-03-15", "subject": "📈 Your progress report is ready", "streak": 146}, {"week_start": "2025-03-15", "week_end": "2025-03-21", "minutes": 85, "xp": 680, "lessons": 13, "sent_date": "2025-03-22", "subject": "📆 Your progress report is ready", "streak": 153}, {"week_start": "2025-03-22", "week_end": "2025-03-28", "minutes": 96, "xp": 512, "lessons": 12, "sent_date": "2025-03-29", "subject": "📬 This week’s stats are in", "streak": 160}, {"week_start": "2025-03-29", "week_end": "2025-04-04", "minutes": 142, "xp": 1348, "lessons": 22, "sent_date": "2025-04-05", "subject": "Progress report! You did great 🥰", "streak": 165}, {"week_start": "2025-04-05", "week_end": "2025-04-11", "minutes": 76, "xp": 678, "lessons": 12, "sent_date": "2025-04-12", "subject": "Antti, your French progress can’t be stopped!", "streak": 172}, {"week_start": "2025-04-12", "week_end": "2025-04-18", "minutes": 105, "xp": 816, "lessons": 16, "sent_date": "2025-04-19", "subject": "Antti, your French progress can’t be stopped!", "streak": 179}, {"week_start": "2025-04-19", "week_end": "2025-04-25", "minutes": 143, "xp": 1114, "lessons": 26, "sent_date": "2025-04-26", "subject": "Progress report! You did great 🥰", "streak": 186}, {"week_start": "2025-04-26", "week_end": "2025-05-02", "minutes": 199, "xp": 2052, "lessons": 33, "sent_date": "2025-05-03", "subject": "👀 Duo sees you with that French progress!", "streak": 193}, {"week_start": "2025-05-03", "week_end": "2025-05-09", "minutes": 88, "xp": 523, "lessons": 14, "sent_date": "2025-05-10", "subject": "Progress report! You did great 🥰", "streak": 200}, {"week_start": "2025-05-10", "week_end": "2025-05-16", "minutes": 71, "xp": 470, "lessons": 10, "sent_date": "2025-05-17", "subject": "Progress report! You did great 🥰", "streak": 206}, {"week_start": "2025-05-17", "week_end": "2025-05-23", "minutes": 87, "xp": 1283, "lessons": 21, "sent_date": "2025-05-24", "subject": "👀 Duo sees you with that French progress!", "streak": 213}, {"week_start": "2025-05-24", "week_end": "2025-05-30", "minutes": 104, "xp": 1043, "lessons": 19, "sent_date": "2025-05-31", "subject": "Antti, your French progress can’t be stopped!", "streak": 219}, {"week_start": "2025-05-31", "week_end": "2025-06-06", "minutes": 58, "xp": 456, "lessons": 9, "sent_date": "2025-06-07", "subject": "📆 Weekly insights unlocked", "streak": 227}, {"week_start": "2025-06-07", "week_end": "2025-06-13", "minutes": 56, "xp": 330, "lessons": 8, "sent_date": "2025-06-14", "subject": "📈 On track this week?", "streak": 233}, {"week_start": "2025-06-14", "week_end": "2025-06-20", "minutes": 52, "xp": 447, "lessons": 10, "sent_date": "2025-06-21", "subject": "👀 Did you beat last week?", "streak": 240}, {"week_start": "2025-06-21", "week_end": "2025-06-27", "minutes": 141, "xp": 959, "lessons": 18, "sent_date": "2025-06-28", "subject": "🫣 Antti, did you make progress?", "streak": 247}, {"week_start": "2025-06-28", "week_end": "2025-07-04", "minutes": 133, "xp": 1619, "lessons": 23, "sent_date": "2025-07-05", "subject": "👀 Duo sees you with that French progress!", "streak": 254}, {"week_start": "2025-07-05", "week_end": "2025-07-11", "minutes": 98, "xp": 1059, "lessons": 20, "sent_date": "2025-07-12", "subject": "Progress report! You did great 🥰", "streak": 261}, {"week_start": "2025-07-12", "week_end": "2025-07-18", "minutes": 153, "xp": 1593, "lessons": 26, "sent_date": "2025-07-19", "subject": "Antti, your French progress can’t be stopped!", "streak": 269}, {"week_start": "2025-07-19", "week_end": "2025-07-25", "minutes": 86, "xp": 687, "lessons": 16, "sent_date": "2025-07-26", "subject": "Progress report! You did great 🥰", "streak": 275}, {"week_start": "2025-07-26", "week_end": "2025-08-01", "minutes": 76, "xp": 570, "lessons": 12, "sent_date": "2025-08-02", "subject": "👀 Duo sees you with that French progress!", "streak": 282}, {"week_start": "2025-08-02", "week_end": "2025-08-08", "minutes": 6, "xp": 44, "lessons": 3, "sent_date": "2025-08-09", "subject": "Weekly stats! Uh oh, you missed 6 days 📉"}, {"week_start": "2025-08-09", "week_end": "2025-08-15", "minutes": 174, "xp": 1554, "lessons": 28, "sent_date": "2025-08-16", "subject": "Progress report! You did great 🥰", "streak": 295}, {"week_start": "2025-08-16", "week_end": "2025-08-22", "minutes": 201, "xp": 1790, "lessons": 33, "sent_date": "2025-08-23", "subject": "👀 Duo sees you with that French progress!", "streak": 302}, {"week_start": "2025-08-23", "week_end": "2025-08-29", "minutes": 170, "xp": 2703, "lessons": 34, "sent_date": "2025-08-30", "subject": "Antti, your French progress can’t be stopped!", "streak": 309}, {"week_start": "2025-08-30", "week_end": "2025-09-05", "minutes": 113, "xp": 876, "lessons": 17, "sent_date": "2025-09-06", "subject": "Antti, your French progress can’t be stopped!", "streak": 316}, {"week_start": "2025-09-06", "week_end": "2025-09-12", "minutes": 125, "xp": 1332, "lessons": 23, "sent_date": "2025-09-13", "subject": "Progress report! You did great 🥰", "streak": 323}, {"week_start": "2025-09-13", "week_end": "2025-09-19", "minutes": 83, "xp": 919, "lessons": 16, "sent_date": "2025-09-20", "subject": "👀 Duo sees you with that French progress!", "streak": 330}, {"week_start": "2025-09-20", "week_end": "2025-09-26", "minutes": 109, "xp": 1527, "lessons": 21, "sent_date": "2025-09-27", "subject": "Progress report! You did great 🥰", "streak": 337}, {"week_start": "2025-09-27", "week_end": "2025-10-03", "minutes": 89, "xp": 1071, "lessons": 15, "sent_date": "2025-10-04", "subject": "Antti, your French progress can’t be stopped!", "streak": 344}, {"week_start": "2025-10-04", "week_end": "2025-10-10", "minutes": 68, "xp": 828, "lessons": 13, "sent_date": "2025-10-11", "subject": "Progress report! You did great 🥰", "streak": 350}, {"week_start": "2025-10-11", "week_end": "2025-10-17", "minutes": 90, "xp": 590, "lessons": 14, "sent_date": "2025-10-18", "subject": "👀 Duo sees you with that French progress!", "streak": 357}, {"week_start": "2025-10-18", "week_end": "2025-10-24", "minutes": 98, "xp": 935, "lessons": 16, "sent_date": "2025-10-25", "subject": "Antti, your French progress can’t be stopped!", "streak": 364}, {"week_start": "2025-10-25", "week_end": "2025-10-31", "minutes": 112, "xp": 928, "lessons": 18, "sent_date": "2025-11-01", "subject": "👀 Duo sees you with that French progress!", "streak": 371}, {"week_start": "2025-11-01", "week_end": "2025-11-07", "minutes": 107, "xp": 997, "lessons": 19, "sent_date": "2025-11-08", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-11-08", "week_end": "2025-11-14", "minutes": 184, "xp": 1948, "lessons": 33, "sent_date": "2025-11-15", "subject": "Progress report! You did great 🥰", "streak": 384}, {"week_start": "2025-11-15", "week_end": "2025-11-21", "minutes": 117, "xp": 1315, "lessons": 21, "sent_date": "2025-11-22", "subject": "Antti, your French progress can’t be stopped!", "streak": 391}, {"week_start": "2025-11-22", "week_end": "2025-11-28", "minutes": 186, "xp": 1697, "lessons": 28, "sent_date": "2025-11-29", "subject": "Antti, your French progress can’t be stopped!", "streak": 398}, {"week_start": "2025-11-29", "week_end": "2025-12-05", "minutes": 88, "xp": 966, "lessons": 17, "sent_date": "2025-12-06", "subject": "👀 Duo sees you with that French progress!", "streak": 405}, {"week_start": "2025-12-06", "week_end": "2025-12-12", "minutes": 180, "xp": 1860, "lessons": 32, "sent_date": "2025-12-13", "subject": "🤩 Your French progress!!!", "streak": 412}, {"week_start": "2025-12-13", "week_end": "2025-12-19", "minutes": 197, "xp": 2106, "lessons": null, "source": "league", "estimated": true, "league_window": "2025-12-15 to 2025-12-21", "competition": "leagues", "xp_per_min_used": 10.7}, {"week_start": "2025-12-20", "week_end": "2025-12-26", "minutes": 154, "xp": 1753, "lessons": 27, "sent_date": "2025-12-27", "subject": "📈 Whoa, Antti… Look at all that French progress!", "streak": 426}, {"week_start": "2025-12-27", "week_end": "2026-01-02", "minutes": 99, "xp": 1495, "lessons": 24, "sent_date": "2026-01-03", "subject": "🚀 French progress unlocked", "streak": 434}, {"week_start": "2026-01-03", "week_end": "2026-01-09", "minutes": 141, "xp": 1680, "lessons": 26, "sent_date": "2026-01-10", "subject": "🚀 French progress unlocked", "streak": 440}, {"week_start": "2026-01-10", "week_end": "2026-01-16", "minutes": 64, "xp": 696, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-01-13 to 2026-01-19", "competition": "leagues", "xp_per_min_used": 10.9}, {"week_start": "2026-01-17", "week_end": "2026-01-23", "minutes": 154, "xp": 1672, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-01-19 to 2026-01-25", "competition": "leagues", "xp_per_min_used": 10.9}, {"week_start": "2026-01-24", "week_end": "2026-01-30", "minutes": 159, "xp": 1691, "lessons": 27, "sent_date": "2026-01-31", "subject": "Antti, stop showing off. Or don’t 😊", "streak": 460}, {"week_start": "2026-01-31", "week_end": "2026-02-06", "minutes": 110, "xp": 1181, "lessons": 23, "sent_date": "2026-02-07", "subject": "🤯 Your French stats? Just wow.", "streak": 467}, {"week_start": "2026-02-07", "week_end": "2026-02-13", "minutes": 76, "xp": 840, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-02-09 to 2026-02-15", "competition": "leagues", "xp_per_min_used": 11.1}, {"week_start": "2026-02-14", "week_end": "2026-02-20", "minutes": 117, "xp": 945, "lessons": 17, "sent_date": "2026-02-21", "subject": "You’re crushing French ✨", "streak": 482}, {"week_start": "2026-02-21", "week_end": "2026-02-27", "minutes": 112, "xp": 1639, "lessons": 21, "sent_date": "2026-02-28", "subject": "🤩 Your French progress!!!", "streak": 488}, {"week_start": "2026-02-28", "week_end": "2026-03-06", "minutes": 198, "xp": 2111, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-03-02 to 2026-03-08", "competition": "leagues", "xp_per_min_used": 10.7}, {"week_start": "2026-03-07", "week_end": "2026-03-13", "minutes": 137, "xp": 1462, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-03-09 to 2026-03-15", "competition": "leagues", "xp_per_min_used": 10.7}, {"week_start": "2026-03-14", "week_end": "2026-03-20", "minutes": 172, "xp": 1632, "lessons": 31, "sent_date": "2026-03-21", "subject": "💪 Crushing it, one French lesson at a time", "streak": 509}, {"week_start": "2026-03-21", "week_end": "2026-03-27", "minutes": 148, "xp": 1730, "lessons": 25, "sent_date": "2026-03-28", "subject": "🤯 Your French stats? Just wow.", "streak": 516}, {"week_start": "2026-03-28", "week_end": "2026-04-03", "minutes": 153, "xp": 2081, "lessons": 31, "sent_date": "2026-04-04", "subject": "🚀 French progress unlocked", "streak": 523}, {"week_start": "2026-04-04", "week_end": "2026-04-10", "minutes": 103, "xp": 1088, "lessons": 19, "sent_date": "2026-04-11", "subject": "📈 Whoa, ‎Antti‎… Look at all that French progress!", "streak": 531}, {"week_start": "2026-04-11", "week_end": "2026-04-17", "minutes": 145, "xp": 2009, "lessons": 34, "sent_date": "2026-04-18", "subject": "Someone’s 👏 been 👏 busy 👏", "streak": 537}, {"week_start": "2026-04-18", "week_end": "2026-04-24", "minutes": 82, "xp": 684, "lessons": 18, "sent_date": "2026-04-25", "subject": "Gold star for ‎Antti‎ ⭐", "streak": 543}, {"week_start": "2026-04-25", "week_end": "2026-05-01", "minutes": 62, "xp": 487, "lessons": 14, "sent_date": "2026-05-02", "subject": "Gold star for ‎Antti‎ ⭐", "streak": 549}, {"week_start": "2026-05-02", "week_end": "2026-05-08", "minutes": 62, "xp": 813, "lessons": 16, "sent_date": "2026-05-09", "subject": "😭 Keep this up and Duo might happy-cry", "streak": 556}, {"week_start": "2026-05-09", "week_end": "2026-05-15", "minutes": 77, "xp": 885, "lessons": 19, "sent_date": "2026-05-16", "subject": "You’re crushing French ✨", "streak": 563}, {"week_start": "2026-05-16", "week_end": "2026-05-22", "minutes": 69, "xp": 708, "lessons": 16, "sent_date": "2026-05-23", "subject": "French? Nailed it ✔️", "streak": 570}, {"week_start": "2026-05-23", "week_end": "2026-05-29", "minutes": 47, "xp": 1051, "lessons": 15, "sent_date": "2026-05-30", "subject": "Weekly French results are in. Nice work 🎉", "streak": 576}, {"week_start": "2026-05-30", "week_end": "2026-06-05", "minutes": 51, "xp": 573, "lessons": 12, "sent_date": "2026-06-06", "subject": "🚀 French progress unlocked", "streak": 582}, {"week_start": "2026-06-06", "week_end": "2026-06-12", "minutes": 84, "xp": 1330, "lessons": 21, "sent_date": "2026-06-13", "subject": "📈 Whoa, ‎Antti‎… Look at all that French progress!", "streak": 589}, {"week_start": "2026-06-13", "week_end": "2026-06-19", "minutes": 104, "xp": 924, "lessons": 19, "sent_date": "2026-06-20", "subject": "🚀 French progress unlocked", "streak": 596}, {"week_start": "2026-06-20", "week_end": "2026-06-26", "minutes": 233, "xp": 3181, "lessons": 44, "sent_date": "2026-06-27", "subject": "📈 You’re making serious French progress", "streak": 603}, {"week_start": "2026-06-27", "week_end": "2026-07-03", "minutes": 245, "xp": 3985, "lessons": 52, "sent_date": "2026-07-04", "subject": "🤩 Your French progress!!!", "streak": 610}, {"week_start": "2026-07-04", "week_end": "2026-07-10", "minutes": 193, "xp": 3286, "lessons": 44, "sent_date": "2026-07-11", "subject": "📈 You’re making serious French progress", "streak": 617}, {"week_start": "2026-07-11", "week_end": "2026-07-17", "minutes": 84, "xp": 1126, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-07-13 to 2026-07-19", "competition": "leagues", "xp_per_min_used": 13.5}, {"week_start": "2026-07-18", "week_end": "2026-07-24", "minutes": 122, "xp": 1828, "lessons": 32, "sent_date": "2026-07-25", "subject": "😭 Keep this up and Duo might happy-cry", "streak": 631}, {"week_start": "2026-07-25", "week_end": "2026-07-31", "minutes": 101, "xp": 1380, "lessons": 23, "sent_date": "2026-08-01", "subject": "You’re in your French era ✨", "streak": 639}, {"week_start": "2026-08-01", "week_end": "2026-08-07", "minutes": 62, "xp": 823, "lessons": 12, "sent_date": "2026-08-08", "subject": "Someone’s 👏 been 👏 busy 👏", "streak": 645}, {"week_start": "2026-08-08", "week_end": "2026-08-14", "minutes": 34, "xp": 287, "lessons": 8, "sent_date": "2026-08-15", "subject": "Duo’s impressed. That’s rare 👀", "streak": 653}, {"week_start": "2026-08-15", "week_end": "2026-08-21", "minutes": 54, "xp": 484, "lessons": 11, "sent_date": "2026-08-22", "subject": "💪 French stats looking strong", "streak": 660}, {"week_start": "2026-08-22", "week_end": "2026-08-28", "minutes": 53, "xp": 446, "lessons": 10, "sent_date": "2026-08-29", "subject": "Duo’s impressed. That’s rare 👀", "streak": 667}, {"week_start": "2026-08-29", "week_end": "2026-09-04", "minutes": 20, "xp": 265, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-08-31 to 2026-09-06", "competition": "leagues", "xp_per_min_used": 13.5}];
 
 const ink = getComputedStyle(document.documentElement);
 function cssVar(name) { return getComputedStyle(document.body).getPropertyValue(name).trim(); }
 
 const rows = DATA.slice().sort((a, b) => a.week_start.localeCompare(b.week_start));
 
-// ---------- KPIs ----------
-const totalMinutes = rows.reduce((s, r) => s + r.minutes, 0);
-const totalXp = rows.reduce((s, r) => s + r.xp, 0);
-const avgMinutes = Math.round(totalMinutes / rows.length);
-const best = rows.reduce((a, b) => b.minutes > a.minutes ? b : a, rows[0]);
+// A week's figure for a metric, or null when that metric is unknown for it.
+// Report emails carry all three metrics; a week standing in from a league
+// score carries only XP, and one old email template reported no XP at all.
+function metricValue(r, m) {
+  if (!r) return null;
+  const v = r[m];
+  if (typeof v !== 'number') return null;
+  if (m === 'xp' && r.xp_missing) return null;
+  return v;
+}
+function isEstimated(r, m) {
+  return !!(r && r.estimated && m === 'xp' && typeof r.xp === 'number');
+}
 
 function fmt(n) { return n.toLocaleString('en-US'); }
 function fmtDuration(totalMin) {
@@ -401,17 +444,38 @@ function fmtDuration(totalMin) {
   return `${h}h ${m}m`;
 }
 
+// ---------- KPIs ----------
+const minuteWeeks = rows.filter(r => metricValue(r, 'minutes') !== null);
+const xpWeeks = rows.filter(r => metricValue(r, 'xp') !== null);
+const fullWeeks = rows.filter(r => !r.estimated);
+const estWeeks = rows.filter(r => isEstimated(r, 'xp'));
+
+const totalMinutes = minuteWeeks.reduce((s, r) => s + r.minutes, 0);
+const totalXp = xpWeeks.reduce((s, r) => s + r.xp, 0);
+const avgMinutes = minuteWeeks.length ? Math.round(totalMinutes / minuteWeeks.length) : 0;
+// Best week is taken from reported weeks only -- an estimate shouldn't be able
+// to claim the record.
+const reportedMinuteWeeks = minuteWeeks.filter(r => !r.estimated);
+const best = reportedMinuteWeeks.reduce((a, b) => b.minutes > a.minutes ? b : a, reportedMinuteWeeks[0]);
+
 document.getElementById('rangeBadge').textContent =
   `${rows[0].week_start} → ${rows[rows.length - 1].week_end}`;
 document.getElementById('tableSub').textContent =
-  `${fmt(rows.length)} weeks with a matching report · click a column to sort`;
+  `${fmt(rows.length)} weeks · ${fmt(fullWeeks.length)} from report emails, ${fmt(estWeeks.length)} estimated · click a column to sort`;
 
 const kpiRow = document.getElementById('kpiRow');
+const estMinutes = rows.filter(r => r.estimated && metricValue(r, 'minutes') !== null)
+                       .reduce((s, r) => s + r.minutes, 0);
 const kpis = [
-  { label: 'Weeks tracked', value: fmt(rows.length), sub: 'weeks with a matching report' },
-  { label: 'Total time', value: fmtDuration(totalMinutes), sub: `across ${fmt(rows.length)} weeks`, cls: 'accent' },
+  { label: 'Weeks tracked', value: fmt(rows.length),
+    sub: `${fmt(fullWeeks.length)} reported · ${fmt(estWeeks.length)} estimated` },
+  { label: 'Total time', value: fmtDuration(totalMinutes),
+    sub: estMinutes ? `incl. ~${fmtDuration(estMinutes)} estimated` : `across ${fmt(minuteWeeks.length)} weeks`,
+    cls: 'accent' },
   { label: 'Avg per week', value: fmtDuration(avgMinutes), sub: 'time spent learning', cls: 'accent' },
-  { label: 'Total XP', value: fmt(totalXp), sub: `avg ${fmt(Math.round(totalXp/rows.length))} / week`, cls: 'pink' },
+  { label: 'Total XP', value: fmt(totalXp),
+    sub: `avg ${fmt(Math.round(totalXp / xpWeeks.length))} / week` + (estWeeks.length ? ` · ${estWeeks.length} est.` : ''),
+    cls: 'pink' },
   { label: 'Best week', value: fmtDuration(best.minutes), sub: `week of ${best.week_start} · ${fmt(best.xp)} XP` },
 ];
 for (const k of kpis) {
@@ -436,29 +500,66 @@ const weeklyFull = [];
 for (let d = new Date(firstWeek); d <= lastWeek; d = addDays(d, 7)) {
   const key = isoDate(d);
   const r = byWeekStart.get(key);
-  weeklyFull.push(r
-    ? { label: key, minutes: r.minutes, xp: r.xp, lessons: r.lessons, hasData: true, xpMissing: !!r.xp_missing, weekEnd: r.week_end }
-    : { label: key, minutes: 0, xp: 0, lessons: 0, hasData: false, xpMissing: false, weekEnd: isoDate(addDays(d, 6)) });
+  weeklyFull.push({
+    label: key,
+    weekEnd: r ? r.week_end : isoDate(addDays(d, 6)),
+    minutes: metricValue(r, 'minutes'),
+    xp: metricValue(r, 'xp'),
+    lessons: metricValue(r, 'lessons'),
+    hasData: !!r,
+    estimated: !!(r && r.estimated),
+    leagueWindow: (r && r.league_window) || null,
+    competition: (r && r.competition) || null,
+    ratioUsed: (r && r.xp_per_min_used) || null,
+  });
 }
 
-const gapRanges = [];
-let gapStart = null;
-weeklyFull.forEach((w, i) => {
-  if (!w.hasData && gapStart === null) gapStart = w.label;
-  if (w.hasData && gapStart !== null) {
-    gapRanges.push([gapStart, weeklyFull[i - 1].weekEnd]);
-    gapStart = null;
-  }
-});
-if (gapStart !== null) gapRanges.push([gapStart, weeklyFull[weeklyFull.length - 1].weekEnd]);
+// Collapse a per-week predicate into contiguous date ranges, for the footnotes.
+function rangesWhere(pred) {
+  const out = [];
+  let start = null;
+  weeklyFull.forEach((w, i) => {
+    if (pred(w)) {
+      if (start === null) start = w.label;
+    } else if (start !== null) {
+      out.push([start, weeklyFull[i - 1].weekEnd]);
+      start = null;
+    }
+  });
+  if (start !== null) out.push([start, weeklyFull[weeklyFull.length - 1].weekEnd]);
+  return out;
+}
+function renderRanges(el, ranges) {
+  const node = document.getElementById(el);
+  if (node) node.textContent = ranges.length ? ranges.map(([a, b]) => `${a} – ${b}`).join('; ') : 'none';
+}
 
-document.getElementById('gapList').textContent = gapRanges.length
-  ? gapRanges.map(([a, b]) => `${a} – ${b}`).join('; ')
-  : 'none';
+renderRanges('gapList', rangesWhere(w => !w.hasData));
+renderRanges('estList', rangesWhere(w => w.estimated));
 
 // ---------- Monthly / annual aggregation ----------
 function monthKey(dateStr) { return dateStr.slice(0, 7); } // YYYY-MM
 function addMonths(d, n) { const r = new Date(d); r.setUTCMonth(r.getUTCMonth() + n); return r; }
+
+// Sum a metric across a bucket's weeks, counting only weeks where that
+// metric is actually known. A bucket where none of them are known stays null
+// so it renders as "no data" rather than a misleading zero.
+function bucket(label, weeksIn) {
+  const sumKnown = (m) => {
+    const vals = weeksIn.map(r => metricValue(r, m)).filter(v => v !== null);
+    return vals.length ? { total: vals.reduce((s, v) => s + v, 0), n: vals.length } : { total: null, n: 0 };
+  };
+  const mins = sumKnown('minutes'), xp = sumKnown('xp'), less = sumKnown('lessons');
+  return {
+    label,
+    minutes: mins.total, xp: xp.total, lessons: less.total,
+    minutesWeeks: mins.n, xpWeeks: xp.n, lessonsWeeks: less.n,
+    hasData: weeksIn.length > 0,
+    weekCount: weeksIn.length,
+    estCount: weeksIn.filter(r => isEstimated(r, 'xp')).length,
+    estimated: weeksIn.length > 0 && weeksIn.every(r => isEstimated(r, 'xp')),
+  };
+}
 
 function aggregateMonthly() {
   const out = [];
@@ -466,15 +567,7 @@ function aggregateMonthly() {
   const end = new Date(Date.UTC(lastWeek.getUTCFullYear(), lastWeek.getUTCMonth(), 1));
   while (cursor <= end) {
     const key = monthKey(isoDate(cursor));
-    const weeksIn = rows.filter(r => monthKey(r.week_start) === key);
-    out.push({
-      label: key,
-      minutes: weeksIn.reduce((s, r) => s + r.minutes, 0),
-      xp: weeksIn.reduce((s, r) => s + r.xp, 0),
-      lessons: weeksIn.reduce((s, r) => s + r.lessons, 0),
-      hasData: weeksIn.length > 0,
-      weekCount: weeksIn.length,
-    });
+    out.push(bucket(key, rows.filter(r => monthKey(r.week_start) === key)));
     cursor = addMonths(cursor, 1);
   }
   return out;
@@ -483,15 +576,7 @@ function aggregateMonthly() {
 function aggregateAnnual() {
   const out = [];
   for (let y = firstWeek.getUTCFullYear(); y <= lastWeek.getUTCFullYear(); y++) {
-    const weeksIn = rows.filter(r => r.week_start.slice(0, 4) === String(y));
-    out.push({
-      label: String(y),
-      minutes: weeksIn.reduce((s, r) => s + r.minutes, 0),
-      xp: weeksIn.reduce((s, r) => s + r.xp, 0),
-      lessons: weeksIn.reduce((s, r) => s + r.lessons, 0),
-      hasData: weeksIn.length > 0,
-      weekCount: weeksIn.length,
-    });
+    out.push(bucket(String(y), rows.filter(r => r.week_start.slice(0, 4) === String(y))));
   }
   return out;
 }
@@ -526,9 +611,9 @@ function fullLabel(period, item) {
 
 // ---------- Bar chart ----------
 const METRIC_META = {
-  minutes: { colorVar: '--accent-sage', fallback: '#436F4C', title: 'Time', verb: 'Time spent learning', format: fmtDuration },
-  xp: { colorVar: '--accent-pink', fallback: '#C2409A', title: 'XP', verb: 'Experience points earned', format: v => fmt(v) + ' XP' },
-  lessons: { colorVar: '--accent-amber', fallback: '#B8752E', title: 'Lessons', verb: 'Lessons completed', format: v => fmt(v) + ' lessons' },
+  minutes: { colorVar: '--accent-sage', fallback: '#436F4C', title: 'Time', lower: 'time', verb: 'Time spent learning', format: fmtDuration },
+  xp: { colorVar: '--accent-pink', fallback: '#C2409A', title: 'XP', lower: 'XP', verb: 'Experience points earned', format: v => fmt(v) + ' XP' },
+  lessons: { colorVar: '--accent-amber', fallback: '#B8752E', title: 'Lessons', lower: 'lessons', verb: 'Lessons completed', format: v => fmt(v) + ' lessons' },
 };
 const PERIOD_META = {
   weekly: 'by report week',
@@ -548,9 +633,19 @@ function buildBarChart() {
   const meta = METRIC_META[currentMetric];
   const color = cssVar(meta.colorVar) || meta.fallback;
   const mutedColor = cssVar('--ink-muted') || '#8B948E';
+  const estColor = cssVar('--accent-estimate') || '#748DA3';
 
   document.getElementById('chartTitle').textContent = `${meta.title} per ${currentPeriod === 'weekly' ? 'week' : currentPeriod === 'monthly' ? 'month' : 'year'}`;
   document.getElementById('chartSub').textContent = `${meta.verb}, ${PERIOD_META[currentPeriod]}`;
+
+  // The legend only earns its space when this view actually mixes sources.
+  const anyEst = items.some(d => d[currentMetric] !== null && d.estimated);
+  const anyNone = items.some(d => d[currentMetric] === null);
+  const legend = document.getElementById('chartLegend');
+  legend.hidden = !(anyEst || anyNone);
+  document.getElementById('swatchSolid').style.background = color;
+  legend.querySelectorAll('.legend-item')[1].hidden = !anyEst;
+  legend.querySelectorAll('.legend-item')[2].hidden = !anyNone;
 
   const n = items.length;
   const isNarrow = window.matchMedia('(max-width: 720px)').matches;
@@ -565,7 +660,7 @@ function buildBarChart() {
   const fontSize = isNarrow ? 13 : 10.5;
   const padL = isNarrow ? 56 : 46, padR = 12, padT = 14, padB = isNarrow ? 34 : 30;
   const plotW = W - padL - padR, plotH = H - padT - padB;
-  const maxVal = Math.max(...items.map(d => d[currentMetric])) * 1.12 || 1;
+  const maxVal = Math.max(...items.map(d => d[currentMetric] === null ? 0 : d[currentMetric])) * 1.12 || 1;
 
   const gap = currentPeriod === 'weekly' ? 1.5 : 6;
   const barW = Math.max(1, plotW / n - gap);
@@ -577,6 +672,28 @@ function buildBarChart() {
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.classList.add("chart-svg");
+
+  // Estimated bars get their own colour, distinct from all three metric
+  // colours, plus a diagonal hatch. The hatch isn't decoration: a slate this
+  // legible against the surface is nearly indistinguishable from the XP pink
+  // under deuteranopia (ΔE ~3), so texture is what actually carries the
+  // distinction for red-green colour blindness and in print.
+  const defs = document.createElementNS(svgNS, "defs");
+  const pat = document.createElementNS(svgNS, "pattern");
+  pat.setAttribute("id", "estHatch");
+  pat.setAttribute("patternUnits", "userSpaceOnUse");
+  pat.setAttribute("width", "5");
+  pat.setAttribute("height", "5");
+  pat.setAttribute("patternTransform", "rotate(45)");
+  const patBg = document.createElementNS(svgNS, "rect");
+  patBg.setAttribute("width", "5"); patBg.setAttribute("height", "5");
+  patBg.setAttribute("fill", estColor); patBg.setAttribute("opacity", "0.45");
+  const patLine = document.createElementNS(svgNS, "rect");
+  patLine.setAttribute("width", "2.2"); patLine.setAttribute("height", "5");
+  patLine.setAttribute("fill", estColor);
+  pat.appendChild(patBg); pat.appendChild(patLine);
+  defs.appendChild(pat);
+  svg.appendChild(defs);
 
   const ticks = 4;
   for (let t = 0; t <= ticks; t++) {
@@ -603,16 +720,23 @@ function buildBarChart() {
 
   items.forEach((d, i) => {
     const bx = xLeft(i);
-    const metricKnown = d.hasData && !(currentMetric === 'xp' && d.xpMissing);
-    const bh = (d[currentMetric] / maxVal) * plotH;
+    const raw = d[currentMetric];
+    const metricKnown = raw !== null && raw !== undefined;
+    // Hatch only when the whole bar is a stand-in: a single estimated week, or
+    // a month/year every one of whose weeks was estimated. Partly-estimated
+    // buckets stay solid and say so in the tooltip instead. Applies to time as
+    // well as XP now, since an estimated week derives both.
+    const isEst = metricKnown && d.estimated;
+    const val = metricKnown ? raw : 0;
+    const bh = (val / maxVal) * plotH;
     const rect = document.createElementNS(svgNS, "rect");
     rect.setAttribute("x", bx);
-    rect.setAttribute("y", y(d[currentMetric]));
+    rect.setAttribute("y", y(val));
     rect.setAttribute("width", barW);
     rect.setAttribute("height", Math.max(bh, metricKnown ? 1.5 : 1));
     rect.setAttribute("rx", Math.min(3, barW / 2));
-    rect.setAttribute("fill", metricKnown ? color : mutedColor);
-    rect.setAttribute("class", "bar " + (metricKnown ? "has-data" : "no-data"));
+    rect.setAttribute("fill", metricKnown ? (isEst ? "url(#estHatch)" : color) : mutedColor);
+    rect.setAttribute("class", "bar " + (metricKnown ? (isEst ? "has-data estimated" : "has-data") : "no-data"));
     svg.appendChild(rect);
 
     if (i % xTickEvery === 0 || i === n - 1) {
@@ -640,14 +764,26 @@ function buildBarChart() {
       dateEl.className = 't-date';
       dateEl.textContent = fullLabel(currentPeriod, d);
       tooltip.appendChild(dateEl);
-      const metricKnown = d.hasData && !(currentMetric === 'xp' && d.xpMissing);
-      if (d.hasData && !metricKnown) {
+      const raw = d[currentMetric];
+      const metricKnown = raw !== null && raw !== undefined;
+      const addNote = (text) => {
         const note = document.createElement('div');
         note.className = 't-row';
         note.style.color = 'var(--bg)';
-        note.textContent = `Report had no ${meta.title.toLowerCase()} figure (${fmtDuration(d.minutes)} · ${fmt(d.lessons)} lessons known)`;
+        note.style.opacity = '0.85';
+        note.textContent = text;
         tooltip.appendChild(note);
-      } else if (metricKnown) {
+      };
+      // Describe the metrics other than the one currently charted, skipping
+      // any that this week doesn't know.
+      const others = (['minutes', 'xp', 'lessons'])
+        .filter(m => m !== currentMetric)
+        .map(m => d[m] === null || d[m] === undefined
+          ? null
+          : (m === 'minutes' ? fmtDuration(d[m]) : m === 'xp' ? `${fmt(d[m])} XP` : `${fmt(d[m])} lessons`))
+        .filter(Boolean);
+
+      if (metricKnown) {
         const row = document.createElement('div');
         row.className = 't-row';
         const key = document.createElement('span');
@@ -655,14 +791,25 @@ function buildBarChart() {
         key.style.background = color;
         const val = document.createElement('span');
         val.className = 't-val';
-        val.textContent = meta.format(d[currentMetric]);
+        val.textContent = (d.estimated ? '≈ ' : '') + meta.format(raw);
         const name = document.createElement('span');
         name.className = 't-name';
-        name.textContent = currentMetric === 'minutes' ? `· ${fmt(d.xp)} XP · ${fmt(d.lessons)} lessons`
-          : currentMetric === 'xp' ? `· ${fmtDuration(d.minutes)} · ${fmt(d.lessons)} lessons`
-          : `· ${fmtDuration(d.minutes)} · ${fmt(d.xp)} XP`;
+        name.textContent = others.length ? '· ' + others.join(' · ') : '';
         row.appendChild(key); row.appendChild(val); row.appendChild(name);
         tooltip.appendChild(row);
+
+        if (currentPeriod === 'weekly' && d.estimated) {
+          addNote(`No report email — XP from the ${d.competition === 'diamond-tournament' ? 'tournament' : 'league'} week ${d.leagueWindow}`);
+          if (currentMetric === 'minutes' && d.ratioUsed) {
+            addNote(`Time derived at ${d.ratioUsed} XP/min, the local rate for nearby weeks`);
+          }
+        } else if (currentPeriod !== 'weekly' && d.estCount > 0) {
+          addNote(`Includes ${d.estCount} week${d.estCount === 1 ? '' : 's'} estimated from league scores`);
+        }
+      } else if (d.hasData) {
+        addNote(others.length
+          ? `No ${meta.lower} figure for this week (${others.join(' · ')} known)`
+          : `No ${meta.lower} figure for this week`);
       }
       // The tooltip is absolutely positioned with no positioned ancestor, so
       // its left/top are relative to the whole document -- use page
@@ -703,10 +850,20 @@ window.addEventListener('resize', () => {
 });
 
 // ---------- Table ----------
-const tableRows = rows.map(r => ({
-  ...r,
-  xp_per_min: r.minutes > 0 ? Math.round((r.xp / r.minutes) * 10) / 10 : 0,
-}));
+const tableRows = rows.map(r => {
+  const mins = metricValue(r, 'minutes'), xp = metricValue(r, 'xp'), less = metricValue(r, 'lessons');
+  return {
+    ...r,
+    // Sort keys: unknown values sort as -1 so they group together rather than
+    // being treated as zero-value weeks.
+    minutes: mins === null ? -1 : mins,
+    xp: xp === null ? -1 : xp,
+    lessons: less === null ? -1 : less,
+    // Circular for estimated weeks (their minutes came *from* this ratio), so blank.
+    xp_per_min: (!r.estimated && mins !== null && xp !== null && mins > 0)
+      ? Math.round((xp / mins) * 10) / 10 : -1,
+  };
+});
 
 let sortKey = 'week_start', sortDir = -1;
 function renderTable() {
@@ -719,12 +876,13 @@ function renderTable() {
   tbody.innerHTML = '';
   sorted.forEach(r => {
     const tr = document.createElement('tr');
+    if (r.estimated) tr.className = 'est-row';
     const cells = [
       `${r.week_start} – ${r.week_end}`,
-      fmtDuration(r.minutes),
-      fmt(r.xp),
-      fmt(r.lessons),
-      r.xp_per_min.toFixed(1),
+      r.minutes < 0 ? '—' : (r.estimated ? '≈ ' : '') + fmtDuration(r.minutes),
+      r.xp < 0 ? '—' : (r.estimated ? '≈ ' : '') + fmt(r.xp),
+      r.lessons < 0 ? '—' : fmt(r.lessons),
+      r.xp_per_min < 0 ? '—' : r.xp_per_min.toFixed(1),
     ];
     cells.forEach((c, idx) => {
       const td = document.createElement('td');

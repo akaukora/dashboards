@@ -15,6 +15,7 @@
   --accent-pink-fill: #FFA1E7;
   --accent-pink-soft: #FCD4F4;
   --accent-amber: #B8752E;
+  --accent-estimate: #748DA3;
   --shadow: 0 1px 2px rgba(28,36,32,0.04), 0 4px 16px rgba(28,36,32,0.05);
 }
 
@@ -33,6 +34,7 @@
     --accent-pink-fill: #FFA1E7;
     --accent-pink-soft: #3A2536;
     --accent-amber: #B8752E;
+    --accent-estimate: #6FA3D6;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
   }
 }
@@ -50,6 +52,7 @@
   --accent-pink-fill: #FFA1E7;
   --accent-pink-soft: #3A2536;
   --accent-amber: #B8752E;
+  --accent-estimate: #6FA3D6;
   --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
 }
 
@@ -194,6 +197,19 @@ h1 {
 }
 .toggle-group button:focus-visible { outline: 2px solid var(--accent-green); outline-offset: 1px; }
 .toggle-row { display: flex; gap: 8px; flex-wrap: wrap; }
+.chart-legend {
+  display: flex; flex-wrap: wrap; gap: 4px 14px;
+  margin-top: 8px; font-size: 11.5px; color: var(--ink-muted);
+}
+.legend-item { display: inline-flex; align-items: center; gap: 5px; }
+.legend-item[hidden], [hidden] { display: none !important; }
+.swatch { width: 11px; height: 11px; border-radius: 2.5px; display: inline-block; flex: none; }
+.swatch-est {
+  background: var(--accent-estimate);
+  background-image: repeating-linear-gradient(45deg,
+    rgba(255,255,255,0.55) 0 1.6px, rgba(255,255,255,0) 1.6px 3.6px);
+}
+.swatch-none { background: var(--ink-muted); opacity: 0.35; }
 .chart-svg { width: 100%; height: auto; display: block; overflow: visible; }
 .gridline { stroke: var(--border); stroke-width: 1; }
 .axis-label { fill: var(--ink-muted); font-size: 10.5px; font-family: "Work Sans", sans-serif; }
@@ -280,6 +296,8 @@ tbody td:first-child { color: var(--ink-secondary); font-variant-numeric: normal
 tbody tr:last-child td { border-bottom: none; }
 tbody tr:hover td { background: var(--surface-2); }
 .gap-row td { color: var(--ink-muted); font-style: italic; background: transparent; }
+.est-row td { color: var(--ink-muted); }
+.est-row td:first-child { font-style: italic; }
 
 footer {
   margin-top: 20px;
@@ -295,6 +313,10 @@ footer a { color: inherit; }
 @media (max-width: 720px) {
   .kpis { grid-template-columns: repeat(2, 1fr); }
   .charts { grid-template-columns: 1fr; }
+  .card { padding: 16px 14px 10px; }
+  .chart-head { gap: 10px; margin-bottom: 10px; }
+  .toggle-group { padding: 2px; gap: 1px; }
+  .toggle-group button { padding: 5px 9px; font-size: 11.5px; }
 }
 </style>
 
@@ -302,7 +324,7 @@ footer a { color: inherit; }
   <header>
     <div>
       <h1>Duolingo Weekly Progress</h1>
-      <p class="subtitle">Time, XP, and lessons, reconstructed from Duolingo's weekly progress-report emails — by week, month, or year.</p>
+      <p class="subtitle">Time, XP, and lessons, reconstructed from Duolingo's weekly progress-report emails and account data export — by week, month, or year.</p>
     </div>
     <div class="streak-badge" id="rangeBadge">—</div>
   </header>
@@ -315,6 +337,11 @@ footer a { color: inherit; }
         <div>
           <h2 id="chartTitle">Time per week</h2>
           <p class="card-sub" id="chartSub">Time spent learning, by report week</p>
+          <div class="chart-legend" id="chartLegend" hidden>
+            <span class="legend-item"><span class="swatch swatch-solid" id="swatchSolid"></span>from report email</span>
+            <span class="legend-item"><span class="swatch swatch-est"></span>estimated from league score</span>
+            <span class="legend-item"><span class="swatch swatch-none"></span>no data</span>
+          </div>
         </div>
         <div class="toggle-row">
           <div class="toggle-group" id="metricToggle">
@@ -355,13 +382,25 @@ footer a { color: inherit; }
   </div>
 
   <footer>
-    Source: weekly progress-report emails from hello@duolingo.com, combining the Proton Mail export
-    (<code>mail_20260901_135154</code>) with emails recovered from an old Gmail account for Oct–Dec 2025.
-    Faded bars mark weeks with no matching report email found in either mailbox — not weeks without studying
-    (the streak was unbroken throughout). One recovered week (Oct 19–25, 2024) had no XP figure in its email,
-    so its XP bar is faded even though minutes and lessons are known. One week (Dec 13–19, 2025) still has no
-    matching email in either mailbox and may be permanently lost. The others are single weeks where Duolingo
-    doesn't seem to have sent the full stats template at all: <span id="gapList"></span>.
+    <strong>Time and lessons</strong> come from Duolingo's weekly progress-report emails
+    (<code>hello@duolingo.com</code>) — a Proton Mail export plus reports recovered from an old Gmail
+    account. Duolingo sends one report per course, so a week often arrives several times over with
+    very different figures; the one kept is whichever carries the account's long French streak, since
+    a secondary course's report covers only a sliver of the week and sometimes logs more minutes than
+    French did. Faded bars mark weeks no report covers, which is a gap in the mail rather than a week
+    without studying. One week (Oct 19–25, 2024) used a template that stated no XP at all, so only
+    its XP is unknown.
+    <br><br>
+    <strong>Hatched slate bars</strong> are estimates, shown in their own color so they never pass
+    for measured data. They cover the weeks with no report email: <span id="estList"></span>. Their
+    XP comes from Duolingo's own league scores (<code>leaderboards.csv</code> in the account data
+    export); since the league week ends about three days off from the report week, treat these as
+    close approximations rather than exact figures. Their <em>time</em> is derived from that XP using
+    the median XP-per-minute of the twelve nearest reported weeks — local rather than lifetime,
+    because the rate climbs from about 7.9 in early 2025 to 13.8 by mid-2026, and a lifetime average
+    would overstate the recent gaps by roughly a third. Lessons are left blank, as nothing in the
+    league data implies them. Every estimate is replaced by real figures automatically once a report
+    email for that week turns up.
   </footer>
 </div>
 
@@ -375,11 +414,19 @@ function cssVar(name) { return getComputedStyle(document.body).getPropertyValue(
 
 const rows = DATA.slice().sort((a, b) => a.week_start.localeCompare(b.week_start));
 
-// ---------- KPIs ----------
-const totalMinutes = rows.reduce((s, r) => s + r.minutes, 0);
-const totalXp = rows.reduce((s, r) => s + r.xp, 0);
-const avgMinutes = Math.round(totalMinutes / rows.length);
-const best = rows.reduce((a, b) => b.minutes > a.minutes ? b : a, rows[0]);
+// A week's figure for a metric, or null when that metric is unknown for it.
+// Report emails carry all three metrics; a week standing in from a league
+// score carries only XP, and one old email template reported no XP at all.
+function metricValue(r, m) {
+  if (!r) return null;
+  const v = r[m];
+  if (typeof v !== 'number') return null;
+  if (m === 'xp' && r.xp_missing) return null;
+  return v;
+}
+function isEstimated(r, m) {
+  return !!(r && r.estimated && m === 'xp' && typeof r.xp === 'number');
+}
 
 function fmt(n) { return n.toLocaleString('en-US'); }
 function fmtDuration(totalMin) {
@@ -390,17 +437,38 @@ function fmtDuration(totalMin) {
   return `${h}h ${m}m`;
 }
 
+// ---------- KPIs ----------
+const minuteWeeks = rows.filter(r => metricValue(r, 'minutes') !== null);
+const xpWeeks = rows.filter(r => metricValue(r, 'xp') !== null);
+const fullWeeks = rows.filter(r => !r.estimated);
+const estWeeks = rows.filter(r => isEstimated(r, 'xp'));
+
+const totalMinutes = minuteWeeks.reduce((s, r) => s + r.minutes, 0);
+const totalXp = xpWeeks.reduce((s, r) => s + r.xp, 0);
+const avgMinutes = minuteWeeks.length ? Math.round(totalMinutes / minuteWeeks.length) : 0;
+// Best week is taken from reported weeks only -- an estimate shouldn't be able
+// to claim the record.
+const reportedMinuteWeeks = minuteWeeks.filter(r => !r.estimated);
+const best = reportedMinuteWeeks.reduce((a, b) => b.minutes > a.minutes ? b : a, reportedMinuteWeeks[0]);
+
 document.getElementById('rangeBadge').textContent =
   `${rows[0].week_start} → ${rows[rows.length - 1].week_end}`;
 document.getElementById('tableSub').textContent =
-  `${fmt(rows.length)} weeks with a matching report · click a column to sort`;
+  `${fmt(rows.length)} weeks · ${fmt(fullWeeks.length)} from report emails, ${fmt(estWeeks.length)} estimated · click a column to sort`;
 
 const kpiRow = document.getElementById('kpiRow');
+const estMinutes = rows.filter(r => r.estimated && metricValue(r, 'minutes') !== null)
+                       .reduce((s, r) => s + r.minutes, 0);
 const kpis = [
-  { label: 'Weeks tracked', value: fmt(rows.length), sub: 'weeks with a matching report' },
-  { label: 'Total time', value: fmtDuration(totalMinutes), sub: `across ${fmt(rows.length)} weeks`, cls: 'accent' },
+  { label: 'Weeks tracked', value: fmt(rows.length),
+    sub: `${fmt(fullWeeks.length)} reported · ${fmt(estWeeks.length)} estimated` },
+  { label: 'Total time', value: fmtDuration(totalMinutes),
+    sub: estMinutes ? `incl. ~${fmtDuration(estMinutes)} estimated` : `across ${fmt(minuteWeeks.length)} weeks`,
+    cls: 'accent' },
   { label: 'Avg per week', value: fmtDuration(avgMinutes), sub: 'time spent learning', cls: 'accent' },
-  { label: 'Total XP', value: fmt(totalXp), sub: `avg ${fmt(Math.round(totalXp/rows.length))} / week`, cls: 'pink' },
+  { label: 'Total XP', value: fmt(totalXp),
+    sub: `avg ${fmt(Math.round(totalXp / xpWeeks.length))} / week` + (estWeeks.length ? ` · ${estWeeks.length} est.` : ''),
+    cls: 'pink' },
   { label: 'Best week', value: fmtDuration(best.minutes), sub: `week of ${best.week_start} · ${fmt(best.xp)} XP` },
 ];
 for (const k of kpis) {
@@ -425,29 +493,66 @@ const weeklyFull = [];
 for (let d = new Date(firstWeek); d <= lastWeek; d = addDays(d, 7)) {
   const key = isoDate(d);
   const r = byWeekStart.get(key);
-  weeklyFull.push(r
-    ? { label: key, minutes: r.minutes, xp: r.xp, lessons: r.lessons, hasData: true, xpMissing: !!r.xp_missing, weekEnd: r.week_end }
-    : { label: key, minutes: 0, xp: 0, lessons: 0, hasData: false, xpMissing: false, weekEnd: isoDate(addDays(d, 6)) });
+  weeklyFull.push({
+    label: key,
+    weekEnd: r ? r.week_end : isoDate(addDays(d, 6)),
+    minutes: metricValue(r, 'minutes'),
+    xp: metricValue(r, 'xp'),
+    lessons: metricValue(r, 'lessons'),
+    hasData: !!r,
+    estimated: !!(r && r.estimated),
+    leagueWindow: (r && r.league_window) || null,
+    competition: (r && r.competition) || null,
+    ratioUsed: (r && r.xp_per_min_used) || null,
+  });
 }
 
-const gapRanges = [];
-let gapStart = null;
-weeklyFull.forEach((w, i) => {
-  if (!w.hasData && gapStart === null) gapStart = w.label;
-  if (w.hasData && gapStart !== null) {
-    gapRanges.push([gapStart, weeklyFull[i - 1].weekEnd]);
-    gapStart = null;
-  }
-});
-if (gapStart !== null) gapRanges.push([gapStart, weeklyFull[weeklyFull.length - 1].weekEnd]);
+// Collapse a per-week predicate into contiguous date ranges, for the footnotes.
+function rangesWhere(pred) {
+  const out = [];
+  let start = null;
+  weeklyFull.forEach((w, i) => {
+    if (pred(w)) {
+      if (start === null) start = w.label;
+    } else if (start !== null) {
+      out.push([start, weeklyFull[i - 1].weekEnd]);
+      start = null;
+    }
+  });
+  if (start !== null) out.push([start, weeklyFull[weeklyFull.length - 1].weekEnd]);
+  return out;
+}
+function renderRanges(el, ranges) {
+  const node = document.getElementById(el);
+  if (node) node.textContent = ranges.length ? ranges.map(([a, b]) => `${a} – ${b}`).join('; ') : 'none';
+}
 
-document.getElementById('gapList').textContent = gapRanges.length
-  ? gapRanges.map(([a, b]) => `${a} – ${b}`).join('; ')
-  : 'none';
+renderRanges('gapList', rangesWhere(w => !w.hasData));
+renderRanges('estList', rangesWhere(w => w.estimated));
 
 // ---------- Monthly / annual aggregation ----------
 function monthKey(dateStr) { return dateStr.slice(0, 7); } // YYYY-MM
 function addMonths(d, n) { const r = new Date(d); r.setUTCMonth(r.getUTCMonth() + n); return r; }
+
+// Sum a metric across a bucket's weeks, counting only weeks where that
+// metric is actually known. A bucket where none of them are known stays null
+// so it renders as "no data" rather than a misleading zero.
+function bucket(label, weeksIn) {
+  const sumKnown = (m) => {
+    const vals = weeksIn.map(r => metricValue(r, m)).filter(v => v !== null);
+    return vals.length ? { total: vals.reduce((s, v) => s + v, 0), n: vals.length } : { total: null, n: 0 };
+  };
+  const mins = sumKnown('minutes'), xp = sumKnown('xp'), less = sumKnown('lessons');
+  return {
+    label,
+    minutes: mins.total, xp: xp.total, lessons: less.total,
+    minutesWeeks: mins.n, xpWeeks: xp.n, lessonsWeeks: less.n,
+    hasData: weeksIn.length > 0,
+    weekCount: weeksIn.length,
+    estCount: weeksIn.filter(r => isEstimated(r, 'xp')).length,
+    estimated: weeksIn.length > 0 && weeksIn.every(r => isEstimated(r, 'xp')),
+  };
+}
 
 function aggregateMonthly() {
   const out = [];
@@ -455,15 +560,7 @@ function aggregateMonthly() {
   const end = new Date(Date.UTC(lastWeek.getUTCFullYear(), lastWeek.getUTCMonth(), 1));
   while (cursor <= end) {
     const key = monthKey(isoDate(cursor));
-    const weeksIn = rows.filter(r => monthKey(r.week_start) === key);
-    out.push({
-      label: key,
-      minutes: weeksIn.reduce((s, r) => s + r.minutes, 0),
-      xp: weeksIn.reduce((s, r) => s + r.xp, 0),
-      lessons: weeksIn.reduce((s, r) => s + r.lessons, 0),
-      hasData: weeksIn.length > 0,
-      weekCount: weeksIn.length,
-    });
+    out.push(bucket(key, rows.filter(r => monthKey(r.week_start) === key)));
     cursor = addMonths(cursor, 1);
   }
   return out;
@@ -472,15 +569,7 @@ function aggregateMonthly() {
 function aggregateAnnual() {
   const out = [];
   for (let y = firstWeek.getUTCFullYear(); y <= lastWeek.getUTCFullYear(); y++) {
-    const weeksIn = rows.filter(r => r.week_start.slice(0, 4) === String(y));
-    out.push({
-      label: String(y),
-      minutes: weeksIn.reduce((s, r) => s + r.minutes, 0),
-      xp: weeksIn.reduce((s, r) => s + r.xp, 0),
-      lessons: weeksIn.reduce((s, r) => s + r.lessons, 0),
-      hasData: weeksIn.length > 0,
-      weekCount: weeksIn.length,
-    });
+    out.push(bucket(String(y), rows.filter(r => r.week_start.slice(0, 4) === String(y))));
   }
   return out;
 }
@@ -515,9 +604,9 @@ function fullLabel(period, item) {
 
 // ---------- Bar chart ----------
 const METRIC_META = {
-  minutes: { colorVar: '--accent-sage', fallback: '#436F4C', title: 'Time', verb: 'Time spent learning', format: fmtDuration },
-  xp: { colorVar: '--accent-pink', fallback: '#C2409A', title: 'XP', verb: 'Experience points earned', format: v => fmt(v) + ' XP' },
-  lessons: { colorVar: '--accent-amber', fallback: '#B8752E', title: 'Lessons', verb: 'Lessons completed', format: v => fmt(v) + ' lessons' },
+  minutes: { colorVar: '--accent-sage', fallback: '#436F4C', title: 'Time', lower: 'time', verb: 'Time spent learning', format: fmtDuration },
+  xp: { colorVar: '--accent-pink', fallback: '#C2409A', title: 'XP', lower: 'XP', verb: 'Experience points earned', format: v => fmt(v) + ' XP' },
+  lessons: { colorVar: '--accent-amber', fallback: '#B8752E', title: 'Lessons', lower: 'lessons', verb: 'Lessons completed', format: v => fmt(v) + ' lessons' },
 };
 const PERIOD_META = {
   weekly: 'by report week',
@@ -537,14 +626,34 @@ function buildBarChart() {
   const meta = METRIC_META[currentMetric];
   const color = cssVar(meta.colorVar) || meta.fallback;
   const mutedColor = cssVar('--ink-muted') || '#8B948E';
+  const estColor = cssVar('--accent-estimate') || '#748DA3';
 
   document.getElementById('chartTitle').textContent = `${meta.title} per ${currentPeriod === 'weekly' ? 'week' : currentPeriod === 'monthly' ? 'month' : 'year'}`;
   document.getElementById('chartSub').textContent = `${meta.verb}, ${PERIOD_META[currentPeriod]}`;
 
+  // The legend only earns its space when this view actually mixes sources.
+  const anyEst = items.some(d => d[currentMetric] !== null && d.estimated);
+  const anyNone = items.some(d => d[currentMetric] === null);
+  const legend = document.getElementById('chartLegend');
+  legend.hidden = !(anyEst || anyNone);
+  document.getElementById('swatchSolid').style.background = color;
+  legend.querySelectorAll('.legend-item')[1].hidden = !anyEst;
+  legend.querySelectorAll('.legend-item')[2].hidden = !anyNone;
+
   const n = items.length;
-  const W = 980, H = 300, padL = 46, padR = 12, padT = 14, padB = 30;
+  const isNarrow = window.matchMedia('(max-width: 720px)').matches;
+  // Render the SVG's viewBox in real, on-screen pixel units (the container's
+  // actual measured width) instead of a fixed 980-unit canvas. With a fixed
+  // viewBox, text sized in "SVG units" shrinks along with everything else
+  // once the container is much narrower than 980px -- exactly what made the
+  // axis labels unreadable on phones. 1 viewBox unit == 1 real px this way,
+  // so a 13px label is always a true 13px, whatever the screen width.
+  const W = Math.max(280, Math.round(container.getBoundingClientRect().width || 940));
+  const H = isNarrow ? 560 : 300;
+  const fontSize = isNarrow ? 13 : 10.5;
+  const padL = isNarrow ? 56 : 46, padR = 12, padT = 14, padB = isNarrow ? 34 : 30;
   const plotW = W - padL - padR, plotH = H - padT - padB;
-  const maxVal = Math.max(...items.map(d => d[currentMetric])) * 1.12 || 1;
+  const maxVal = Math.max(...items.map(d => d[currentMetric] === null ? 0 : d[currentMetric])) * 1.12 || 1;
 
   const gap = currentPeriod === 'weekly' ? 1.5 : 6;
   const barW = Math.max(1, plotW / n - gap);
@@ -556,6 +665,28 @@ function buildBarChart() {
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.classList.add("chart-svg");
+
+  // Estimated bars get their own colour, distinct from all three metric
+  // colours, plus a diagonal hatch. The hatch isn't decoration: a slate this
+  // legible against the surface is nearly indistinguishable from the XP pink
+  // under deuteranopia (ΔE ~3), so texture is what actually carries the
+  // distinction for red-green colour blindness and in print.
+  const defs = document.createElementNS(svgNS, "defs");
+  const pat = document.createElementNS(svgNS, "pattern");
+  pat.setAttribute("id", "estHatch");
+  pat.setAttribute("patternUnits", "userSpaceOnUse");
+  pat.setAttribute("width", "5");
+  pat.setAttribute("height", "5");
+  pat.setAttribute("patternTransform", "rotate(45)");
+  const patBg = document.createElementNS(svgNS, "rect");
+  patBg.setAttribute("width", "5"); patBg.setAttribute("height", "5");
+  patBg.setAttribute("fill", estColor); patBg.setAttribute("opacity", "0.45");
+  const patLine = document.createElementNS(svgNS, "rect");
+  patLine.setAttribute("width", "2.2"); patLine.setAttribute("height", "5");
+  patLine.setAttribute("fill", estColor);
+  pat.appendChild(patBg); pat.appendChild(patLine);
+  defs.appendChild(pat);
+  svg.appendChild(defs);
 
   const ticks = 4;
   for (let t = 0; t <= ticks; t++) {
@@ -570,32 +701,43 @@ function buildBarChart() {
     label.setAttribute("x", padL - 8); label.setAttribute("y", yy + 3);
     label.setAttribute("text-anchor", "end");
     label.setAttribute("class", "axis-label");
+    label.setAttribute("style", `font-size:${fontSize}px`);
     label.textContent = currentMetric === 'minutes' ? fmtDuration(Math.round(val)) : Math.round(val).toLocaleString('en-US');
     svg.appendChild(label);
   }
 
-  const maxTicks = currentPeriod === 'weekly' ? 12 : currentPeriod === 'monthly' ? 14 : n;
+  const maxTicks = isNarrow
+    ? (currentPeriod === 'weekly' ? 5 : currentPeriod === 'monthly' ? 6 : n)
+    : (currentPeriod === 'weekly' ? 12 : currentPeriod === 'monthly' ? 14 : n);
   const xTickEvery = Math.max(1, Math.ceil(n / maxTicks));
 
   items.forEach((d, i) => {
     const bx = xLeft(i);
-    const metricKnown = d.hasData && !(currentMetric === 'xp' && d.xpMissing);
-    const bh = (d[currentMetric] / maxVal) * plotH;
+    const raw = d[currentMetric];
+    const metricKnown = raw !== null && raw !== undefined;
+    // Hatch only when the whole bar is a stand-in: a single estimated week, or
+    // a month/year every one of whose weeks was estimated. Partly-estimated
+    // buckets stay solid and say so in the tooltip instead. Applies to time as
+    // well as XP now, since an estimated week derives both.
+    const isEst = metricKnown && d.estimated;
+    const val = metricKnown ? raw : 0;
+    const bh = (val / maxVal) * plotH;
     const rect = document.createElementNS(svgNS, "rect");
     rect.setAttribute("x", bx);
-    rect.setAttribute("y", y(d[currentMetric]));
+    rect.setAttribute("y", y(val));
     rect.setAttribute("width", barW);
     rect.setAttribute("height", Math.max(bh, metricKnown ? 1.5 : 1));
     rect.setAttribute("rx", Math.min(3, barW / 2));
-    rect.setAttribute("fill", metricKnown ? color : mutedColor);
-    rect.setAttribute("class", "bar " + (metricKnown ? "has-data" : "no-data"));
+    rect.setAttribute("fill", metricKnown ? (isEst ? "url(#estHatch)" : color) : mutedColor);
+    rect.setAttribute("class", "bar " + (metricKnown ? (isEst ? "has-data estimated" : "has-data") : "no-data"));
     svg.appendChild(rect);
 
     if (i % xTickEvery === 0 || i === n - 1) {
       const label = document.createElementNS(svgNS, "text");
-      label.setAttribute("x", bx + barW / 2); label.setAttribute("y", H - 8);
+      label.setAttribute("x", bx + barW / 2); label.setAttribute("y", H - (isNarrow ? 10 : 8));
       label.setAttribute("text-anchor", "middle");
       label.setAttribute("class", "axis-label");
+      label.setAttribute("style", `font-size:${fontSize}px`);
       label.textContent = formatLabel(currentPeriod, d.label);
       svg.appendChild(label);
     }
@@ -610,20 +752,31 @@ function buildBarChart() {
     hit.addEventListener('pointerenter', () => rect.style.opacity = 0.8);
     hit.addEventListener('pointerleave', () => { rect.style.opacity = 1; tooltip.style.opacity = 0; });
     hit.addEventListener('pointermove', (e) => {
-      const rectBounds = svg.getBoundingClientRect();
       tooltip.innerHTML = '';
       const dateEl = document.createElement('div');
       dateEl.className = 't-date';
       dateEl.textContent = fullLabel(currentPeriod, d);
       tooltip.appendChild(dateEl);
-      const metricKnown = d.hasData && !(currentMetric === 'xp' && d.xpMissing);
-      if (d.hasData && !metricKnown) {
+      const raw = d[currentMetric];
+      const metricKnown = raw !== null && raw !== undefined;
+      const addNote = (text) => {
         const note = document.createElement('div');
         note.className = 't-row';
         note.style.color = 'var(--bg)';
-        note.textContent = `Report had no ${meta.title.toLowerCase()} figure (${fmtDuration(d.minutes)} · ${fmt(d.lessons)} lessons known)`;
+        note.style.opacity = '0.85';
+        note.textContent = text;
         tooltip.appendChild(note);
-      } else if (metricKnown) {
+      };
+      // Describe the metrics other than the one currently charted, skipping
+      // any that this week doesn't know.
+      const others = (['minutes', 'xp', 'lessons'])
+        .filter(m => m !== currentMetric)
+        .map(m => d[m] === null || d[m] === undefined
+          ? null
+          : (m === 'minutes' ? fmtDuration(d[m]) : m === 'xp' ? `${fmt(d[m])} XP` : `${fmt(d[m])} lessons`))
+        .filter(Boolean);
+
+      if (metricKnown) {
         const row = document.createElement('div');
         row.className = 't-row';
         const key = document.createElement('span');
@@ -631,17 +784,33 @@ function buildBarChart() {
         key.style.background = color;
         const val = document.createElement('span');
         val.className = 't-val';
-        val.textContent = meta.format(d[currentMetric]);
+        val.textContent = (d.estimated ? '≈ ' : '') + meta.format(raw);
         const name = document.createElement('span');
         name.className = 't-name';
-        name.textContent = currentMetric === 'minutes' ? `· ${fmt(d.xp)} XP · ${fmt(d.lessons)} lessons`
-          : currentMetric === 'xp' ? `· ${fmtDuration(d.minutes)} · ${fmt(d.lessons)} lessons`
-          : `· ${fmtDuration(d.minutes)} · ${fmt(d.xp)} XP`;
+        name.textContent = others.length ? '· ' + others.join(' · ') : '';
         row.appendChild(key); row.appendChild(val); row.appendChild(name);
         tooltip.appendChild(row);
+
+        if (currentPeriod === 'weekly' && d.estimated) {
+          addNote(`No report email — XP from the ${d.competition === 'diamond-tournament' ? 'tournament' : 'league'} week ${d.leagueWindow}`);
+          if (currentMetric === 'minutes' && d.ratioUsed) {
+            addNote(`Time derived at ${d.ratioUsed} XP/min, the local rate for nearby weeks`);
+          }
+        } else if (currentPeriod !== 'weekly' && d.estCount > 0) {
+          addNote(`Includes ${d.estCount} week${d.estCount === 1 ? '' : 's'} estimated from league scores`);
+        }
+      } else if (d.hasData) {
+        addNote(others.length
+          ? `No ${meta.lower} figure for this week (${others.join(' · ')} known)`
+          : `No ${meta.lower} figure for this week`);
       }
-      tooltip.style.left = (e.clientX - rectBounds.left) + 'px';
-      tooltip.style.top = (e.clientY - rectBounds.top) + 'px';
+      // The tooltip is absolutely positioned with no positioned ancestor, so
+      // its left/top are relative to the whole document -- use page
+      // coordinates (which already include scroll offset), not coordinates
+      // relative to the SVG's viewport position, or the box lands far from
+      // the cursor as soon as the page is scrolled at all.
+      tooltip.style.left = e.pageX + 'px';
+      tooltip.style.top = e.pageY + 'px';
       tooltip.style.opacity = 1;
     });
     svg.appendChild(hit);
@@ -667,11 +836,27 @@ document.getElementById('periodToggle').addEventListener('click', (e) => {
 
 buildBarChart();
 
+let resizeTimer = null;
+window.addEventListener('resize', () => {
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(buildBarChart, 150);
+});
+
 // ---------- Table ----------
-const tableRows = rows.map(r => ({
-  ...r,
-  xp_per_min: r.minutes > 0 ? Math.round((r.xp / r.minutes) * 10) / 10 : 0,
-}));
+const tableRows = rows.map(r => {
+  const mins = metricValue(r, 'minutes'), xp = metricValue(r, 'xp'), less = metricValue(r, 'lessons');
+  return {
+    ...r,
+    // Sort keys: unknown values sort as -1 so they group together rather than
+    // being treated as zero-value weeks.
+    minutes: mins === null ? -1 : mins,
+    xp: xp === null ? -1 : xp,
+    lessons: less === null ? -1 : less,
+    // Circular for estimated weeks (their minutes came *from* this ratio), so blank.
+    xp_per_min: (!r.estimated && mins !== null && xp !== null && mins > 0)
+      ? Math.round((xp / mins) * 10) / 10 : -1,
+  };
+});
 
 let sortKey = 'week_start', sortDir = -1;
 function renderTable() {
@@ -684,12 +869,13 @@ function renderTable() {
   tbody.innerHTML = '';
   sorted.forEach(r => {
     const tr = document.createElement('tr');
+    if (r.estimated) tr.className = 'est-row';
     const cells = [
       `${r.week_start} – ${r.week_end}`,
-      fmtDuration(r.minutes),
-      fmt(r.xp),
-      fmt(r.lessons),
-      r.xp_per_min.toFixed(1),
+      r.minutes < 0 ? '—' : (r.estimated ? '≈ ' : '') + fmtDuration(r.minutes),
+      r.xp < 0 ? '—' : (r.estimated ? '≈ ' : '') + fmt(r.xp),
+      r.lessons < 0 ? '—' : fmt(r.lessons),
+      r.xp_per_min < 0 ? '—' : r.xp_per_min.toFixed(1),
     ];
     cells.forEach((c, idx) => {
       const td = document.createElement('td');

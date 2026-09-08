@@ -27,6 +27,31 @@ Already seeded with 76 weeks (Aug 2024 – Feb 2026) — combining your Proton
 Mail export with weekly-report emails recovered from an old Gmail account
 for the Oct–Dec 2025 stretch — pulled on 2026-09-07, so history isn't lost.
 
+## The two data files
+
+`data/weekly_duolingo.json` is the authoritative one: weeks parsed from
+report emails, with minutes, XP and lessons. `parse_duolingo.py` owns it and
+is the only thing that writes to it.
+
+`data/league_weekly.json` holds weekly league scores taken from a Duolingo
+account data export (`leaderboards.csv`). Duolingo's export contains no
+time-on-task data at all and only lifetime lesson totals, so this is
+XP-only — but it does cover weeks whose report emails are missing.
+
+`build_dashboard.py` merges them at build time: a league score stands in for
+a week **only** when no report email exists for it, and such a week is drawn
+with hatched bars and an `≈` in the table. Because the merge is recomputed on
+every build rather than written into the data file, a stand-in disappears by
+itself the moment `parse_duolingo.py` picks up the real email for that week —
+there's nothing to clean up manually.
+
+Note the two sources use different weekly grids (a league week ends about
+three days off from a report week), which is why league scores are never
+blended into a week that already has an email, and why they're labelled as
+approximations. To refresh them, request a new data export from Duolingo
+(Settings → Privacy) and replace `data/league_weekly.json` — the format is
+one entry per league week: `window_start`, `window_end`, `xp`, `competition`.
+
 ## One-time setup
 
 **1. Create the dedicated mailbox.** A free Gmail account works well (good
