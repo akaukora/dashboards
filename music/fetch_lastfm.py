@@ -18,10 +18,13 @@ repository secret anyway so it is not sitting in the workflow file.
 from __future__ import annotations
 
 import argparse
+import bisect
 import csv
 import os
+import re
 import sys
 import time
+import unicodedata
 from collections import defaultdict
 from datetime import datetime, timezone
 from pathlib import Path
@@ -29,7 +32,7 @@ from pathlib import Path
 import requests
 
 API = "https://ws.audioscrobbler.com/2.0/"
-FIELDS = ["uts", "datetime_utc", "artist", "album", "track", "loved"]
+FIELDS = ["uts", "datetime_utc", "artist", "album", "track", "loved", "source"]   # source: blank = Last.fm, "spotify" = merged from spotify_backfill.csv
 PAGE_SIZE = 200
 CHECKPOINT_EVERY = 25          # pages; a long backfill survives a hiccup without starting over
 PAUSE = 0.25                   # seconds between calls — Last.fm asks for well under 5 requests/s
@@ -129,6 +132,53 @@ def apply_corrections(rows, path: Path):
                 row[col] = rule[col].strip()
         n += 1
     return n
+
+
+BACKFILL_FILE = "spotify_backfill.csv"
+MATCH_TRACK_S, MATCH_ARTIST_S = 600, 60      # a Spotify play counts as already scrobbled if Last.fm has the same track within ±10 min, or any track of the artist within ±60 s
+
+
+def norm_artist(a):
+    return unicodedata.normalize("NFKC", a).lower().strip()
+
+
+def norm_title(t):
+    """Title as Last.fm tends to auto-correct it: no zero-width characters, no " - Radio Edit" / " - Live" suffix,
+    no "(feat. …)" / "[Remastered]" brackets, lower case. "Levels - Radio Edit" and "Levels" compare equal."""
+    t = re.sub(r"[\u200b-\u200f\ufeff\u2060]", "", unicodedata.normalize("NFKC", t)).lower().strip()
+    core = re.sub(r"\s*[\(\[][^)\]]*[\)\]]", "", t)
+    core = re.split(r"\s+[-–]\s+", core)[0].strip()
+    return core or t
+
+
+def merge_backfill(rows, path: Path):
+    """Add the plays of spotify_backfill.csv that Last.fm never received. Idempotent: rows previously merged
+    (source=spotify) are dropped first and re-derived, so the CSV and the match rule stay the single source
+    of truth. Returns (rows, added, matched)."""
+    rows = [r for r in rows if (r.get("source") or "") != "spotify"]
+    if not path.exists():
+        return rows, 0, 0
+    by_track, by_artist = defaultdict(list), defaultdict(list)
+    for r in rows:
+        by_track[(norm_artist(r["artist"]), norm_title(r["track"]))].append(r["uts"])
+        by_artist[norm_artist(r["artist"])].append(r["uts"])
+    for d in (by_track, by_artist):
+        for k in d:
+            d[k].sort()
+
+    def near(times, t, w):
+        i = bisect.bisect_left(times, t - w)
+        return i < len(times) and times[i] <= t + w
+
+    added, matched = [], 0
+    with path.open(encoding="utf-8", newline="") as f:
+        for r in csv.DictReader(f):
+            uts, a = int(r["uts"]), norm_artist(r["artist"])
+            if near(by_track.get((a, norm_title(r["track"])), []), uts, MATCH_TRACK_S) or near(by_artist.get(a, []), uts, MATCH_ARTIST_S):
+                matched += 1; continue
+            added.append({"uts": uts, "datetime_utc": r["datetime_utc"], "artist": r["artist"], "album": r.get("album", ""),
+                          "track": r["track"], "loved": "", "source": "spotify"})
+    return rows + added, len(added), matched
 
 
 def dedupe(rows):
@@ -272,6 +322,9 @@ def main():
                 log(f"  retry {datetime.fromtimestamp(t0, timezone.utc):%Y-%m-%d} failed again: {e}"); still.append([t0, t1])
         failed = still
 
+    rows, added, matched = merge_backfill(rows, data / BACKFILL_FILE)
+    if added or matched:
+        log(f"  {BACKFILL_FILE}: {added} Spotify plays added that Last.fm never got ({matched} already scrobbled)")
     fixed = apply_corrections(rows, data / CORRECTIONS_FILE)
     if fixed:
         log(f"  corrections.csv: {fixed} scrobbles re-credited")

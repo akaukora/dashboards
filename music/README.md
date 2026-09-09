@@ -19,9 +19,26 @@ repository as `music/`.
 - `update-lastfm.yml` — GitHub Actions workflow. Goes in `.github/workflows/`, not in this
   folder. Runs daily at 03:17 UTC and on demand (Actions → *Update Last.fm* → *Run workflow*,
   where a *full* checkbox re-fetches everything).
-- `scrobbles.csv` — one row per scrobble: `uts, datetime_utc, artist, album, track, loved`.
+- `scrobbles.csv` — one row per play: `uts, datetime_utc, artist, album, track, loved, source`.
   Sorted oldest first. `loved` is `1` for tracks marked loved on Last.fm, blank otherwise (kept
-  in the data, not shown on the page).
+  in the data, not shown on the page). `source` is blank for Last.fm scrobbles and `spotify` for
+  the rows merged from the Spotify export (below).
+- `spotify_backfill.csv` + `spotify_backfill.py` — the Spotify side. Spotify's *Extended streaming
+  history* export (Account → Privacy settings → Download your data; one `Streaming_History_Audio_<year>.json`
+  per year, arrives by email after a few days) showed that the Last.fm scrobbler was silent for most
+  of 2014, 2016 and 2018 and patchy in 2012–2019: about 27,700 Spotify plays of 30 s+ have no
+  scrobble. Last.fm's API refuses scrobbles older than two weeks, so the history is repaired here
+  instead: `python music/spotify_backfill.py my_spotify_data.zip` writes every play of 30 s+ to
+  `spotify_backfill.csv` (start time = Spotify's end timestamp minus `ms_played`; podcasts and
+  audiobooks skipped; Spotify's own double rows collapsed), and `fetch_lastfm.py` merges that file
+  into `scrobbles.csv` on every run — `merge_backfill()` drops the previously merged rows and
+  re-derives them, so the CSV and the rule are the single source of truth. A Spotify play is taken as
+  already scrobbled when Last.fm has the same artist and track within ±10 minutes, or *any* track of
+  that artist within ±60 s of the play's start (Last.fm auto-corrects titles — "Levels - Radio Edit"
+  becomes "Levels", "(feat. …)" is dropped — so titles are compared with brackets and " - …" suffixes
+  removed, and the artist-level rule catches the rest). The run log reports `N Spotify plays added
+  that Last.fm never got (M already scrobbled)`. To refresh after a newer export, re-run the script
+  and commit the new CSV; nothing else changes. The export on file covers 28 May 2009 – 2 Jul 2024.
 - `corrections.csv` — fixes applied to the scrobbles on every write, because Last.fm's own data can't
   be edited through the API. Columns `match_artist, match_track, artist, album, track, note`: a row
   matches scrobbles by artist + track (case-insensitive; `match_track` `*` or blank means every track
@@ -171,6 +188,9 @@ here. See `music-viewer/README.md`.
 
 ## Notes
 
+- With the Spotify backfill the dashboard reads about 134,000 plays instead of 106,700, and the
+  favorites list grows from 237 to 270 — Avicii, for one, becomes a forgotten favorite whose peak
+  year (2018) was almost empty in Last.fm alone. The page still says "scrobbles" for all of them.
 - The API key only reads public data (the same as anyone sees on last.fm/user/akaukora); it is
   kept as a secret so it is not lying in the workflow file. If the Last.fm profile is set to hide
   recent listening, the API returns nothing — the *Hide recent listening information* setting in
