@@ -99,7 +99,11 @@ line so you can see when an artist crossed from occasional listen to favorite (T
 heard 2008, crossed 50 plays in 2019); and **Newest favorites** — today's favorites (artists or
 tracks, following the Artist/Track switch) by the date you first heard them, newest first, each row
 showing the first play and how long it took to reach the threshold. With a year filter it becomes
-"favorites first heard in 2016", i.e. that year's discoveries that stuck; the first year of the
+"favorites first heard in 2016", i.e. that year's discoveries that stuck; with an artist selected
+(the *Find an artist* box, or a click on any name) the card becomes that artist's story — "Taylor
+Swift · favorite since 12 Jul 2018: first heard 3 Aug 2008; crossed the 50-play line 9.9 years
+later; 2,150 plays now" — or, for a non-favorite, how far short it is and why; the per-year chart's
+note says the same in years; the first year of the
 history holds everything already known when scrobbling began, and the note says so. **Listening**
 holds the rest:
 scrobbles per year with a Columns / Lines / Per artist toggle (Per artist = scrobbles ÷ distinct

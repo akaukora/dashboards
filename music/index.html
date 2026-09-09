@@ -803,7 +803,10 @@ function render() {
         scales: { x: { ...AXIS, grid: { display: false }, ticks: { ...AXIS.ticks, maxRotation: 0 } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } }, y2: { position: "right", beginAtZero: true, grid: { display: false }, border: { display: false }, ticks: { color: css("--text-3") } } },
         plugins: { tooltip: { callbacks: { label: (c) => c.datasetIndex === 0 ? `${fmt(c.parsed.y)} artists crossed ${thr} plays` : c.datasetIndex === 1 ? `${fmt(c.parsed.y)} future favorites heard for the first time` : `${fmt(c.parsed.y)} favorites by then` } }, milestones: { on: true, years: YEARS } } } });
     $("#growLegend").innerHTML = `<span><i style="background:${hexA("#5b8fb9", 0.7)}"></i>Future favorites first heard</span><span><i style="background:${css("--green-mark")}"></i>Crossed the ${thr}-play line</span><span><i style="background:${css("--text")};width:14px;height:2px;border-radius:1px"></i>Favorites so far</span>`;
-    $("#noteGrow").textContent = `Of today's ${fmt(favList.length)} favorite artists: how many were heard for the first time each year (blue), and how many crossed the ${thr}-play line that year (green). The list below names them. Click a bar to filter.`;
+    const fa = F.artist && A.get(F.artist), fx = fa ? crossAt(fa) : null;
+    $("#noteGrow").textContent = fa
+      ? `${fa.name}: first heard ${localDate(fa.first).getUTCFullYear()}${fx ? `, crossed the ${thr}-play line in ${localDate(fx).getUTCFullYear()} (${fmtDate(localDate(fx))})` : `, ${thr - fa.plays} plays short of the line`}. Bars: all of today's ${fmt(favList.length)} favorites — first heard (blue) and crossing the line (green) per year.`
+      : `Of today's ${fmt(favList.length)} favorite artists: how many were heard for the first time each year (blue), and how many crossed the ${thr}-play line that year (green). The list below names them. Click a bar to filter.`;
   }
 
   /* Now vs before — last 7 / 30 days against the period before, or this year to date against the same days last year */
@@ -896,8 +899,21 @@ function renderNewFav(favs) {
   const crossAt = (a) => a.times.length >= thr ? a.times[thr - 1] : null;
   const yearOf = (uts) => localDate(uts).getUTCFullYear();
   const inPeriod = (a) => anyYear() ? yearOn(yearOf(a.first)) && (F.month == null || localDate(a.first).getUTCMonth() === F.month) : F.last12 ? a.first >= NOW - 365 * 86400 : true;
-  const list = favs.filter((f) => inPeriod(f.a)).sort((x, y) => y.a.first - x.a.first);
   const what = tracks ? "tracks" : "artists";
+  const span = (m) => m < 1 ? "within a month" : m < 24 ? `${Math.round(m)} months later` : `${(m / 12).toFixed(1).replace(/\.0$/, "")} years later`;
+  if (F.artist && A.has(F.artist)) {   // a selected artist: when did THIS one become a favorite? (its favorite tracks in Track mode)
+    const a = A.get(F.artist), x = a.times.length >= ui.minPlays ? a.times[ui.minPlays - 1] : null, isFav = favorites("artists", true).some((f) => f.a.name === F.artist);
+    $("#newFavHead").textContent = `${F.artist} · ${x && isFav ? `favorite since ${fmtDate(localDate(x))}` : x ? `${fmt(ui.minPlays)} plays reached ${fmtDate(localDate(x))}, but not a favorite` : "not a favorite yet"}`;
+    $("#noteNewFav").textContent = `First heard ${fmtDate(localDate(a.first))}; ${x ? `crossed the ${ui.minPlays}-play line ${fmtDate(localDate(x))}, ${span(monthsBetween(a.first, x))}` : `${fmt(ui.minPlays - a.plays)} plays short of the ${ui.minPlays}-play line`}; ${fmt(a.plays)} plays now, last ${fmtDate(localDate(a.last))}.${x && !isFav ? ` Not counted as a favorite: needs ${ui.minTracks}+ tracks played ${ui.minTrackPlays}+ times each (has ${a.tracksWith(ui.minTrackPlays)}).` : ""}${tracks ? ` Below: ${F.artist}'s favorite tracks by first play.` : ""}`;
+    const list = tracks ? favs.filter((f) => f.a.artist === F.artist).sort((x, y) => y.a.first - x.a.first) : [{ a, silence: monthsBetween(a.last, NOW) }];
+    const shown = list, half = Math.ceil(shown.length / 2);
+    const row = (f, i) => { const xx = crossAt(f.a); return `<li><span class="rank">${i + 1}</span><span class="who"><a href="${tracks ? lfmTrack(f.a.artist, f.a.name) : lfmArtist(f.a.name)}" target="_blank" rel="noopener" title="Open in your Last.fm library">${esc(f.a.name)}</a><span class="sub">${fmtDate(localDate(f.a.first))}${xx ? ` → ${tracks || isFav ? "favorite" : `${fmt(thr)} plays`} ${span(monthsBetween(f.a.first, xx))}` : ` · ${fmt(f.a.plays)} plays`}</span></span><span class="yrs" title="plays per year, ${YEARS[0]}–${YEARS.at(-1)}">${yearBars(f.a.byYear, null)}</span><span class="num"><b>${fmt(f.a.plays)}</b> plays<br><span class="pill" style="background:${recencyColor(f.silence)}">${ago(f.silence)}</span></span></li>`; };
+    $("#newFavA").innerHTML = shown.slice(0, half).map(row).join("") || `<li><span class="num">No favorite tracks by ${esc(F.artist)} — lower the track threshold.</span></li>`;
+    $("#newFavB").innerHTML = shown.slice(half).map((f, i) => row(f, i + half)).join("");
+    $("#newFavMore").hidden = true;
+    return;
+  }
+  const list = favs.filter((f) => inPeriod(f.a)).sort((x, y) => y.a.first - x.a.first);
   const period = anyYear() ? `first heard in ${F.month != null ? MONTHS[F.month] + " " : ""}${yearsLabel()}` : F.last12 ? "first heard in the last 12 months" : "";
   $("#newFavHead").textContent = period ? `Favorites ${period}` : `Newest favorite ${what}`;
   const last12 = favs.filter((f) => f.a.first >= NOW - 365 * 86400).length, cy = localDate(NOW).getUTCFullYear(), thisYear = favs.filter((f) => yearOf(f.a.first) === cy).length;
