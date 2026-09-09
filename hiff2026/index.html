@@ -667,9 +667,9 @@ function vCat(){
 function vFilm(){
   if(!shortlist.size) return `<p class="empty">Nothing shortlisted yet. Go to "1. Choose films" and tick the ones you want to consider${PRESET.length?', or load a shortlist from the bar above':''}.</p>`;
   const names=filterNames([...shortlist]);
-  const ord={urgent:0,soon:1,ok:2,done:3};
+  const RANK={urgent:0,soon:1,ok:2,done:3};
   const rows=names.map(n=>({n,s:filmState(n)}))
-    .sort((a,b)=>ord[a.s.k]-ord[b.s.k]||a.n.localeCompare(b.n,'fi'));
+    .sort((a,b)=>RANK[a.s.k]-RANK[b.s.k]||a.n.localeCompare(b.n,'fi'));
   let h=filterBar('Filter shortlist\u2026');
   h+=rows.map(({n,s})=>{
     const m=meta(n);
@@ -817,7 +817,14 @@ function render(){
   document.getElementById('info').innerHTML=infoBox();
   renderStats();
   const b=document.getElementById('body');
-  b.innerHTML = view==='cat'?vCat():view==='film'?vFilm():view==='grid'?vGrid():vMine();
+  try{
+    b.innerHTML = view==='cat'?vCat():view==='film'?vFilm():view==='grid'?vGrid():vMine();
+  }catch(err){
+    console.error(err);
+    b.innerHTML = `<div class="bn warn">Something went wrong drawing this view: ${esc(err.message)}.
+      Your picks are safe \u2014 try another tab, or copy your plan from "Share / import a plan".</div>`;
+    return;
+  }
 
   b.querySelectorAll('[data-pick]').forEach(el=>el.addEventListener('click',()=>togglePick(+el.dataset.pick)));
   b.querySelectorAll('[data-gpick]').forEach(el=>{
