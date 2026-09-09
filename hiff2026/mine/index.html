@@ -13,6 +13,7 @@
  --dg:#a32d2d;--dgb:#fcebeb;
  --wn:#854f0b;--wnb:#faeeda;
  --sb:#ffe9b8;--sbr:#c98a12;--sbt:#7a5000;
+ --wn2:#b4501a;--tkbg:#3b6d11;--tktx:#ffffff;
  --r:8px;
  font-family:-apple-system,BlinkMacSystemFont,"Segoe UI",Helvetica,Arial,sans-serif}
 @media (prefers-color-scheme:dark){:root{
@@ -21,7 +22,8 @@
  --ac:#7fb0e8;--acb:#0c2a44;--act:#b5d4f4;
  --dg:#e07a7a;--dgb:#3a1414;
  --wn:#e0b25f;--wnb:#3a2a06;
- --sb:#4a3505;--sbr:#c98a12;--sbt:#ffd98a}}
+ --sb:#4a3505;--sbr:#c98a12;--sbt:#ffd98a;
+ --wn2:#f0995c;--tkbg:#9bc95f;--tktx:#122006}}
 *{box-sizing:border-box}
 body{margin:0;background:var(--bg);color:var(--tx);line-height:1.5;font-size:15px}
 .wrap{max-width:1000px;margin:0 auto;padding:1.15rem 1rem 4rem}
@@ -176,6 +178,11 @@ a{color:var(--ac)}
 
 .ordn{display:inline-block;min-width:26px;font-size:10.5px;font-weight:600;color:var(--t2);
  background:var(--card2);border:1px solid var(--border);border-radius:4px;padding:0 4px;text-align:center;margin-right:2px}
+
+.fc.soon{border-color:var(--wn2)}
+.fs.soon{color:var(--wn2)}
+.sbtn.tk,.ob.tk{background:var(--tkbg);border-color:var(--tkbg);color:var(--tktx);font-weight:600}
+.tick{background:var(--tkbg);border-color:var(--tkbg);color:var(--tktx)}
 textarea{width:100%;min-height:70px;font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
 </style>
 </head>
@@ -324,7 +331,7 @@ async function load(){
   } else {
     const a={}; SEED_SOLDOUT.forEach(i => { if(get(i)) a[i]=3; });
     plans = {'My plan': {s:[...PRESET], p:[], a}};
-    adopt('My plan');
+    adopt('My plan'); persist();
   }
   storeOk = await probeStore();
   const m = location.hash.match(/[#&]p=([^&]+)/);
@@ -334,7 +341,8 @@ async function load(){
       const only = Object.keys(plans).length===1 && !shortlist.size && !picks.size;
       if(only){                                        // nothing here yet: just take it
         plans={}; const k=uniqueName(inc.label||'Shared plan');
-        plans[k]={s:inc.names,p:inc.picks,a:inc.avail,b:inc.bought||[]}; adopt(k);
+        plans[k]={s:inc.names,p:inc.picks,a:inc.avail,b:inc.bought||[]};
+        adopt(k); persist();                           // <- must persist or a refresh loses it
       } else {
         importPlan(inc, inc.label || 'Shared plan');
       }
@@ -612,7 +620,7 @@ function rowHtml(f, fl){
     <p class="tt">${esc(f.title)}${soBadge}</p>
     <p class="mt">${f.start}\u2013${f.end}${d} \u00b7 ${esc(f.venue)}${n}</p>${flag}</div>
     ${avBtn(f.id)}
-    <button class="sbtn${on?' on':''}${hasTicket(f.id)?' tk':''}" data-pick="${f.id}"
+    <button class="sbtn${hasTicket(f.id)?' tk':on?' on':''}" data-pick="${f.id}"
       title="${esc(pickHint(f.id))}" aria-label="${esc(pickHint(f.id))}">${hasTicket(f.id)?'\u{1F3AB}':on?'\u2605':'\u2606'}</button></div>`;
 }
 
@@ -687,7 +695,7 @@ function vFilm(){
       const why=bl&&!so?' \u2014 clashes with '+esc(bl.film):'';
       const tk=hasTicket(o.id);
       return `<div class="opt${gone?' gone':''}${so&&!tk?' soopt':''}">${avBtn(o.id)}
-        <button class="ob${on?' on':''}${tk?' tk':''}" data-pick="${o.id}" title="${esc(pickHint(o.id))}">${tk?'\u{1F3AB} ticket':on?'\u2605 picked':'pick'}</button>
+        <button class="ob${tk?' tk':on?' on':''}" data-pick="${o.id}" title="${esc(pickHint(o.id))}">${tk?'\u{1F3AB} ticket':on?'\u2605 picked':'pick'}</button>
         <span>${ord(o)?`<b class="ordn">${ord(o)}</b> `:''}${o.dateLabel} ${o.start}\u2013${o.end}${d} \u00b7 ${esc(o.venue)}${why}</span>
         ${so&&!tk?'<span class="sold">sold out</span>':''}</div>`;
     }).join('');
