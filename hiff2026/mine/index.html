@@ -183,6 +183,11 @@ a{color:var(--ac)}
 .fs.soon{color:var(--wn2)}
 .sbtn.tk,.ob.tk{background:var(--tkbg);border-color:var(--tkbg);color:var(--tktx);font-weight:600}
 .tick{background:var(--tkbg);border-color:var(--tkbg);color:var(--tktx)}
+
+.cc{font-size:11.5px;color:var(--t2);line-height:1.4}
+.fn{font-size:15.5px;font-weight:650;letter-spacing:-.01em;color:var(--tx)}
+.fc .fn{margin:0 0 1px}
+.isslab{margin-right:2px}
 textarea{width:100%;min-height:70px;font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
 </style>
 </head>
@@ -268,6 +273,7 @@ function importPlan(st, suggested){
       ? name : uniqueName(name);
   }
   plans[k]={s:st.names, p:st.picks, a:st.avail, b:st.bought||[]};
+  applyNewSeeds();
   adopt(k); persist();
   return true;
 }
@@ -287,6 +293,7 @@ const AVC = ['var(--t3)','var(--ok)','var(--wn)','var(--dg)'];
 
 let shortlist = new Set(), picks = new Set(), avail = {};
 let plans = {}, active = 'My plan';
+let seeded = [];   // seed ids already applied, so a cleared mark is never resurrected
 let bought = new Set();
 let view='film', query='', theme='', kw='', country='', lang='', gridScope='short';
 let gridDay = DAYS[1] ? DAYS[1][0] : DAYS[0][0];
@@ -321,18 +328,34 @@ async function probeStore(){
     return v === '1';
   }catch(e){ return false; }
 }
+function applyNewSeeds(){
+  const fresh = SEED_SOLDOUT.filter(i => get(i) && !seeded.includes(i));
+  if(!fresh.length) return false;
+  Object.values(plans).forEach(p => {
+    p.a = p.a || {};
+    fresh.forEach(i => { if(p.a[i] === undefined) p.a[i] = 3; });
+  });
+  seeded = [...new Set([...seeded, ...fresh])];
+  return true;
+}
+
 async function load(){
   const raw = await store.get(SKEY+'-state');
   let st=null; try{ st = raw?JSON.parse(raw):null; }catch(e){}
   if(st && st.v===2 && st.plans && Object.keys(st.plans).length){
     plans = st.plans;
+    seeded = Array.isArray(st.seeded) ? st.seeded : [];
+    const changed = applyNewSeeds();
     adopt(plans[st.active] ? st.active : Object.keys(plans)[0]);
+    if(changed) persist();
   } else if(st && st.shortlist){                       // migrate the single-plan format
     plans = {'My plan': {s:st.shortlist, p:st.picks||[], a:st.avail||{}}};
-    adopt('My plan');
+    applyNewSeeds();
+    adopt('My plan'); persist();
   } else {
     const a={}; SEED_SOLDOUT.forEach(i => { if(get(i)) a[i]=3; });
     plans = {'My plan': {s:[...PRESET], p:[], a}};
+    seeded = SEED_SOLDOUT.filter(i=>get(i));
     adopt('My plan'); persist();
   }
   storeOk = await probeStore();
@@ -344,6 +367,7 @@ async function load(){
       if(only){                                        // nothing here yet: just take it
         plans={}; const k=uniqueName(inc.label||'Shared plan');
         plans[k]={s:inc.names,p:inc.picks,a:inc.avail,b:inc.bought||[]};
+        seeded=[]; applyNewSeeds();
         adopt(k); persist();                           // <- must persist or a refresh loses it
       } else {
         importPlan(inc, inc.label || 'Shared plan');
@@ -357,7 +381,7 @@ async function load(){
 }
 function persist(){
   plans[active]=snapshot();
-  store.set(SKEY+'-state', JSON.stringify({v:2, active, plans}));
+  store.set(SKEY+'-state', JSON.stringify({v:2, active, plans, seeded}));
 }
 
 const av = id => avail[id] || 0;
@@ -566,18 +590,18 @@ function renderIssues(){
   const dups=[...new Set(it.filter(f=>fl[f.id].dup).map(f=>f.film))];
   const so=it.filter(f=>soldOut(f.id)&&!hasTicket(f.id));
   const rows=[];
-  if(urgent.length) rows.push(`<div class="issrow"><span class="isslab bad">No time slot left</span>
+  if(urgent.length) rows.push(`<div class="issrow"><span class="isslab wn">No time slot left:</span>
     <span class="issnames">${urgent.map(([n,w])=>fb(n)+`<span style="color:var(--t3)">(${w})</span>`).join(' ')}</span></div>`);
   const tkClash=clashes.filter(([a,b])=>hasTicket(a.id)||hasTicket(b.id));
-  if(tkClash.length) rows.push(`<div class="issrow"><span class="isslab bad">Ticket clashes</span>
+  if(tkClash.length) rows.push(`<div class="issrow"><span class="isslab bad">Ticket clashes:</span>
     <span class="issnames">${tkClash.map(([a,b])=>`<span>${fb(a.film)} ${hasTicket(a.id)?'\u{1F3AB}':''} vs ${fb(b.film)} ${hasTicket(b.id)?'\u{1F3AB}':''}, ${a.dateLabel}</span>`).join('; ')}</span></div>`);
-  if(clashes.length) rows.push(`<div class="issrow"><span class="isslab bad">Overlapping picks</span>
+  if(clashes.length) rows.push(`<div class="issrow"><span class="isslab bad">Overlapping picks:</span>
     <span class="issnames">${clashes.map(([a,b])=>`<span>${fb(a.film)} ${a.start}\u2013${a.end} vs ${fb(b.film)} ${b.start}\u2013${b.end}, ${a.dateLabel}</span>`).join('; ')}</span></div>`);
-  if(tights.length) rows.push(`<div class="issrow"><span class="isslab wn">Tight changeover</span>
+  if(tights.length) rows.push(`<div class="issrow"><span class="isslab wn">Tight changeover:</span>
     <span class="issnames">${tights.map(([a,b,g])=>`<span>${g} min: ${fb(a.film)} (${esc(a.venue)}) \u2192 ${fb(b.film)} (${esc(b.venue)}), ${a.dateLabel}</span>`).join('; ')}</span></div>`);
-  if(dups.length) rows.push(`<div class="issrow"><span class="isslab wn">Picked twice</span>
+  if(dups.length) rows.push(`<div class="issrow"><span class="isslab wn">Picked twice:</span>
     <span class="issnames">${dups.map(fb).join(' ')}</span></div>`);
-  if(so.length) rows.push(`<div class="issrow"><span class="isslab bad">Picked but sold out</span>
+  if(so.length) rows.push(`<div class="issrow"><span class="isslab bad">Picked but sold out:</span>
     <span class="issnames">${so.map(f=>`<span>${fb(f.film)} ${f.dateLabel} ${f.start}</span>`).join('; ')}</span></div>`);
   el.innerHTML = rows.length
     ? `<div class="iss">${rows.join('')}</div>`
