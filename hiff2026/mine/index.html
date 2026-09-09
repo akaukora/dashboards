@@ -252,7 +252,9 @@ function uniqueName(n){
 }
 function switchPlan(name){
   if(!plans[name]) return;
-  persist(); adopt(name); persist(); render();
+  persist(); adopt(name); persist();
+  if(!shortlist.size) setView('cat');
+  render();
 }
 // an imported plan is saved alongside, never over the top of, what is already here
 function importPlan(st, suggested){
@@ -498,7 +500,9 @@ function renderPlanBar(){
     const k=uniqueName(raw);
     const a={}; SEED_SOLDOUT.forEach(i=>{ if(get(i)) a[i]=3; });
     plans[k]={s:[],p:[],a};
-    adopt(k); persist(); render();
+    adopt(k); persist();
+    setView('cat');                     // a brand-new plan starts at "choose films"
+    render();
   });
   document.getElementById('planRen').addEventListener('click',()=>{
     const raw=prompt('Rename this plan:',active);
@@ -512,7 +516,9 @@ function renderPlanBar(){
     if(Object.keys(plans).length<2) return;
     if(!confirm(`Delete the plan "${active}"? This cannot be undone.`)) return;
     delete plans[active];
-    adopt(Object.keys(plans)[0]); persist(); render();
+    adopt(Object.keys(plans)[0]); persist();
+    if(!shortlist.size) setView('cat');
+    render();
   });
 }
 
