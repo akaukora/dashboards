@@ -1011,7 +1011,7 @@ function playsFromRows(rows, cols, source, name) {   // cols: { a, t, al, d, ms,
   for (const r of rows) {
     const artist = (r[cols.a] || "").trim(), track = (r[cols.t] || "").trim(); if (!artist || !track) continue;
     if (cols.type >= 0 && r[cols.type] && !/PLAY_END/i.test(r[cols.type])) continue;            // Apple logs several event kinds per play; PLAY_END carries the duration
-    const ms = cols.ms >= 0 ? +r[cols.ms] || 0 : 0; if (cols.ms >= 0 && ms && ms < MIN_MS) { skipped++; continue; }
+    const ms = cols.ms >= 0 ? +r[cols.ms] || 0 : 0; if (cols.ms >= 0 && (source !== "lastfm" || String(r[cols.ms] ?? "") !== "") && ms < MIN_MS) { skipped++; continue; }   // 0 ms = nothing was played
     const uts = parseDateish(r[cols.d]); if (!uts) { noDate++; continue; }                        // Last.fm "now playing" rows have no date
     plays.push({ uts, artist, track, album: cols.al >= 0 ? (r[cols.al] || "").trim() : "", ms });
   }

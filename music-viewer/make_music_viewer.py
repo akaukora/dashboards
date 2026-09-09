@@ -7,6 +7,11 @@ ROOT = HERE if os.path.isfile(os.path.join(HERE, "music", "index.html")) else os
 SRC = os.path.join(ROOT, "music", "index.html")
 OUT = os.path.join(ROOT, "music-viewer" if os.path.isdir(os.path.join(ROOT, "music-viewer")) else "music_viewer", "index.html")
 s = open(SRC, encoding="utf-8").read()
+def region(start, end, new):
+    """Replace from the first `start` through the following `end` (inclusive) with `new`."""
+    global s
+    a = s.index(start); b = s.index(end, a) + len(end)
+    s = s[:a] + new + s[b:]
 def rep(old, new, count=1):
     global s
     assert s.count(old) == count, (s.count(old), old[:100])
@@ -23,14 +28,8 @@ rep("""      <h1>Antti's <span>Last.fm</span> diary</h1>
       <div class="sub" id="subtitle">Loading the scrobbles…</div>""",
 """      <h1>Your <span>music</span> diary</h1>
       <div class="sub" id="subtitle">An interactive dashboard of your listening history, made from your own export.</div>""")
-rep("""    <nav class="nav" aria-label="Media dashboards">
-      <a href="../films-watched/">Films</a>
-      <a href="../books-read/">Books</a>
-      <a class="active" href="./">Music</a>
-      <span class="soon" title="Coming later">Games</span>
-      <a class="profile" href="https://www.last.fm/user/akaukora" target="_blank" rel="noopener">last.fm/user/akaukora ↗</a>
-    </nav>""",
-"""    <nav class="nav" aria-label="Data">
+region('<nav class="nav" aria-label="Media dashboards">', '</nav>',
+"""<nav class="nav" aria-label="Data">
       <button class="chip" id="pickBtn" type="button" hidden>Add files…</button>
       <button class="chip warn" id="forgetBtn" type="button" hidden title="Remove the loaded data from this browser">Forget my data</button>
       <a href="../letterboxd-viewer/">Films</a>
@@ -38,14 +37,11 @@ rep("""    <nav class="nav" aria-label="Media dashboards">
       <a class="active" href="./">Music</a>
       <a class="profile" href="../music/" title="The dashboard this viewer is made from">Antti's music ↗</a>
     </nav>""")
-rep("""  <p class="intro"><a href="https://www.last.fm" target="_blank" rel="noopener">Last.fm</a> keeps a diary of every track played — it plugs into Spotify, Tidal, Qobuz, Apple Music and most players and logs each play as a "scrobble". This page reads that diary: what got played, when, and which old favorites have gone quiet.</p>
-
-  <div id="status"></div>
+region('<p class="intro">', '</p>', '<p class="intro">Every streaming service keeps a log of what you played and when. This page reads yours — from a Last.fm export, Spotify\'s extended streaming history or Apple Music\'s play activity — and shows what got played, when, and which old favorites have gone quiet. Everything happens in your browser; nothing is uploaded.</p>')
+rep("""  <div id="status"></div>
 
   <div class="top">""",
-"""  <p class="intro">Every streaming service keeps a log of what you played and when. This page reads yours — from a Last.fm export, Spotify's extended streaming history or Apple Music's play activity — and shows what got played, when, and which old favorites have gone quiet. Everything happens in your browser; nothing is uploaded.</p>
-
-  <div id="status"></div>
+"""  <div id="status"></div>
 
   <section class="drop" id="drop" tabindex="0" role="button" aria-label="Choose or drop your listening history files">
     <h2>Drop your listening history here</h2>
@@ -64,16 +60,12 @@ rep("""  <p class="intro"><a href="https://www.last.fm" target="_blank" rel="noo
 
   <div class="dash" id="dash" hidden>
   <div class="top">""")
-rep("""  <footer>
-    Data: <code>scrobbles.csv</code> and <code>artists.csv</code> in the same repository, filled daily from the Last.fm API by a GitHub Action. Times are shown in Helsinki time. <span id="creditsNote"></span><span id="kidsNote"></span>
-    <span id="fetchedAt"></span>
-    Have your own listening history? <a href="../music-viewer/">Drop a Last.fm, Spotify or Apple Music export into a version of this dashboard</a> — nothing is uploaded.
-  </footer>""",
+region('  <footer>', '</footer>',
 """  </div><!-- /dash -->
 
   <footer>
-    <span id="fetchedAt"></span><span id="creditsNote"></span><span id="kidsNote"></span>
-    Times are shown in your device's time zone. Your files are parsed in the browser and kept only in this browser's storage; nothing is sent to a server. A viewer for listening-history exports, made from <a href="../music/">Antti's music dashboard</a> — source on <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">GitHub</a>.
+    <span id="fetchedAt"></span>
+    <details><summary>About this viewer</summary><span id="creditsNote"></span><span id="kidsNote"></span> Times are shown in your device's time zone. Your files are parsed in the browser and kept only in this browser's storage; nothing is sent to a server. A viewer for listening-history exports, made from <a href="../music/">Antti's music dashboard</a> — source on <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">GitHub</a>.</details>
   </footer>""")
 # drop-zone CSS (shared look with the other viewers)
 rep("""  footer { color: var(--text-3); font-size: 12px; margin-top: 22px; line-height: 1.6; }""",
@@ -106,7 +98,7 @@ rep("""const lfmArtist = (a) => `https://www.last.fm/user/${LASTFM_USER}/library
     """const lfmArtist = (a) => SOURCE === "lastfm" ? `https://www.last.fm/${LASTFM_USER ? `user/${LASTFM_USER}/library/` : ""}music/${encodeURIComponent(a).replace(/%20/g, "+")}` : null;""")
 rep("""const lfmTrack = (a, t) => `${lfmArtist(a)}/_/${encodeURIComponent(t).replace(/%20/g, "+")}`;""", """const lfmTrack = (a, t) => lfmArtist(a) ? `${lfmArtist(a)}/_/${encodeURIComponent(t).replace(/%20/g, "+")}` : null;""")
 rep("""<a href="${tracks ? lfmTrack(f.a.artist, f.a.name) : lfmArtist(f.a.name)}" target="_blank" rel="noopener" title="Open in your Last.fm library">${esc(f.a.name)}</a>""",
-    """${(tracks ? lfmTrack(f.a.artist, f.a.name) : lfmArtist(f.a.name)) ? `<a href="${tracks ? lfmTrack(f.a.artist, f.a.name) : lfmArtist(f.a.name)}" target="_blank" rel="noopener" title="Open on Last.fm">${esc(f.a.name)}</a>` : `<span style="color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">${esc(f.a.name)}</span>`}""")
+    """${(tracks ? lfmTrack(f.a.artist, f.a.name) : lfmArtist(f.a.name)) ? `<a href="${tracks ? lfmTrack(f.a.artist, f.a.name) : lfmArtist(f.a.name)}" target="_blank" rel="noopener" title="Open on Last.fm">${esc(f.a.name)}</a>` : `<span style="color:var(--text);font-weight:600;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;display:block">${esc(f.a.name)}</span>`}""", count=2)   # forgotten-favorites rows and newest-favorites rows
 rep("""Bars are plays per year over your whole history; the name opens your library on Last.fm, the plays count filters the dashboard to the artist.`""",
     """Bars are plays per year over your whole history; ${SOURCE === "lastfm" ? "the name opens your library on Last.fm, " : ""}the plays count filters the dashboard to the artist.`""")
 # device time zone instead of Helsinki
@@ -177,7 +169,7 @@ function playsFromRows(rows, cols, source, name) {   // cols: { a, t, al, d, ms,
   for (const r of rows) {
     const artist = (r[cols.a] || "").trim(), track = (r[cols.t] || "").trim(); if (!artist || !track) continue;
     if (cols.type >= 0 && r[cols.type] && !/PLAY_END/i.test(r[cols.type])) continue;            // Apple logs several event kinds per play; PLAY_END carries the duration
-    const ms = cols.ms >= 0 ? +r[cols.ms] || 0 : 0; if (cols.ms >= 0 && ms && ms < MIN_MS) { skipped++; continue; }
+    const ms = cols.ms >= 0 ? +r[cols.ms] || 0 : 0; if (cols.ms >= 0 && (source !== "lastfm" || String(r[cols.ms] ?? "") !== "") && ms < MIN_MS) { skipped++; continue; }   // 0 ms = nothing was played
     const uts = parseDateish(r[cols.d]); if (!uts) { noDate++; continue; }                        // Last.fm "now playing" rows have no date
     plays.push({ uts, artist, track, album: cols.al >= 0 ? (r[cols.al] || "").trim() : "", ms });
   }
