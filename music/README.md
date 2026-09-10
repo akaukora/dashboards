@@ -57,7 +57,7 @@ repository as `music/`.
 What counts as a favorite is a dashboard-level setting, in the pinned bar under the years, and
 reads as a sentence: *Favorite artist = 50+ plays, from 10+ tracks played 3+ times each; forgotten
 after 1 yr.* Each number is a button group (plays 20 / 50 / 100 / 250; tracks any / 5 / 10 / 15;
-plays per track 1 / 2 / 3 / 5; silence 6 mo / 1 / 2 / 3 yrs). The "played 3+ times each" clause is
+plays per track 1 / 2 / 3 / 5; silence 6 mo / 1 / 2 / 3 yrs; stray plays none / 3 / 5 / 10). The "played 3+ times each" clause is
 what keeps an artist with three heavily played songs and twenty one-offs out of the list — Antti
 Tuisku (240 plays, 28 tracks, only 3 of them played 3+ times) is not a favorite, Tapio Rautavaara
 (446 plays, 15 tracks with 3+ plays) is. With the defaults there are 237 favorite artists. The
@@ -69,7 +69,17 @@ chart below it — show individual tracks, and the plays button filters to the t
 peak year, a recency pill, a link to the artist in your Last.fm library and a plays button that
 filters the whole dashboard to that artist. The **Rediscovered** toggle shows the mirror image:
 favorites you came back to in the last twelve months after a gap of at least the chosen length
-(three or more plays since). With a year or month filter on, "favorite" means an artist you
+(three or more plays since — or the stray-play threshold, if higher).
+
+**Stray plays.** The last control in the definition row — *stray plays: under none / 3 / 5 / 10 a
+year don't count* (default 3) — decides what counts as listening at all. A play counts only when
+there are that many plays of the artist within a twelve-month window around it; a lone shuffle hit
+or an accidental scrobble is a stray. Strays don't end a silence (so an artist last *really* heard
+in 2015 with one play in 2023 is still forgotten since 2015, shown as "last heard 28 Dec 2015 (+1
+stray)"), don't count toward a return, and don't move a bubble in the last-listened chart (x = last
+real listen; the tooltip mentions strays). With the default, 170 of the 270 favorites are forgotten
+instead of 116, and Manu Chao appears as rediscovered "back after 9 yrs" — the stray plays in
+between had hidden the gap. *none* restores the literal rule (any single play resets the clock). With a year or month filter on, "favorite" means an artist you
 played *N*+ times *in that period* — so 2016's favorites who have since gone quiet — while the
 silence is still measured to today.
 

@@ -183,6 +183,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
       <span class="def" id="minTrackPlaysWrap">played <span class="seg" id="minTrackPlays"><button type="button" data-v="1">1</button><button type="button" data-v="2">2</button><button type="button" data-v="3">3</button><button type="button" data-v="5">5</button></span>+ times each</span>
       <span class="def" id="minPlaysTrackWrap" hidden>= <span class="seg" id="minPlaysTrack"><button type="button" data-v="10">10</button><button type="button" data-v="15">15</button><button type="button" data-v="25">25</button><button type="button" data-v="50">50</button></span>+ plays</span>
       <span class="def">· forgotten after <span class="seg" id="silence"><button type="button" data-v="6">6 mo</button><button type="button" data-v="12">1 yr</button><button type="button" data-v="24">2 yrs</button><button type="button" data-v="36">3 yrs</button></span></span>
+      <span class="def" title="A play only counts as listening — for 'last heard', for being forgotten and for coming back — when there are this many plays of the artist within a year around it. Fewer are stray plays: a shuffle hit, an accidental scrobble.">· stray plays: under <span class="seg" id="minBurst"><button type="button" data-v="1">none</button><button type="button" data-v="3">3</button><button type="button" data-v="5">5</button><button type="button" data-v="10">10</button></span> a year don't count</span>
       <span class="def" style="margin-left:auto" title="Songs on the kids' playlist (KIDS_TRACKS in the page)">Kids' songs <span class="seg" id="kidsMode"><button type="button" data-v="all">include</button><button type="button" data-v="unliked">hide unliked</button><button type="button" data-v="none">hide all</button></span></span>
     </div>
     <div class="active" id="activeBar" hidden>
@@ -324,7 +325,7 @@ const TOP_COUNT = 15;                          // rows in Top artists / top trac
 const RECENT_COUNT = 20;                       // rows in Recent scrobbles (two columns)
 const FAV_PAGE = 20;                           // forgotten favorites shown per "Show more"
 const TABLE_MAX = 1000;                        // rows the table renders at once
-const DEFAULTS = { silence: 12, minPlays: 50, minTracks: 10, minTrackPlays: 3, minPlaysTrack: 15, sort: "score", favMode: "forgotten", unit: "artists", kids: "all", hidden: [] };   // kids: all | unliked (hide kids' songs I don't like) | none (hide all kids' songs)   // hidden: artist names / track keys you chose to leave out of the favorites lists
+const DEFAULTS = { silence: 12, minBurst: 3, minPlays: 50, minTracks: 10, minTrackPlays: 3, minPlaysTrack: 15, sort: "score", favMode: "forgotten", unit: "artists", kids: "all", hidden: [] };   // kids: all | unliked (hide kids' songs I don't like) | none (hide all kids' songs)   // hidden: artist names / track keys you chose to leave out of the favorites lists
 // Personal milestones drawn as thin vertical lines on the time charts. Add your own: { date: "YYYY-MM-DD", label: "…" }.
 const MILESTONES = [{ date: "2009-01-11", label: "Streaming (Spotify)" }];
 // Collaborations: "Taylor Swift, Post Malone" and "A feat. B" are credited to the first-named artist (the full credit is kept for tooltips and the table),
@@ -645,7 +646,8 @@ function render() {
 
   /* Bubble chart — every artist with BUBBLE_MIN_PLAYS+ plays in the selection (artist filter ignored): x = last played, y = plays, size = distinct tracks */
   const byTrack = ui.unit === "tracks", bubbleBase = filtered("artist"), bAgg = new Map();
-  for (const s of bubbleBase) { const k = byTrack ? trackKey(s) : s.artist; let b = bAgg.get(k); if (!b) { b = { key: k, name: byTrack ? s.track : s.artist, artist: s.artist, plays: 0, last: 0, tracks: new Set() }; bAgg.set(k, b); } b.plays++; if (s.uts > b.last) b.last = s.uts; b.tracks.add(s.track); }
+  for (const s of bubbleBase) { const k = byTrack ? trackKey(s) : s.artist; let b = bAgg.get(k); if (!b) { b = { key: k, name: byTrack ? s.track : s.artist, artist: s.artist, plays: 0, last: 0, tracks: new Set(), times: [] }; bAgg.set(k, b); } b.plays++; if (s.uts > b.last) b.last = s.uts; b.times.push(s.uts); b.tracks.add(s.track); }
+  for (const b of bAgg.values()) { if (b.plays >= (byTrack ? 5 : BUBBLE_MIN_PLAYS)) { b.times.sort((x, y) => x - y); b.lastAny = b.last; b.last = lastRealOf(b.times) ?? b.times[0]; } }
   const favSet = new Set(favs.map((f) => byTrack ? f.a.key : f.a.name)), bubbleMin = byTrack ? Math.max(5, Math.round(BUBBLE_MIN_PLAYS / 2)) : BUBBLE_MIN_PLAYS;
   const bubbles = [...bAgg.values()].filter((b) => b.plays >= bubbleMin).map((b) => { const sil = monthsBetween(b.last, NOW); return { x: monthX(b.last), y: b.plays, r: byTrack ? Math.max(3, Math.min(16, 1.4 * Math.sqrt(b.plays))) : Math.max(2.5, Math.min(22, 1.6 * Math.sqrt(b.tracks.size))), b, sil, fav: favSet.has(byTrack ? b.key : b.name) }; });
   const bx0 = Math.floor(Math.min(monthX(S[0].uts), ...bubbles.map((d) => d.x))), bx1 = Math.ceil(monthX(NOW)) + 1;   // whole history, so the milestones show
@@ -657,11 +659,11 @@ function render() {
       onClick: (e, els) => { if (els.length) toggleFilter("artist", bubbles[els[0].index].b.artist); },
       scales: { x: { ...AXIS, type: "linear", min: bx0, max: bx1, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 12, autoSkip: false, maxRotation: 0, callback: (v) => Math.abs(v / 12 - Math.round(v / 12)) < 1e-6 ? String(Math.round(v / 12)) : "" }, title: { display: true, text: byTrack ? "Last time you played the track" : "Last time you listened to the artist", color: css("--text-3"), font: { size: 11 } } },
         y: { ...AXIS, type: bubbleY === "log" ? "logarithmic" : "linear", beginAtZero: bubbleY !== "log", grid: { ...GRID, color: (c) => bubbleY !== "log" || LOG_TICKS.includes(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, callback: (v) => bubbleY === "log" ? (LOG_TICKS.includes(v) ? fmt(v) : "") : fmt(v) }, title: { display: true, text: "Plays", color: css("--text-3"), font: { size: 11 } } } },
-      plugins: { tooltip: { callbacks: { title: (c) => byTrack ? `${c[0].raw.b.name} — ${c[0].raw.b.artist}` : c[0].raw.b.name, label: (c) => `${fmt(c.raw.b.plays)} plays${byTrack ? "" : ` · ${fmt(c.raw.b.tracks.size)} tracks`} · last ${fmtDate(localDate(c.raw.b.last))} (${ago(c.raw.sil)})`, afterBody: (c) => [c[0].raw.fav ? (c[0].raw.sil >= ui.silence ? "Forgotten favorite" : "Favorite") : "", "Click to filter to the artist"].filter(Boolean) } }, milestones: { on: true } } } });
+      plugins: { tooltip: { callbacks: { title: (c) => byTrack ? `${c[0].raw.b.name} — ${c[0].raw.b.artist}` : c[0].raw.b.name, label: (c) => `${fmt(c.raw.b.plays)} plays${byTrack ? "" : ` · ${fmt(c.raw.b.tracks.size)} tracks`} · last ${fmtDate(localDate(c.raw.b.last))} (${ago(c.raw.sil)})${c.raw.b.lastAny > c.raw.b.last ? ` · stray plays since, last ${fmtDate(localDate(c.raw.b.lastAny))}` : ""}`, afterBody: (c) => [c[0].raw.fav ? (c[0].raw.sil >= ui.silence ? "Forgotten favorite" : "Favorite") : "", "Click to filter to the artist"].filter(Boolean) } }, milestones: { on: true } } } });
   $("#bubbleLegend").innerHTML = `<span><i style="background:transparent;border:2px solid #3ddc7a;box-sizing:border-box"></i>Forgotten favorite</span><span><i style="background:${hexA("#25a657", 0.8)}"></i>Favorite, still heard</span><span><i style="background:${hexA("#5b6e80", 0.5)}"></i>Other ${ui.unit === "tracks" ? "track" : "artist"} (${BUBBLE_MIN_PLAYS}+ plays)</span><span style="margin-left:auto;color:var(--text-3)">bubble size = ${byTrack ? "plays" : "distinct tracks"}</span>`;
   document.querySelectorAll("#bubbleY button").forEach((b) => b.classList.toggle("active", b.dataset.m === bubbleY));
   $("#bubbleHead").textContent = byTrack ? "When did I last play each track?" : "When did I last listen to each artist?";
-  $("#noteBubble").textContent = `${fmt(bubbles.length)} ${byTrack ? "tracks" : "artists"} with ${bubbleMin}+ plays${active.filter((k) => k !== "artist").length ? " in this selection" : ""}. The further left a big bubble sits, the longer a favorite has been forgotten. Hover for details, click to filter to the artist.`;
+  $("#noteBubble").textContent = `${fmt(bubbles.length)} ${byTrack ? "tracks" : "artists"} with ${bubbleMin}+ plays${active.filter((k) => k !== "artist").length ? " in this selection" : ""}. The further left a big bubble sits, the longer a favorite has been forgotten${ui.minBurst > 1 ? ` (x = last real listen; stray plays, fewer than ${ui.minBurst} within a year, don't move a bubble)` : ""}. Hover for details, click to filter to the artist.`;
 
   /* Scrobbles per year */
   document.querySelectorAll("#yearsMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === yearsMode));
@@ -871,7 +873,21 @@ function render() {
   renderTable(rows);
 }
 
-/* Favorites: artists with enough plays; silence = months since last play; rediscovered = came back after a long gap. */
+/* Real listening: a play counts only if there are `n`+ plays within a 12-month window around it (±6 months);
+   fewer are stray plays. n = 1 turns the rule off. `times` must be sorted. */
+function realTimes(times, n) {
+  if (n <= 1 || times.length < n) return n <= 1 ? times : [];
+  const half = 182.6 * 86400, out = []; let lo = 0, hi = 0;
+  for (let i = 0; i < times.length; i++) {
+    while (times[lo] < times[i] - half) lo++;
+    while (hi < times.length && times[hi] <= times[i] + half) hi++;
+    if (hi - lo >= n) out.push(times[i]);
+  }
+  return out;
+}
+const lastRealOf = (times, n = ui.minBurst) => { const r = realTimes(times, n); return r.length ? r.at(-1) : null; };
+
+/* Favorites: artists with enough plays; silence = months since the last real listen; rediscovered = came back after a long gap. */
 function favorites(unit = ui.unit, allTime = false) {   // allTime: ignore the year / month / last-12 filters (today's favorites, all history)
   const out = [];
   const scoped = !allTime && (anyYear() || F.month != null || F.last12);                  // a year/month filter: favorites OF that period, silence still measured to today
@@ -883,13 +899,14 @@ function favorites(unit = ui.unit, allTime = false) {   // allTime: ignore the y
     if (hidden.has(tracks ? a.key : a.name)) continue;
     const plays = scoped ? (inSel.get(tracks ? a.key : a.name) || 0) : a.plays;
     if (plays < minPlays || (!tracks && a.tracksWith(ui.minTrackPlays) < ui.minTracks)) continue;
-    const silence = monthsBetween(a.last, NOW);
-    // biggest gap that ENDS within the last 12 months = a return after that gap
+    const t = realTimes(a.times, ui.minBurst), lastReal = t.length ? t.at(-1) : a.first, stray = a.times.length - t.length, strayAfter = a.times.filter((x) => x > lastReal).length;
+    const silence = monthsBetween(lastReal, NOW);
+    // biggest gap between real plays that ENDS within the last 12 months = a return after that gap
     let backAfter = 0, recentPlays = 0;
-    const t = a.times, cutoff = NOW - 365 * 86400;
+    const cutoff = NOW - 365 * 86400;
     for (let i = t.length - 1; i > 0 && t[i] >= cutoff; i--) { recentPlays++; const gap = monthsBetween(t[i - 1], t[i]); if (gap > backAfter) backAfter = gap; }
     const peakYear = Object.entries(a.byYear).sort((x, y) => y[1] - x[1])[0][0];
-    out.push({ a, plays, silence, backAfter, recentPlays, peakYear: +peakYear, score: plays * Math.log2(1 + silence / 6) });
+    out.push({ a, plays, silence, lastReal, stray, strayAfter, backAfter, recentPlays, peakYear: +peakYear, score: plays * Math.log2(1 + silence / 6) });
   }
   return out;
 }
@@ -934,6 +951,7 @@ function renderFav(favs) {
   $("#minPlaysWrap").hidden = tracks; $("#minTracksWrap").hidden = tracks; $("#minPlaysTrackWrap").hidden = !tracks;
   document.querySelectorAll("#favMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === ui.favMode));
   document.querySelectorAll("#silence button").forEach((b) => b.classList.toggle("active", +b.dataset.v === ui.silence));
+  document.querySelectorAll("#minBurst button").forEach((b) => b.classList.toggle("active", +b.dataset.v === (ui.minBurst || 1)));
   document.querySelectorAll("#minPlays button").forEach((b) => b.classList.toggle("active", +b.dataset.v === ui.minPlays));
   document.querySelectorAll("#minTracks button").forEach((b) => b.classList.toggle("active", +b.dataset.v === ui.minTracks));
   document.querySelectorAll("#minTrackPlays button").forEach((b) => b.classList.toggle("active", +b.dataset.v === ui.minTrackPlays));
@@ -941,16 +959,17 @@ function renderFav(favs) {
   $("#minTrackPlaysWrap").hidden = tracks;
   document.querySelectorAll("#favSort button").forEach((b) => b.classList.toggle("active", b.dataset.v === ui.sort));
   const forgotten = ui.favMode === "forgotten";
-  let list = forgotten ? favs.filter((f) => f.silence >= ui.silence) : favs.filter((f) => f.silence < 12 && f.backAfter >= ui.silence && f.recentPlays >= 3);
+  const minReturn = Math.max(3, ui.minBurst);
+  let list = forgotten ? favs.filter((f) => f.silence >= ui.silence) : favs.filter((f) => f.silence < 12 && f.backAfter >= ui.silence && f.recentPlays >= minReturn);
   const key = ui.sort === "plays" ? (f) => f.plays : ui.sort === "silence" ? (f) => (forgotten ? f.silence : f.backAfter) : (f) => (forgotten ? f.score : f.plays * Math.log2(1 + f.backAfter / 6));
   const period = anyYear() ? (F.month != null ? `in ${MONTHS[F.month]} ${yearsLabel()}` : `in ${yearsLabel()}`) : F.last12 ? "in the last 12 months" : F.month != null ? `in ${MONTHS[F.month]} (any year)` : "";
   list.sort((x, y) => key(y) - key(x));
   $("#favHead").textContent = (forgotten ? "Forgotten favorite " : "Rediscovered favorite ") + (tracks ? "tracks" : "artists") + (period ? ` · ${period.replace(/^in /, "")}` : "");
   $("#noteFav").textContent = forgotten
     ? `${tracks ? `Tracks you played at least ${ui.minPlaysTrack} times` : `Artists you played at least ${ui.minPlays} times${ui.minTracks > 1 ? ` (from ${ui.minTracks}+ different tracks${ui.minTrackPlays > 1 ? `, each played ${ui.minTrackPlays}+ times` : ""})` : ""}`}${period ? " " + period : ""} but haven't heard for ${ui.silence >= 12 ? `${ui.silence / 12}+ year${ui.silence > 12 ? "s" : ""}` : `${ui.silence}+ months`}: ${fmt(list.length)} of ${fmt(favs.length)} favorites. Bars are plays per year over your whole history; the name opens your library on Last.fm, the plays count filters the dashboard to the artist.`
-    : `Favorites${period ? " " + period : ""} you came back to in the last 12 months after a gap of ${ui.silence >= 12 ? `${ui.silence / 12}+ year${ui.silence > 12 ? "s" : ""}` : `${ui.silence}+ months`} (3+ plays since): ${fmt(list.length)}.`;
+    : `Favorites${period ? " " + period : ""} you came back to in the last 12 months after a gap of ${ui.silence >= 12 ? `${ui.silence / 12}+ year${ui.silence > 12 ? "s" : ""}` : `${ui.silence}+ months`} (${minReturn}+ plays since): ${fmt(list.length)}.${ui.minBurst > 1 ? ` Stray plays — fewer than ${ui.minBurst} within a year — neither end a silence nor count as a return.` : ""}`;
   const shown = list.slice(0, favShown), half = Math.ceil(shown.length / 2);
-  const row = (f, i) => `<li><span class="rank">${i + 1}</span><span class="who"><a href="${tracks ? lfmTrack(f.a.artist, f.a.name) : lfmArtist(f.a.name)}" target="_blank" rel="noopener" title="Open in your Last.fm library">${esc(f.a.name)}</a><span class="sub">${tracks ? esc(f.a.artist) + " · " : ""}${forgotten ? `last heard ${fmtDate(localDate(f.a.last))} · peak ${f.peakYear}` : `back after ${ago(f.backAfter).replace(" ago", "")} · ${f.recentPlays} plays this year`}</span></span><span class="yrs" title="plays per year, ${YEARS[0]}–${YEARS.at(-1)}">${yearBars(f.a.byYear, forgotten ? null : NOW && localDate(NOW).getUTCFullYear())}</span><span class="num"><button type="button" class="chip" style="padding:2px 9px;font-size:12px" data-a="${esc(tracks ? f.a.artist : f.a.name)}" title="Filter the dashboard to ${esc(tracks ? f.a.artist : f.a.name)}"><b>${fmt(f.plays)}</b> plays</button><br><span class="pill" style="background:${recencyColor(f.silence)}">${ago(f.silence)}</span> <button type="button" class="hide" data-h="${esc(tracks ? f.a.key : f.a.name)}" title="Leave this ${tracks ? "track" : "artist"} out of the favorites lists (this browser only)">×</button></span></li>`;
+  const row = (f, i) => `<li><span class="rank">${i + 1}</span><span class="who"><a href="${tracks ? lfmTrack(f.a.artist, f.a.name) : lfmArtist(f.a.name)}" target="_blank" rel="noopener" title="Open in your Last.fm library">${esc(f.a.name)}</a><span class="sub">${tracks ? esc(f.a.artist) + " · " : ""}${forgotten ? `last heard ${fmtDate(localDate(f.lastReal))}${f.strayAfter ? ` (+${f.strayAfter} stray)` : ""} · peak ${f.peakYear}` : `back after ${ago(f.backAfter).replace(" ago", "")} · ${f.recentPlays} plays this year`}</span></span><span class="yrs" title="plays per year, ${YEARS[0]}–${YEARS.at(-1)}">${yearBars(f.a.byYear, forgotten ? null : NOW && localDate(NOW).getUTCFullYear())}</span><span class="num"><button type="button" class="chip" style="padding:2px 9px;font-size:12px" data-a="${esc(tracks ? f.a.artist : f.a.name)}" title="Filter the dashboard to ${esc(tracks ? f.a.artist : f.a.name)}"><b>${fmt(f.plays)}</b> plays</button><br><span class="pill" style="background:${recencyColor(f.silence)}">${ago(f.silence)}</span> <button type="button" class="hide" data-h="${esc(tracks ? f.a.key : f.a.name)}" title="Leave this ${tracks ? "track" : "artist"} out of the favorites lists (this browser only)">×</button></span></li>`;
   $("#favA").innerHTML = shown.slice(0, half).map(row).join("") || `<li><span class="num">No artists match — lower the thresholds.</span></li>`;
   $("#favB").innerHTML = shown.slice(half).map((f, i) => row(f, i + half)).join("");
   document.querySelectorAll("#favA button[data-a], #favB button[data-a]").forEach((b) => b.addEventListener("click", () => toggleFilter("artist", b.dataset.a)));
@@ -993,6 +1012,7 @@ function wire() {
   document.querySelectorAll("#yearsMode button").forEach((b) => b.addEventListener("click", () => { yearsMode = b.dataset.m; try { localStorage.setItem("musicYearsMode", yearsMode); } catch (e) {} render(); }));
   document.querySelectorAll("#favMode button").forEach((b) => b.addEventListener("click", () => { ui.favMode = b.dataset.m; favShown = FAV_PAGE; saveUi(); renderFav(favorites()); }));
   document.querySelectorAll("#silence button").forEach((b) => b.addEventListener("click", () => { ui.silence = +b.dataset.v; favShown = FAV_PAGE; saveUi(); render(); }));
+  document.querySelectorAll("#minBurst button").forEach((b) => b.addEventListener("click", () => { ui.minBurst = +b.dataset.v; favShown = FAV_PAGE; saveUi(); render(); }));
   document.querySelectorAll("#minPlays button").forEach((b) => b.addEventListener("click", () => { ui.minPlays = +b.dataset.v; favShown = FAV_PAGE; saveUi(); render(); }));
   document.querySelectorAll("#minTracks button").forEach((b) => b.addEventListener("click", () => { ui.minTracks = +b.dataset.v; favShown = FAV_PAGE; saveUi(); render(); }));
   document.querySelectorAll("#minTrackPlays button").forEach((b) => b.addEventListener("click", () => { ui.minTrackPlays = +b.dataset.v; favShown = FAV_PAGE; saveUi(); render(); }));
