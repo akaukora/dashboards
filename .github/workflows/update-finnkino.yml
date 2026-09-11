@@ -1,0 +1,39 @@
+name: Update Finnkino showtimes
+
+on:
+  schedule:
+    - cron: "0 4 * * *"        # 07:00 Helsinki, after the nightly schedule drop
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch showtimes
+        id: fetch
+        continue-on-error: true          # a bad run must still commit status.json
+        run: python finnkino/fetch_finnkino.py finnkino/shows.json
+
+      - name: Commit data and status
+        if: always()
+        run: |
+          git config user.name  "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add finnkino/shows.json finnkino/status.json 2>/dev/null || true
+          git diff --staged --quiet || git commit -m "Finnkino $(date -u +%Y-%m-%d)"
+          git push
+
+      - name: Fail the run if the fetch failed
+        if: steps.fetch.outcome != 'success'
+        run: |
+          echo "::error::Finnkino fetch failed - see finnkino/status.json"
+          exit 1
