@@ -189,6 +189,11 @@ a{color:var(--ac)}
 .isslab{margin-right:2px}
 
 .buy{font-size:10.5px;font-weight:600;color:var(--ac);text-decoration:none;border-bottom:1px solid var(--ac);margin-left:4px}
+
+.avl{display:inline-block;font-size:10px;font-weight:600;text-transform:uppercase;letter-spacing:.04em;
+ border-radius:4px;padding:0 5px;margin-left:7px;vertical-align:2px;white-space:nowrap}
+.avl.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok)}
+.avl.bad{background:var(--dgb);color:var(--dg);border:1px solid var(--dg)}
 textarea{width:100%;min-height:70px;font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
 </style>
 </head>
@@ -653,6 +658,15 @@ function rowHtml(f, fl){
 }
 
 function hasFreeSeat(n){ return (BY_FILM[n]||[]).some(o=>!soldOut(o.id)); }
+function seatBadge(n){
+  const all=BY_FILM[n]||[];
+  const out=all.filter(o=>soldOut(o.id)).length;
+  if(!out) return '';
+  const free=all.length-out;
+  return free
+    ? `<span class="avl ok">${free} of ${all.length} on sale</span>`
+    : `<span class="avl bad">all ${all.length===1?'sold out':all.length+' sold out'}</span>`;
+}
 function dropMatch(n){
   const m=meta(n);
   if(availOnly && !hasFreeSeat(n)) return false;
@@ -697,7 +711,7 @@ function vCat(){
     const o=BY_FILM[n], m=meta(n), on=shortlist.has(n);
     const dur=o[0].duration?o[0].duration+' min':'event';
     return `<div class="fc${on?' insl':''}${!on&&catOnlyIn?' gh':''}">
-      <div class="fh"><p class="fn">${esc(n)}</p>
+      <div class="fh"><p class="fn">${esc(n)}${seatBadge(n)}</p>
         <button class="cb${on?' on':''}" data-short="${esc(n)}" aria-label="Toggle shortlist">${on?'\u2713':'+'}</button></div>
       <p class="cc" style="margin:1px 0 0">${esc(kwPills(n))}${m.d?' \u00b7 dir. '+esc(m.d):''} \u00b7 ${dur} \u00b7 ${o.length} screening${o.length>1?'s':''}</p>
       ${langLine(n)?`<p class="kws">${esc(langLine(n))}</p>`:''}
@@ -730,7 +744,7 @@ function vFilm(){
         <span>${ord(o)?`<b class="ordn">${ord(o)}</b> `:''}${o.dateLabel} ${o.start}\u2013${o.end}${d} \u00b7 ${esc(o.venue)}${why}${o.u&&!so?` <a class="buy" href="${esc(o.u)}" target="_blank" rel="noopener">tickets</a>`:''}</span>
         ${so&&!tk?'<span class="sold">sold out</span>':''}</div>`;
     }).join('');
-    return `<div class="fc ${cls}"><div class="fh"><p class="fn">${esc(n)}</p>
+    return `<div class="fc ${cls}"><div class="fh"><p class="fn">${esc(n)}${seatBadge(n)}</p>
       <span class="fs ${s.k}">${lab}</span></div>
       <p class="cc" style="margin:1px 0 0">${esc(kwPills(n))}${m.d?' \u00b7 dir. '+esc(m.d):''}</p>
       ${langLine(n)?`<p class="kws">${esc(langLine(n))}</p>`:''}
