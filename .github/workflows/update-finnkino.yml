@@ -23,12 +23,20 @@ jobs:
         continue-on-error: true          # a bad run must still commit status.json
         run: python finnkino/fetch_finnkino.py finnkino/shows.json
 
+      - name: Show status
+        if: always()
+        run: |
+          echo "--- finnkino/status.json"
+          cat finnkino/status.json 2>/dev/null || echo "(status.json was not written)"
+          echo "--- files"
+          ls -la finnkino/ || true
+
       - name: Commit data and status
         if: always()
         run: |
           git config user.name  "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add finnkino/shows.json finnkino/status.json 2>/dev/null || true
+          git add -A finnkino/                       # adds whatever exists
           git diff --staged --quiet || git commit -m "Finnkino $(date -u +%Y-%m-%d)"
           git push
 
