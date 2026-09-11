@@ -17,7 +17,11 @@ SITES = {                      # capital region; add ids to taste
 }
 DAYS = 21
 API = "https://digital-api.finnkino.fi/WSVistaWebClient/ocapi/v1/showtimes/by-business-date/"
-UA = "Mozilla/5.0 (compatible; personal-watchlist/1.0)"
+UA = ("Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 "
+      "(KHTML, like Gecko) Chrome/141.0.0.0 Safari/537.36")
+BROWSERISH = {"User-Agent": UA,
+              "Accept-Language": "fi-FI,fi;q=0.9,en;q=0.8",
+              "Accept": "text/html,application/xhtml+xml,application/xml;q=0.9,*/*;q=0.8"}
 OUT = pathlib.Path(sys.argv[1] if len(sys.argv) > 1 else "shows.json")
 STATUS = OUT.with_name("status.json")
 
@@ -30,13 +34,19 @@ def write_status(ok, note, **extra):
 
 
 def get(url, headers=None):
-    req = urllib.request.Request(url, headers={"User-Agent": UA, **(headers or {})})
+    req = urllib.request.Request(url, headers={**BROWSERISH, **(headers or {})})
     with urllib.request.urlopen(req, timeout=60) as r:
         return r.read().decode("utf-8")
 
 
 def get_token():
-    html = get("https://www.finnkino.fi/")
+    try:
+        html = get("https://www.finnkino.fi/")
+    except urllib.error.HTTPError as e:
+        raise RuntimeError(f"finnkino.fi returned HTTP {e.code} when fetching the token page "
+                           f"- the runner is probably being blocked") from None
+    if len(html) < 5000:
+        raise RuntimeError(f"finnkino.fi returned only {len(html)} bytes - likely a bot wall")
     m = re.search(r'"authToken"\s*:\s*"(eyJ[A-Za-z0-9_.\-]+)"', html)
     if not m:
         m = re.search(r'(eyJ[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,}\.[A-Za-z0-9_-]{20,})', html)
