@@ -1,0 +1,5 @@
+{
+ "lastRun": "2026-09-11T11:49+00:00",
+ "ok": false,
+ "note": "RuntimeError: finnkino.fi returned HTTP 403 when fetching the token page - the runner is probably being blocked"
+}
