@@ -85,6 +85,7 @@ rep("""  footer { color: var(--text-3); font-size: 12px; margin-top: 22px; line-
 
 # ---------------- personal config out
 rep("""const SCROBBLES_URL = "scrobbles.csv";        // relative to the page; ?src= overrides for testing
+const STATE_URL = "fetch_state.json";          // written by fetch_lastfm.py: when the data was last completed — the end of every "last N days" window
 const LASTFM_USER = "akaukora";""", """const STORE_DB = "music-viewer", STORE_KEY = "plays";   // IndexedDB: the normalized plays, so a reload doesn't need the files again
 let SOURCE = "";                                          // lastfm | spotify | apple | csv — set by the parser; Last.fm library links only make sense for lastfm
 let LASTFM_USER = "";                                     // filled from a Last.fm export when it carries a username (it usually doesn't)""")

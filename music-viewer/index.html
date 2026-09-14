@@ -416,7 +416,7 @@ function parseCSV(text) {
 /* ---------- data ---------- */
 // S: plays sorted by time, each { uts, y, m, d, dow, h, artist, track, album, loved }
 // A: artists by name { name, plays, first, last, tracks:Map, byYear:{} }
-let S = [], S_ALL = [], A = new Map(), T = new Map(), YEARS = [], NOW = 0, charts = {}, CREDITS = { strings: 0, plays: 0 }, KIDS = { matched: 0, liked: 0, unliked: 0, unmatched: [] };
+let S = [], S_ALL = [], A = new Map(), T = new Map(), YEARS = [], NOW = 0, DATA_END = 0, charts = {}, CREDITS = { strings: 0, plays: 0 }, KIDS = { matched: 0, liked: 0, unliked: 0, unmatched: [] };
 const normTitle = (t) => t.toLowerCase().replace(/\s*[\(\[].*?[\)\]]/g, "").replace(/\s+-\s.*$/, "").replace(/\s+/g, " ").trim();
 const trackKey = (s) => s.artist + "\u0000" + s.track.toLowerCase();
 function build(rows) { S_ALL = null; buildFrom(rows); }
@@ -485,6 +485,9 @@ function buildFrom(rows) {
   }
   YEARS = [...new Set(S.map((s) => s.y))].sort();
   NOW = Math.max(Math.floor(Date.now() / 1000), S.at(-1)?.uts || 0);
+  // "Last 7 days" and friends end where the DATA ends, not at the clock: the CSV is refreshed once a night, so a window ending
+  // "now" would always be missing today (and part of yesterday) and read low against the full 7 days before it.
+  DATA_END = Math.max(S.at(-1)?.uts || 0, STATE_END || 0) || NOW;
 }
 
 /* ---------- state ---------- */
@@ -494,6 +497,7 @@ const anyYear = () => F.year.length > 0;
 const oneYear = () => (F.year.length ? Math.max(...F.year) : null);   // the year single-year views focus on
 const yearsLabel = () => F.year.slice().sort().join(", ");
 const FILTER_LABEL = { year: "Year", last12: "Period", month: "Month", artist: "Artist" };
+let STATE_END = 0;   // fetch_state.json → completed_through (uts): the data is complete up to here
 let ui = { ...DEFAULTS }; try { Object.assign(ui, JSON.parse(localStorage.getItem("musicUi") || "{}")); } catch (e) {}
 let yearsMode = "columns"; try { yearsMode = ["lines", "depth"].includes(localStorage.getItem("musicYearsMode")) ? localStorage.getItem("musicYearsMode") : "columns"; } catch (e) {}
 let groups = { rediscover: true, discover: true, listening: true }; try { Object.assign(groups, JSON.parse(localStorage.getItem("musicGroups") || "{}")); } catch (e) {}
@@ -588,12 +592,12 @@ function render() {
   // concentration: share of the period's plays that went to its top 10 artists
   const { conc, hhi, effN } = (() => { const c = new Map(); for (const s of rows) c.set(s.artist, (c.get(s.artist) || 0) + 1); const vals = [...c.values()], n = rows.length; const top = vals.sort((x, y) => y - x).slice(0, 10).reduce((x, y) => x + y, 0); const h = n ? vals.reduce((a, v) => a + (v / n) ** 2, 0) : 0; return { conc: n ? 100 * top / n : 0, hhi: Math.round(h * 10000), effN: h ? Math.round(1 / h) : 0 }; })();
   const periodLabel = anyYear() ? yearsLabel() : F.last12 ? "the last 12 months" : F.month != null ? MONTHS[F.month] : "all time";
-  const week = (() => { const wk = 7 * 86400, weeks = [], recentRows = S.filter((s) => s.uts > NOW - 13 * wk && (F.artist == null || s.artist === F.artist)); for (let i = 11; i >= 0; i--) { const a = NOW - (i + 1) * wk, b = NOW - i * wk; weeks.push(recentRows.filter((s) => s.uts > a && s.uts <= b).length); } return weeks; })();
+  const week = (() => { const wk = 7 * 86400, weeks = [], recentRows = S.filter((s) => s.uts > DATA_END - 13 * wk && (F.artist == null || s.artist === F.artist)); for (let i = 11; i >= 0; i--) { const a = DATA_END - (i + 1) * wk, b = DATA_END - i * wk; weeks.push(recentRows.filter((s) => s.uts > a && s.uts <= b).length); } return weeks; })();
   const wNow = week[11], wPrev = week[10], wPct = wPrev ? Math.round(100 * (wNow - wPrev) / wPrev) : null;
   const tiles = [
     { l: anyYear() ? `Plays in ${yearsLabel()}` : F.last12 ? "Plays, last 12 months" : "Plays", v: fmt(rows.length), d: `${fmt(artistsIn.size)} artists${rows.length ? ` · since ${fmtDate(localDate(rows[0].uts))}` : ""}` },
     { l: `Played in ${yr}`, v: fmt(thisYear), d: `<span class="${diff >= 0 ? "up" : "down"}">${diff >= 0 ? "+" : ""}${fmt(diff)}</span> vs ${yr === cy ? "the same point in" : ""} ${yr - 1}`, spark: sparkline(cum(yr, yr === cy ? nowLd.getUTCMonth() : 11), cum(yr - 1), `${yr} vs ${yr - 1}, cumulative by month`) },
-    { l: "Last 7 days vs the 7 before", v: wPct == null ? (wNow ? "new" : "—") : `<span class="${wPct >= 0 ? "up" : "down"}">${wPct >= 0 ? "+" : ""}${wPct}%</span>`, d: `${fmt(wNow)} vs ${fmt(wPrev)} plays`, foot: "line: weekly totals, last 12 weeks", spark: sparkline(week, [], "plays per week, last 12 weeks") },
+    { l: "Last 7 days vs the 7 before", v: wPct == null ? (wNow ? "new" : "—") : `<span class="${wPct >= 0 ? "up" : "down"}">${wPct >= 0 ? "+" : ""}${wPct}%</span>`, d: `${fmt(wNow)} vs ${fmt(wPrev)} plays`, foot: `line: weekly totals, last 12 weeks · to ${fmtDT(localDate(DATA_END))}`, spark: sparkline(week, [], "plays per week, last 12 weeks") },
     { l: "Concentration", v: rows.length ? `${Math.round(conc)}%` : "—", d: `of plays in ${periodLabel} went to the top 10 artists · HHI ${fmt(hhi)} — as if ${fmt(effN)} artists shared your listening equally`, bg: rows.length ? shade(conc) : null },
     { l: F.artist ? "Plays per year" : `New artists in ${anyYear() || F.last12 ? periodLabel : yr}`, v: F.artist ? fmt(Math.round(rows.length / Math.max(1, new Set(rows.map((s) => s.y)).size))) : `${fmt(anyYear() || F.last12 ? [...artistsIn].filter((a) => { const f = A.get(a).first; return rows.some((s) => s.artist === a && s.uts === f); }).length : newThisYear)}<span style="font-size:16px;color:var(--text-3)"> / ${fmt(anyYear() || F.last12 ? artistsIn.size : yearArtists)}</span>`,
       d: F.artist ? `${fmt(A.get(F.artist).tracks.size)} tracks · ${fmt(A.get(F.artist).albums.size)} albums` : `${(anyYear() || F.last12 ? artistsIn.size : yearArtists) ? Math.round(100 * (anyYear() || F.last12 ? [...artistsIn].filter((a) => { const f = A.get(a).first; return rows.some((s) => s.artist === a && s.uts === f); }).length : newThisYear) / (anyYear() || F.last12 ? artistsIn.size : yearArtists)) : 0}% of the artists heard in ${anyYear() || F.last12 ? periodLabel : yr} were heard for the first time`,
@@ -666,8 +670,8 @@ function render() {
   /* Top artists (albums when an artist is selected) and Top tracks (that artist's tracks when selected) — for the current selection, or for a recent window */
   document.querySelectorAll("#topMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === topMode));
   const topDays = topMode === "sel" ? null : topMode === "w" ? topWeeks * 7 : +topMode;
-  const topRows = topDays ? S.filter((s) => s.uts > NOW - topDays * 86400 && (F.artist == null || s.artist === F.artist)) : rows;
-  const topScope = topDays ? (topMode === "w" ? `the last ${topWeeks} week${topWeeks === 1 ? "" : "s"}` : `the last ${topDays} days`) : "this selection";
+  const topRows = topDays ? S.filter((s) => s.uts > DATA_END - topDays * 86400 && (F.artist == null || s.artist === F.artist)) : rows;
+  const topScope = topDays ? (topMode === "w" ? `the last ${topWeeks} week${topWeeks === 1 ? "" : "s"}` : `the last ${topDays} days`) + ` (to ${fmtDate(localDate(DATA_END))})` : "this selection";
   const barRow = (i, label, sub, n, max, btn) => `<li><span class="rank">${i + 1}</span><span class="who">${btn ? `<button type="button" data-a="${esc(btn)}" title="Filter to ${esc(btn)}">${esc(label)}</button>` : `<span style="color:var(--text);font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</span>`}${sub ? `<span class="sub">${sub}</span>` : ""}<div class="track"><i style="width:${100 * n / max}%"></i></div></span><span class="num"><b>${fmt(n)}</b> plays</span></li>`;
   if (F.artist) {
     const a = A.get(F.artist), al = new Map(); for (const s of topRows) if (s.album) al.set(s.album, (al.get(s.album) || 0) + 1);
@@ -679,7 +683,7 @@ function render() {
     const cnt = new Map(); for (const s of topRows) cnt.set(s.artist, (cnt.get(s.artist) || 0) + 1);
     const list = [...cnt.entries()].sort((x, y) => y[1] - x[1]).slice(0, TOP_COUNT), max = list[0]?.[1] || 1;
     $("#topHead").textContent = "Top artists";
-    $("#topList").innerHTML = list.map(([name, n], i) => { const a = A.get(name), sil = monthsBetween(a.last, NOW), isNew = topDays && a.first > NOW - topDays * 86400;
+    $("#topList").innerHTML = list.map(([name, n], i) => { const a = A.get(name), sil = monthsBetween(a.last, NOW), isNew = topDays && a.first > DATA_END - topDays * 86400;
       const pill = topDays ? (isNew ? `<span class="pill" style="background:#25a657" title="first heard in this window">new to you</span>` : `<span class="pill" style="background:#5b6e80" title="all-time plays">${fmt(a.plays)} all-time</span>`) : `<span class="pill" style="background:${recencyColor(sil)}" title="last played ${fmtDate(localDate(a.last))}">${ago(sil)}</span>`;
       return `<li><span class="rank">${i + 1}</span><span class="who"><button type="button" data-a="${esc(name)}" title="Filter to ${esc(name)}">${esc(name)}</button><div class="track"><i style="width:${100 * n / max}%"></i></div></span><span class="num"><b>${fmt(n)}</b> · ${pill}</span></li>`; }).join("") || `<li><span class="num">Nothing in ${topScope}.</span></li>`;
     $("#noteTop").textContent = topDays ? `Most played in ${topScope}; green = an artist you heard for the first time in that window. Click an artist to filter everything to them.` : `Most played in ${topScope}; the pill is how long since you last heard them at all. Click an artist to filter everything to them.`;
@@ -777,11 +781,11 @@ function render() {
   const artistOnly = (s) => F.artist == null || s.artist === F.artist;
   let cur, prev, curLabel, prevLabel;
   if (wowMode === 365) {
-    const y0 = Date.UTC(cy, 0, 1) / 1000 - 2 * 3600, sameLast = NOW - 365 * 86400, y0p = Date.UTC(cy - 1, 0, 1) / 1000 - 2 * 3600;
+    const y0 = Date.UTC(cy, 0, 1) / 1000 - 2 * 3600, sameLast = DATA_END - 365 * 86400, y0p = Date.UTC(cy - 1, 0, 1) / 1000 - 2 * 3600;
     cur = S.filter((s) => s.uts >= y0 && artistOnly(s)); prev = S.filter((s) => s.uts >= y0p && s.uts <= sameLast && artistOnly(s));
     curLabel = `${cy} so far`; prevLabel = `${cy - 1} to the same date`;
   } else {
-    const span = wowMode * 86400; cur = S.filter((s) => s.uts > NOW - span && artistOnly(s)); prev = S.filter((s) => s.uts > NOW - 2 * span && s.uts <= NOW - span && artistOnly(s));
+    const span = wowMode * 86400; cur = S.filter((s) => s.uts > DATA_END - span && artistOnly(s)); prev = S.filter((s) => s.uts > DATA_END - 2 * span && s.uts <= DATA_END - span && artistOnly(s));
     curLabel = `last ${wowMode} days`; prevLabel = `the ${wowMode} days before`;
   }
   const distinct = (arr, f) => new Set(arr.map(f)).size;
@@ -792,7 +796,7 @@ function render() {
   ];
   $("#cmp").innerHTML = cmpData.map(([l, now, before]) => { const max = Math.max(now, before, 1), d = before ? Math.round(100 * (now - before) / before) : null;
     return `<div class="m"><span>${l}</span><span class="bars"><span class="bar" title="${curLabel}: ${fmt(now)}"><i style="width:${100 * now / max}%;background:${css("--green-mark")}"></i></span><span class="bar" title="${prevLabel}: ${fmt(before)}"><i style="width:${100 * before / max}%;background:#55616e"></i></span></span><span class="v"><b>${fmt(now)}</b> <span style="color:var(--text-3)">vs ${fmt(before)}</span><span class="pct ${d == null ? "" : d >= 0 ? "up" : "down"}" style="color:${d == null ? "var(--text-3)" : d >= 0 ? "var(--green)" : "var(--orange)"}">${d == null ? "—" : (d >= 0 ? "+" : "") + d + "%"}</span></span></div>`; }).join("");
-  $("#noteWow").textContent = `Green: ${curLabel} · gray: ${prevLabel}. ${F.artist ? `Only ${F.artist}.` : "Always about now — year filters don't apply here."}`;
+  $("#noteWow").textContent = `Green: ${curLabel} · gray: ${prevLabel}, both counted back from the last data update (${fmtDT(localDate(DATA_END))}). ${F.artist ? `Only ${F.artist}.` : "Year filters don't apply here."}`;
 
   /* Listening fingerprint — five habits for the focus year against your all-time average (Last.fm compares to a global average; we have only you) */
   const fpOf = (sc, yFrom, yTo) => {   // sc: plays; year span for the day-count
