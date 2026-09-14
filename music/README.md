@@ -93,7 +93,10 @@ edge are the ones to rediscover. Hover for the artist, click to filter.
 The KPI row is the executive summary, in the order of the sections below it: scrobbles; this
 year vs the same point last year (background sparkline: cumulative by month); the last 7 days as
 a percentage change against the 7 days before, with weekly totals of the last 12 weeks as the
-background line; concentration — the share of the period's plays that went to its top 10 artists,
+background line — every "last N days" window on the page (this tile, *Now vs before*, the Top
+artists/tracks windows) ends at the last data update read from `fetch_state.json`
+(`completed_through`), not at the clock, because the CSV is refreshed once a night and a window
+ending "now" would always be missing today and read low; the tile's footnote shows the end time; concentration — the share of the period's plays that went to its top 10 artists,
 shaded to that share, with the Herfindahl–Hirschman index of artist shares and its inverse, the
 number of equally-played artists it corresponds to; new artists out of all artists heard in the period, shaded; forgotten
 favorites out of all favorites, gray for the forgotten share.
