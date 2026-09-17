@@ -194,6 +194,10 @@ a{color:var(--ac)}
  border-radius:4px;padding:0 5px;margin-left:7px;vertical-align:2px;white-space:nowrap}
 .avl.ok{background:var(--ok-bg);color:var(--ok);border:1px solid var(--ok)}
 .avl.bad{background:var(--dgb);color:var(--dg);border:1px solid var(--dg)}
+
+.row.bt{border-color:var(--tkbg);background:var(--ok-bg)}
+.opt.tkopt{background:var(--ok-bg);border-radius:5px;padding:3px 5px;margin:-1px -5px}
+.fc.done.hasticket{background:var(--ok-bg)}
 textarea{width:100%;min-height:70px;font-size:11.5px;font-family:ui-monospace,Menlo,monospace}
 </style>
 </head>
@@ -731,7 +735,8 @@ function vFilm(){
   let h=filterBar('Filter shortlist\u2026');
   h+=rows.map(({n,s})=>{
     const m=meta(n);
-    const cls=s.k==='done'?'done':s.k==='urgent'?'urgent':s.k==='soon'?'soon':'';
+    let cls=s.k==='done'?'done':s.k==='urgent'?'urgent':s.k==='soon'?'soon':'';
+    if(s.k==='done'&&s.picked.some(o=>hasTicket(o.id))) cls+=' hasticket';
     const lab=s.k==='done'?`${hasTicket(s.picked[0].id)?'\u{1F3AB}':'\u2605'} ${s.picked[0].dateLabel} ${s.picked[0].start}${ord(s.picked[0])?' ('+ord(s.picked[0])+')':''}`:s.msg;
     const opts=s.opts.map(o=>{
       const on=picks.has(o.id), bl=blockedBy(o), so=soldOut(o.id);
@@ -739,7 +744,7 @@ function vFilm(){
       const d=o.duration?` \u00b7 ${o.duration} min`:'';
       const why=bl&&!so?' \u2014 clashes with '+esc(bl.film):'';
       const tk=hasTicket(o.id);
-      return `<div class="opt${gone?' gone':''}${so&&!tk?' soopt':''}">${avBtn(o.id)}
+      return `<div class="opt${gone?' gone':''}${so&&!tk?' soopt':''}${tk?' tkopt':''}">${avBtn(o.id)}
         <button class="ob${tk?' tk':on?' on':''}" data-pick="${o.id}" title="${esc(pickHint(o.id))}">${tk?'\u{1F3AB} ticket':on?'\u2605 picked':'pick'}</button>
         <span>${ord(o)?`<b class="ordn">${ord(o)}</b> `:''}${o.dateLabel} ${o.start}\u2013${o.end}${d} \u00b7 ${esc(o.venue)}${why}${o.u&&!so?` <a class="buy" href="${esc(o.u)}" target="_blank" rel="noopener">tickets</a>`:''}</span>
         ${so&&!tk?'<span class="sold">sold out</span>':''}</div>`;
