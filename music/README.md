@@ -124,7 +124,7 @@ artists that year — the old "average times listened per artist"); one heatmap 
 toggle (scrobbles per month, or weekday × hour in Helsinki time); **Top artists** and **Top tracks** side by side,
 for the current selection or — via the Selection / 7 days / 30 days / Last *N* weeks control — for
 a recent window regardless of year filters, so "what was that thing I played a lot last week" has
-an answer; in window mode the pill marks artists heard for the first time in that window (with an
+an answer; in window mode the pill is itself a small bar, filled to the share of the artist's (or track's) all-time plays that fell in the window — "72% of 36" — so a fully green pill is an artist heard for the first time there ("new to you") (with an
 artist selected the two cards become that artist's *Albums* and *Top tracks*); **New artists per year** with the share of the year's scrobbles that
 went to artists heard for the first time (for a selected artist: their plays by month of the year,
 a seasonal profile); **Now vs before** — paired bars for scrobbles, artists, tracks, albums and

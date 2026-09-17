@@ -712,7 +712,9 @@ function render() {
   const topDays = topMode === "sel" ? null : topMode === "w" ? topWeeks * 7 : +topMode;
   const topRows = topDays ? S.filter((s) => s.uts > DATA_END - topDays * 86400 && (F.artist == null || s.artist === F.artist)) : rows;
   const topScope = topDays ? (topMode === "w" ? `the last ${topWeeks} week${topWeeks === 1 ? "" : "s"}` : `the last ${topDays} days`) + ` (to ${fmtDate(localDate(DATA_END))})` : "this selection";
-  const barRow = (i, label, sub, n, max, btn) => `<li><span class="rank">${i + 1}</span><span class="who">${btn ? `<button type="button" data-a="${esc(btn)}" title="Filter to ${esc(btn)}">${esc(label)}</button>` : `<span style="color:var(--text);font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</span>`}${sub ? `<span class="sub">${sub}</span>` : ""}<div class="track"><i style="width:${100 * n / max}%"></i></div></span><span class="num"><b>${fmt(n)}</b> plays</span></li>`;
+  // the "all-time" pill is itself a bar: filled to the share of the artist's / track's all-time plays that fell in the window (100 % = new to you)
+  const sharePill = (n, total, isNew, what) => { const pct = total ? Math.min(100, Math.round(100 * n / total)) : 0; return `<span class="pill share" style="background:linear-gradient(90deg, #25a657 ${pct}%, #5b6e80 ${pct}%)" title="${isNew ? `first heard in this window — all ${fmt(total)} plays of this ${what} are from it` : `${fmt(n)} of ${fmt(total)} all-time plays (${pct}%) fell in this window`}">${isNew ? "new to you" : `${pct}% of ${fmt(total)}`}</span>`; };
+  const barRow = (i, label, sub, n, max, btn, extra = "") => `<li><span class="rank">${i + 1}</span><span class="who">${btn ? `<button type="button" data-a="${esc(btn)}" title="Filter to ${esc(btn)}">${esc(label)}</button>` : `<span style="color:var(--text);font-weight:600;display:block;white-space:nowrap;overflow:hidden;text-overflow:ellipsis">${esc(label)}</span>`}${sub ? `<span class="sub">${sub}</span>` : ""}<div class="track"><i style="width:${100 * n / max}%"></i></div></span><span class="num"><b>${fmt(n)}</b>${extra ? ` · ${extra}` : " plays"}</span></li>`;
   if (F.artist) {
     const a = A.get(F.artist), al = new Map(); for (const s of topRows) if (s.album) al.set(s.album, (al.get(s.album) || 0) + 1);
     const list = [...al.entries()].sort((x, y) => y[1] - x[1]).slice(0, TOP_COUNT), max = list[0]?.[1] || 1;
@@ -724,15 +726,15 @@ function render() {
     const list = [...cnt.entries()].sort((x, y) => y[1] - x[1]).slice(0, TOP_COUNT), max = list[0]?.[1] || 1;
     $("#topHead").textContent = "Top artists";
     $("#topList").innerHTML = list.map(([name, n], i) => { const a = A.get(name), sil = monthsBetween(a.last, NOW), isNew = topDays && a.first > DATA_END - topDays * 86400;
-      const pill = topDays ? (isNew ? `<span class="pill" style="background:#25a657" title="first heard in this window">new to you</span>` : `<span class="pill" style="background:#5b6e80" title="all-time plays">${fmt(a.plays)} all-time</span>`) : `<span class="pill" style="background:${recencyColor(sil)}" title="last played ${fmtDate(localDate(a.last))}">${ago(sil)}</span>`;
+      const pill = topDays ? sharePill(n, a.plays, isNew, "artist") : `<span class="pill" style="background:${recencyColor(sil)}" title="last played ${fmtDate(localDate(a.last))}">${ago(sil)}</span>`;
       return `<li><span class="rank">${i + 1}</span><span class="who"><button type="button" data-a="${esc(name)}" title="Filter to ${esc(name)}">${esc(name)}</button><div class="track"><i style="width:${100 * n / max}%"></i></div></span><span class="num"><b>${fmt(n)}</b> · ${pill}</span></li>`; }).join("") || `<li><span class="num">Nothing in ${topScope}.</span></li>`;
-    $("#noteTop").textContent = topDays ? `Most played in ${topScope}; green = an artist you heard for the first time in that window. Click an artist to filter everything to them.` : `Most played in ${topScope}; the pill is how long since you last heard them at all. Click an artist to filter everything to them.`;
+    $("#noteTop").textContent = topDays ? `Most played in ${topScope}. The pill is filled to the share of the artist's all-time plays that fell in this window — fully green means you heard them for the first time here. Click an artist to filter everything to them.` : `Most played in ${topScope}; the pill is how long since you last heard them at all. Click an artist to filter everything to them.`;
   }
   { const tc = new Map(); for (const s of topRows) { const k = trackKey(s); const e = tc.get(k); if (e) e.n++; else tc.set(k, { n: 1, s }); }
     const list = [...tc.values()].sort((x, y) => y.n - x.n).slice(0, TOP_COUNT), max = list[0]?.n || 1;
     $("#trackHead").textContent = F.artist ? `Top tracks · ${F.artist}` : "Top tracks";
-    $("#trackList").innerHTML = list.map((e, i) => barRow(i, e.s.track, F.artist ? "" : esc(e.s.artist), e.n, max)).join("") || `<li><span class="num">Nothing in ${topScope}.</span></li>`;
-    $("#noteTracks").textContent = `${fmt(tc.size)} distinct tracks in ${topScope}.`; }
+    $("#trackList").innerHTML = list.map((e, i) => { const t = topDays && T.get(trackKey(e.s)); return barRow(i, e.s.track, F.artist ? "" : esc(e.s.artist), e.n, max, null, t ? sharePill(e.n, t.plays, t.first > DATA_END - topDays * 86400, "track") : ""); }).join("") || `<li><span class="num">Nothing in ${topScope}.</span></li>`;
+    $("#noteTracks").textContent = `${fmt(tc.size)} distinct tracks in ${topScope}.${topDays ? " Pill: share of the track's all-time plays in this window." : ""}`; }
   document.querySelectorAll("#topList button[data-a]").forEach((b) => b.addEventListener("click", () => toggleFilter("artist", b.dataset.a)));
 
   document.querySelectorAll("#heatMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === heatMode));
