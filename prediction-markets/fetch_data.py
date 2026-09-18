@@ -113,7 +113,80 @@ def iso(ts: Any) -> str | None:
     if isinstance(ts, (int, float)):
         return dt.datetime.fromtimestamp(ts, tz=dt.timezone.utc).date().isoformat()
     text = str(ts)
+    if text.isdigit():
+        return dt.datetime.fromtimestamp(int(text), tz=dt.timezone.utc).date().isoformat()
     return text[:10] if len(text) >= 10 else text
+
+
+TODAY = dt.date.today()
+
+
+def days_between(start: str | None, end: str | None) -> int | None:
+    if not start:
+        return None
+    try:
+        a = dt.date.fromisoformat(start[:10])
+        b = dt.date.fromisoformat(end[:10]) if end else TODAY
+    except ValueError:
+        return None
+    return max((b - a).days, 0)
+
+
+def annualize(roi: float, days: int | None, floor_days: int = 7) -> float | None:
+    """Compound a holding-period return to a yearly rate.
+
+    Returns None below floor_days: annualizing a two-day trade multiplies its
+    noise by ~180, and a -100% loss has no finite annualized form at all.
+    """
+    if days is None or days < floor_days or roi <= -1:
+        return None
+    try:
+        return (1 + roi) ** (365.0 / days) - 1
+    except (OverflowError, ValueError):
+        return None
+
+
+def xirr(flows: list[tuple[str, float]]) -> float | None:
+    """Money-weighted annual return over dated cash flows (negative = paid in).
+
+    Bisection rather than Newton: slower, but it cannot diverge, which matters
+    on a flow series this irregular. Returns None when the flows don't bracket
+    a root - typically because they never change sign.
+    """
+    dated = []
+    for d, amt in flows:
+        try:
+            dated.append((dt.date.fromisoformat(d[:10]), amt))
+        except (ValueError, TypeError):
+            continue
+    if len(dated) < 2:
+        return None
+    if not (any(a < 0 for _, a in dated) and any(a > 0 for _, a in dated)):
+        return None
+
+    t0 = min(d for d, _ in dated)
+
+    def npv(rate: float) -> float:
+        total = 0.0
+        for d, amt in dated:
+            years = (d - t0).days / 365.0
+            total += amt / ((1 + rate) ** years)
+        return total
+
+    lo, hi = -0.9999, 100.0
+    f_lo, f_hi = npv(lo), npv(hi)
+    if f_lo * f_hi > 0:
+        return None
+    for _ in range(200):
+        mid = (lo + hi) / 2
+        f_mid = npv(mid)
+        if abs(f_mid) < 1e-9:
+            return mid
+        if f_lo * f_mid < 0:
+            hi, f_hi = mid, f_mid
+        else:
+            lo, f_lo = mid, f_mid
+    return (lo + hi) / 2
 
 
 # --------------------------------------------------------------------------
@@ -144,9 +217,43 @@ def fetch_polymarket(wallet: str) -> dict:
     open_raw = poly_paged("/positions", wallet)
     closed_raw = poly_paged("/closed-positions", wallet)
 
+    # /activity carries the dated trade history the position endpoints lack:
+    # it supplies each market's entry date and the cash flows the IRR needs.
+    # YIELD rows are interest paid on idle USDC, not a trading result, so they
+    # are counted separately and kept out of the return calculation.
+    first_buy: dict[str, str] = {}
+    flows: list[tuple[str, float]] = []
+    yield_earned = 0.0
+    try:
+        for a in poly_paged("/activity", wallet):
+            kind = (a.get("type") or "").upper()
+            when = iso(a.get("timestamp"))
+            usdc = num(a.get("usdcSize"))
+            cid = a.get("conditionId")
+            if kind == "YIELD":
+                yield_earned += usdc
+                continue
+            if kind == "TRADE":
+                if (a.get("side") or "").upper() == "BUY":
+                    flows.append((when, -usdc))
+                    if cid and (cid not in first_buy or when < first_buy[cid]):
+                        first_buy[cid] = when
+                else:
+                    flows.append((when, usdc))
+            elif kind in ("REDEEM", "CONVERSION"):
+                flows.append((when, usdc))
+    except requests.RequestException:
+        pass
+
     positions = []
     for p in open_raw:
         slug = p.get("eventSlug") or p.get("slug") or ""
+        cid = p.get("conditionId")
+        cost = num(p.get("initialValue"))
+        pnl = num(p.get("cashPnl"))
+        opened = first_buy.get(cid)
+        held = days_between(opened, None)
+        roi = pnl / cost if cost else 0.0
         positions.append({
             "venue": "polymarket",
             "title": p.get("title"),
@@ -154,11 +261,14 @@ def fetch_polymarket(wallet: str) -> dict:
             "size": num(p.get("size")),
             "avg_price": num(p.get("avgPrice")),
             "cur_price": num(p.get("curPrice")),
-            "cost_basis": num(p.get("initialValue")),
+            "cost_basis": cost,
             "current_value": num(p.get("currentValue")),
-            "unrealized_pnl": num(p.get("cashPnl")),
+            "unrealized_pnl": pnl,
             "pct_pnl": num(p.get("percentPnl")),
             "fees": num(p.get("entryFeesUsdc")),
+            "opened_at": opened,
+            "days_held": held,
+            "annualized": annualize(roi, held),
             "end_date": iso(p.get("endDate")),
             "redeemable": bool(p.get("redeemable")),
             "url": f"https://polymarket.com/event/{slug}" if slug else None,
@@ -167,8 +277,13 @@ def fetch_polymarket(wallet: str) -> dict:
     closed = []
     for p in closed_raw:
         slug = p.get("eventSlug") or p.get("slug") or ""
+        cid = p.get("conditionId")
         cost = num(p.get("totalBought")) * num(p.get("avgPrice"))
         realized = num(p.get("realizedPnl"))
+        opened = first_buy.get(cid)
+        closed_at = iso(p.get("timestamp") or p.get("endDate"))
+        held = days_between(opened, closed_at)
+        roi = realized / cost if cost else 0.0
         closed.append({
             "venue": "polymarket",
             "title": p.get("title"),
@@ -177,8 +292,11 @@ def fetch_polymarket(wallet: str) -> dict:
             "avg_price": num(p.get("avgPrice")),
             "cost_basis": round(cost, 4),
             "realized_pnl": realized,
-            "pct_pnl": round(realized / cost * 100, 4) if cost else 0.0,
-            "closed_at": iso(p.get("timestamp") or p.get("endDate")),
+            "pct_pnl": round(roi * 100, 4),
+            "opened_at": opened,
+            "closed_at": closed_at,
+            "days_held": held,
+            "annualized": annualize(roi, held),
             "url": f"https://polymarket.com/event/{slug}" if slug else None,
         })
 
@@ -198,6 +316,8 @@ def fetch_polymarket(wallet: str) -> dict:
         "closed": closed,
         "reported_open_value": reported_value,
         "cash": None,  # Polymarket USDC balance is not exposed on the public API
+        "flows": flows,
+        "yield_earned": round(yield_earned, 4),
     }
 
 
@@ -366,32 +486,60 @@ def fetch_kalshi(key_id: str, pem: str) -> dict:
     except requests.RequestException:
         pass  # older fills unavailable; recent ones still count
 
+    def fill_action(f: dict) -> str:
+        a = f.get("action")
+        if a in ("buy", "sell"):
+            return a
+        return "buy" if f.get("book_side") == "bid" else "sell"
+
+    def fill_ticker(f: dict) -> str | None:
+        return f.get("ticker") or f.get("market_ticker")
+
+    # Which side of each market was actually held.
+    #
+    # Deliberately taken from the BUY fills only. On a sell, Kalshi reports
+    # outcome_side as the side of the book the trade crossed, not the side held
+    # - selling Yes is booked against No - so trusting it there prices the sale
+    # at the complement, turning a 13c exit into 87c. Buys are reliable (every
+    # cost basis reconciles against the app), so the buys fix the side and every
+    # fill in that market is then priced from that side's field.
+    flows: list[tuple[str, float]] = []
+    sides: dict[str, bool] = {}
+    for f in fills:
+        t = fill_ticker(f)
+        if t and fill_action(f) == "buy" and t not in sides:
+            sides[t] = (f.get("outcome_side") or f.get("side")) == "yes"
+
     books: dict[str, dict] = {}
     for f in fills:
-        t = f.get("ticker") or f.get("market_ticker")
+        t = fill_ticker(f)
         if not t:
             continue
         b = books.setdefault(t, {"cost": 0.0, "payout": 0.0, "bought": 0.0,
-                                 "fees": 0.0, "last": None, "side": None})
+                                 "sold": 0.0, "proceeds": 0.0, "settled": 0.0,
+                                 "fees": 0.0, "last": None, "first_buy": None,
+                                 "side": None})
         count = num(f.get("count_fp") or f.get("count"))
-        is_yes = (f.get("outcome_side") or f.get("side")) == "yes"
+        fee = num(f.get("fee_cost"))
+        is_yes = sides.get(t, (f.get("outcome_side") or f.get("side")) == "yes")
         price = opt(f, "yes_price_dollars" if is_yes else "no_price_dollars",
                     "yes_price" if is_yes else "no_price") or 0.0
-        fee = num(f.get("fee_cost"))
 
-        action = f.get("action")
-        if action not in ("buy", "sell"):
-            action = "buy" if f.get("book_side") == "bid" else "sell"
-
-        if action == "buy":
+        when = iso(f.get("created_time") or f.get("ts"))
+        b["side"] = "Yes" if is_yes else "No"
+        if fill_action(f) == "buy":
             b["cost"] += count * price + fee
             b["bought"] += count
-            b["side"] = "Yes" if is_yes else "No"
+            if when and (b["first_buy"] is None or when < b["first_buy"]):
+                b["first_buy"] = when
+            flows.append((when, -(count * price + fee)))
         else:
+            b["proceeds"] += count * price - fee
             b["payout"] += count * price - fee
+            b["sold"] += count
+            flows.append((when, count * price - fee))
         b["fees"] += fee
-        when = f.get("created_time") or f.get("ts")
-        if when and (b["last"] is None or str(when) > str(b["last"])):
+        if when and (b["last"] is None or when > b["last"]):
             b["last"] = when
 
     settled_at: dict[str, str] = {}
@@ -400,14 +548,29 @@ def fetch_kalshi(key_id: str, pem: str) -> dict:
         if not t:
             continue
         b = books.setdefault(t, {"cost": 0.0, "payout": 0.0, "bought": 0.0,
+                                 "sold": 0.0, "proceeds": 0.0, "settled": 0.0,
                                  "fees": 0.0, "last": None, "side": None})
-        b["payout"] += num(s.get("revenue")) / 100        # revenue is in cents
+        revenue = num(s.get("revenue")) / 100             # revenue is in cents
+        b["payout"] += revenue
+        b["settled"] += revenue
         if s.get("settled_time"):
             settled_at[t] = s["settled_time"]
+        if revenue:
+            flows.append((iso(s.get("settled_time")), revenue))
 
     still_open = {p["ticker"] for p in positions}
     closed_tickers = [t for t in books if t not in still_open]
     closed_meta = kalshi_market_meta(key_id, private_key, closed_tickers)
+
+    for p in positions:                      # entry dates for the open side
+        b = books.get(p["ticker"])
+        if not b:
+            continue
+        p["opened_at"] = b["first_buy"]
+        p["days_held"] = days_between(b["first_buy"], None)
+        p["annualized"] = annualize(
+            p["unrealized_pnl"] / p["cost_basis"] if p["cost_basis"] else 0.0,
+            p["days_held"])
 
     closed = []
     for t in closed_tickers:
@@ -415,6 +578,8 @@ def fetch_kalshi(key_id: str, pem: str) -> dict:
         if b["cost"] <= 0:
             continue
         realized = b["payout"] - b["cost"]
+        closed_on = iso(settled_at.get(t) or b["last"])
+        held = days_between(b["first_buy"], closed_on)
         closed.append({
             "venue": "kalshi",
             "title": (closed_meta.get(t) or {}).get("title") or t,
@@ -425,8 +590,18 @@ def fetch_kalshi(key_id: str, pem: str) -> dict:
             "cost_basis": round(b["cost"], 4),
             "realized_pnl": round(realized, 4),
             "pct_pnl": round(realized / b["cost"] * 100, 4),
-            "closed_at": iso(settled_at.get(t) or b["last"]),
+            "opened_at": b["first_buy"],
+            "closed_at": closed_on,
+            "days_held": held,
+            "annualized": annualize(realized / b["cost"], held),
             "url": f"https://kalshi.com/markets/{t}",
+            # Kept so a future mismatch against the app can be traced to the
+            # sell leg or the settlement leg without re-deriving anything.
+            "payout": round(b["payout"], 4),
+            "sold": round(b["sold"], 4),
+            "sale_proceeds": round(b["proceeds"], 4),
+            "settlement_payout": round(b["settled"], 4),
+            "fees": round(b["fees"], 4),
         })
 
     cash = None
@@ -437,18 +612,37 @@ def fetch_kalshi(key_id: str, pem: str) -> dict:
         pass
 
     return {"ok": True, "positions": positions, "closed": closed,
-            "reported_open_value": None, "cash": cash}
+            "reported_open_value": None, "cash": cash,
+            "flows": flows, "yield_earned": 0.0}
 
 
 # --------------------------------------------------------------------------
 # assemble
 # --------------------------------------------------------------------------
 
-def totals(positions: list[dict], closed: list[dict]) -> dict:
+def totals(positions: list[dict], closed: list[dict],
+           flows: list[tuple[str, float]] | None = None) -> dict:
     open_value = sum(p["current_value"] for p in positions)
     unrealized = sum(p["unrealized_pnl"] for p in positions)
     realized = sum(c["realized_pnl"] for c in closed)
     wins = [c for c in closed if c["realized_pnl"] > 0]
+    staked = sum(p["cost_basis"] for p in positions) + \
+        sum(c["cost_basis"] for c in closed)
+
+    # Money-weighted return: every buy, sell and settlement at its own date,
+    # with the open positions marked to market today as a closing inflow. This
+    # is the figure comparable to other investments, because it accounts for
+    # both timing and how much was at risk - unlike a simple sum of per-bet
+    # percentages, which weights a $10 punt the same as a $100 one.
+    irr = None
+    if flows:
+        series = list(flows)
+        if open_value:
+            series.append((TODAY.isoformat(), open_value))
+        irr = xirr(series)
+
+    held = [c["days_held"] for c in closed if c.get("days_held") is not None]
+
     return {
         "open_value": round(open_value, 2),
         "open_positions": len(positions),
@@ -459,6 +653,10 @@ def totals(positions: list[dict], closed: list[dict]) -> dict:
         "win_rate": round(len(wins) / len(closed) * 100, 1) if closed else None,
         "best_win": round(max((c["realized_pnl"] for c in closed), default=0), 2),
         "worst_loss": round(min((c["realized_pnl"] for c in closed), default=0), 2),
+        "staked": round(staked, 2),
+        "roi": round((unrealized + realized) / staked, 6) if staked else None,
+        "irr": round(irr, 6) if irr is not None else None,
+        "median_days_held": sorted(held)[len(held) // 2] if held else None,
     }
 
 
@@ -477,12 +675,14 @@ def main() -> int:
         except Exception as exc:
             venues["polymarket"] = {"ok": False, "error": str(exc)[:200],
                                     "positions": [], "closed": [],
-                                    "reported_open_value": None, "cash": None}
+                                    "reported_open_value": None, "cash": None,
+                                    "flows": [], "yield_earned": 0.0}
             print(f"polymarket: FAILED - {str(exc)[:200]}", file=sys.stderr)
     else:
         venues["polymarket"] = {"ok": False, "error": "POLYMARKET_WALLET not set",
                                 "positions": [], "closed": [],
-                                "reported_open_value": None, "cash": None}
+                                "reported_open_value": None, "cash": None,
+                                "flows": [], "yield_earned": 0.0}
 
     if key_id and pem:
         try:
@@ -494,16 +694,19 @@ def main() -> int:
             # which only ever travels in a header.
             venues["kalshi"] = {"ok": False, "error": str(exc)[:200],
                                 "positions": [], "closed": [],
-                                "reported_open_value": None, "cash": None}
+                                "reported_open_value": None, "cash": None,
+                                "flows": [], "yield_earned": 0.0}
             print(f"kalshi: FAILED - {str(exc)[:200]}", file=sys.stderr)
     else:
         venues["kalshi"] = {"ok": False, "error": "no credentials configured",
                             "positions": [], "closed": [],
-                            "reported_open_value": None, "cash": None}
+                            "reported_open_value": None, "cash": None,
+                            "flows": [], "yield_earned": 0.0}
         print("kalshi: skipped (no credentials)")
 
     all_positions = [p for v in venues.values() for p in v["positions"]]
     all_closed = [c for v in venues.values() for c in v["closed"]]
+    all_flows = [f for v in venues.values() for f in (v.get("flows") or [])]
 
     data = {
         "generated_at": dt.datetime.now(dt.timezone.utc).isoformat(timespec="seconds"),
@@ -513,11 +716,12 @@ def main() -> int:
                 "error": v.get("error"),
                 "cash": v.get("cash"),
                 "reported_open_value": v.get("reported_open_value"),
-                **totals(v["positions"], v["closed"]),
+                "yield_earned": v.get("yield_earned"),
+                **totals(v["positions"], v["closed"], v.get("flows")),
             }
             for name, v in venues.items()
         },
-        "totals": totals(all_positions, all_closed),
+        "totals": totals(all_positions, all_closed, all_flows),
         "positions": sorted(all_positions, key=lambda p: -p["current_value"]),
         "closed": sorted(all_closed, key=lambda c: (c["closed_at"] or ""), reverse=True),
     }

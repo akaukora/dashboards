@@ -149,7 +149,9 @@
   .pnl-bar { position: absolute; top: 3px; height: 9px; }
   .pnl-bar.p { border-radius: 0 4px 4px 0; background: var(--gain); }
   .pnl-bar.n { border-radius: 4px 0 0 4px; background: var(--loss); }
-  .pnl-val { font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; }
+  .pnl-val { font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; line-height: 1.3; }
+  .pnl-val .ann { display: block; font-size: 11px; color: var(--text-muted); }
+  .pnl-name .held { color: var(--text-muted); font-size: 11.5px; margin-left: 8px; }
 
   .legend { display: flex; gap: 16px; font-size: 12.5px; color: var(--text-secondary); margin: 0 0 12px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; }
@@ -190,7 +192,9 @@
   <div class="card" id="open-card"></div>
 
   <h2>Settled markets</h2>
-  <p class="hint">Realized profit and loss per resolved market.</p>
+  <p class="hint">Realized profit and loss per resolved market, with the annualized
+    rate beneath. Positions held under a week aren't annualized — the compounding
+    turns noise into a headline.</p>
   <div class="legend">
     <span><i style="background:var(--gain)"></i>Profit</span>
     <span><i style="background:var(--loss)"></i>Loss</span>
@@ -220,6 +224,12 @@ const cls = n => n >= 0 ? 'pos' : 'neg';
 // A missing price is shown as unknown, never as zero — a zero here would read
 // as a total loss when it actually means the venue returned no quote.
 const price3 = p => (p == null ? '—' : p.toFixed(3));
+// Annualized figures are stored as fractions. Past a few hundred percent the
+// digits stop meaning anything, so they're capped rather than printed in full.
+const rate = r => r == null ? '—'
+  : r > 20 ? '>+2,000%'
+  : (r >= 0 ? '+' : '') + (r * 100).toFixed(r > 1 || r < -1 ? 0 : 1) + '%';
+const days = d => d == null ? '—' : d < 365 ? d + 'd' : (d / 365).toFixed(1) + 'y';
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
@@ -273,9 +283,15 @@ function renderTiles() {
   const t = scope();
   const cards = [
     ['Position value', usd(t.open_value), `${t.open_positions} open`, ''],
-    ['Unrealized P&L', signed(t.unrealized_pnl), 'on open positions', cls(t.unrealized_pnl)],
-    ['Realized P&L', signed(t.realized_pnl), `${t.settled_markets} settled`, cls(t.realized_pnl)],
-    ['Total P&L', signed(t.total_pnl), 'realized + unrealized', cls(t.total_pnl)],
+    ['Total P&L', signed(t.total_pnl),
+     t.roi == null ? 'realized + unrealized'
+                   : `${rate(t.roi)} on ${usd(t.staked)} staked`, cls(t.total_pnl)],
+    ['Annualized return', t.irr == null ? '—' : rate(t.irr),
+     'money-weighted (IRR)', t.irr == null ? '' : cls(t.irr)],
+    ['Realized P&L', signed(t.realized_pnl),
+     `${t.settled_markets} settled` +
+     (t.median_days_held != null ? `, median ${t.median_days_held}d` : ''),
+     cls(t.realized_pnl)],
     ['Win rate', t.win_rate == null ? '—' : t.win_rate.toFixed(0) + '%',
      t.settled_markets ? `best ${signed(t.best_win)}` : 'no settled markets', '']
   ];
@@ -305,15 +321,20 @@ function renderOpen() {
       `${p.size.toFixed(2)} contracts @ ${p.avg_price.toFixed(3)} → ${price3(p.cur_price)}` +
       (p.price_basis && p.price_basis !== 'last' ? ` (${esc(p.price_basis)})` : '') + `<br>` +
       `Cost ${esc(usd(p.cost_basis))} · Now ${esc(usd(p.current_value))}` +
+      (p.opened_at ? `<br>Opened ${esc(p.opened_at)} (${esc(days(p.days_held))} ago)` : '') +
+      (p.annualized != null ? `<br>Annualized ${esc(rate(p.annualized))}` : '') +
       (p.end_date ? `<br>Resolves ${esc(p.end_date)}` : '') + `">
       <td><div class="market"><span class="dot" style="background:${v.color}"></span>
         <div>${title}<div class="venue-label">${esc(v.name)}${p.redeemable ? ' · redeemable' : ''}</div></div>
       </div></td>
       <td><span class="side">${esc(p.outcome)}</span></td>
       <td class="num col-opt">${price3(p.cur_price)}</td>
+      <td class="num col-opt">${days(p.days_held)}</td>
       <td class="num">${usd(p.current_value)}</td>
       <td class="num ${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}<br>
         <span style="font-size:11.5px;opacity:.75">${pct(p.pct_pnl)}</span></td>
+      <td class="num col-opt ${p.annualized == null ? '' : cls(p.annualized)}"
+          style="opacity:${p.annualized == null ? .5 : 1}">${rate(p.annualized)}</td>
       <td class="bar-cell"><div class="bar-track">
         <div class="bar-fill" style="width:${w}%;background:${v.color}"></div></div></td>
     </tr>`;
@@ -321,7 +342,8 @@ function renderOpen() {
 
   card.innerHTML = `<table><thead><tr>
     <th>Market</th><th>Side</th><th class="num col-opt">Price</th>
-    <th class="num">Value</th><th class="num">Unrealized</th><th></th>
+    <th class="num col-opt">Held</th><th class="num">Value</th>
+    <th class="num">Unrealized</th><th class="num col-opt">Ann.</th><th></th>
   </tr></thead><tbody>${body}</tbody></table>`;
 
   card.querySelectorAll('tbody tr').forEach(tr => bindTip(tr, tr.dataset.tip));
@@ -345,15 +367,19 @@ function renderClosed() {
     return `<div class="pnl-row" data-tip="${esc(v.name)} · ${esc(c.outcome)}<br>` +
       `${c.size.toFixed(2)} contracts @ ${c.avg_price.toFixed(3)}<br>` +
       `Cost ${esc(usd(c.cost_basis))} · ${esc(signed(c.realized_pnl))} (${esc(pct(c.pct_pnl))})` +
-      (c.closed_at ? `<br>Settled ${esc(c.closed_at)}` : '') + `">
+      (c.days_held != null ? `<br>Held ${esc(days(c.days_held))}` +
+        (c.annualized != null ? ` · ${esc(rate(c.annualized))} annualized`
+                              : ' · too short to annualize') : '') +
+      (c.opened_at ? `<br>${esc(c.opened_at)} → ${esc(c.closed_at || '')}` : '') + `">
       <div class="pnl-name">${c.url
         ? `<a href="${esc(c.url)}" target="_blank" rel="noopener" style="color:inherit;text-decoration:none">${esc(c.title)}</a>`
-        : esc(c.title)}</div>
+        : esc(c.title)}<span class="held">${days(c.days_held)}</span></div>
       <div class="pnl-plot">
         <div class="pnl-axis" style="left:${ZERO}%"></div>
         <div class="pnl-bar ${p ? 'p' : 'n'}" style="${p ? `left:${ZERO}%` : `right:${100 - ZERO}%`};width:${w}%"></div>
       </div>
-      <div class="pnl-val ${cls(c.realized_pnl)}">${signed(c.realized_pnl)}</div>
+      <div class="pnl-val ${cls(c.realized_pnl)}">${signed(c.realized_pnl)}
+        <span class="ann">${rate(c.annualized)}</span></div>
     </div>`;
   }).join('') + '</div>';
 
@@ -393,8 +419,13 @@ fetch('data.json?' + Date.now())
       when.toLocaleString('en-US', { dateStyle: 'medium', timeStyle: 'short' });
     document.getElementById('footer').innerHTML =
       'Polymarket figures from the public Data API; Kalshi from the authenticated ' +
-      'portfolio API. Kalshi P&amp;L is reconstructed from cost basis, settlements and fees, ' +
-      'so it is computed differently from Polymarket\'s own reported numbers.';
+      'portfolio API. Kalshi P&amp;L is reconstructed from fills, settlements and fees, ' +
+      'so it is computed differently from Polymarket\'s own reported numbers. ' +
+      '<br><br><b>Annualized return</b> is an IRR over every dated buy, sell and settlement, ' +
+      'with open positions marked to market today. It weights by money and by time, so it ' +
+      'is not the average of the per-market rates — a large slow position moves it more than ' +
+      'a small fast one. It also assumes capital is continuously redeployed at the same rate, ' +
+      'which is exactly the assumption a run of short winning trades flatters.';
     renderNotices(); renderAll();
   })
   .catch(e => {
