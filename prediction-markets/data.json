@@ -1,11 +1,12 @@
 {
-  "generated_at": "2026-09-18T06:45:56+00:00",
+  "generated_at": "2026-09-18T07:43:34+00:00",
   "venues": {
     "polymarket": {
       "ok": true,
       "error": null,
       "cash": null,
       "reported_open_value": 186.1937,
+      "yield_earned": 0.3414,
       "open_value": 186.19,
       "open_positions": 5,
       "unrealized_pnl": 34.19,
@@ -14,34 +15,47 @@
       "settled_markets": 22,
       "win_rate": 81.8,
       "best_win": 72.2,
-      "worst_loss": -32.58
+      "worst_loss": -32.58,
+      "staked": 1290.67,
+      "roi": 0.159709,
+      "irr": 2.04015,
+      "median_days_held": 24
     },
     "kalshi": {
       "ok": true,
       "error": null,
       "cash": 251.1518,
       "reported_open_value": null,
+      "yield_earned": 0.0,
       "open_value": 198.95,
       "open_positions": 4,
       "unrealized_pnl": 8.99,
-      "realized_pnl": 74.28,
-      "total_pnl": 83.27,
+      "realized_pnl": 96.84,
+      "total_pnl": 105.84,
       "settled_markets": 8,
-      "win_rate": 37.5,
-      "best_win": 170.48,
-      "worst_loss": -61.54
+      "win_rate": 75.0,
+      "best_win": 64.76,
+      "worst_loss": -29.99,
+      "staked": 523.91,
+      "roi": 0.202013,
+      "irr": 2.406722,
+      "median_days_held": 27
     }
   },
   "totals": {
     "open_value": 385.15,
     "open_positions": 9,
     "unrealized_pnl": 43.19,
-    "realized_pnl": 246.22,
-    "total_pnl": 289.4,
+    "realized_pnl": 268.78,
+    "total_pnl": 311.97,
     "settled_markets": 30,
-    "win_rate": 70.0,
-    "best_win": 170.48,
-    "worst_loss": -61.54
+    "win_rate": 80.0,
+    "best_win": 72.2,
+    "worst_loss": -32.58,
+    "staked": 1814.58,
+    "roi": 0.171923,
+    "irr": 2.161435,
+    "median_days_held": 27
   },
   "positions": [
     {
@@ -61,7 +75,10 @@
       "fees": 0.2616,
       "end_date": "2027-01-01",
       "redeemable": false,
-      "url": "https://kalshi.com/markets/KXTRUMPIRAN-27JAN01"
+      "url": "https://kalshi.com/markets/KXTRUMPIRAN-27JAN01",
+      "opened_at": "2026-08-06",
+      "days_held": 43,
+      "annualized": 0.04393962645617777
     },
     {
       "venue": "polymarket",
@@ -75,6 +92,9 @@
       "unrealized_pnl": 21.923,
       "pct_pnl": 43.846,
       "fees": 0.69999,
+      "opened_at": "2026-05-07",
+      "days_held": 134,
+      "annualized": 1.6921264003117673,
       "end_date": "2026-09-13",
       "redeemable": false,
       "url": "https://polymarket.com/event/next-prime-minister-of-sweden"
@@ -91,6 +111,9 @@
       "unrealized_pnl": 9.8101,
       "pct_pnl": 19.6202,
       "fees": 0.0,
+      "opened_at": "2026-05-28",
+      "days_held": 113,
+      "annualized": 0.7836759586529185,
       "end_date": "2027-01-01",
       "redeemable": false,
       "url": "https://polymarket.com/event/us-obtains-iranian-enriched-uranium-by"
@@ -112,7 +135,10 @@
       "fees": 0.7921,
       "end_date": "2027-02-01",
       "redeemable": false,
-      "url": "https://kalshi.com/markets/CONTROLH-2026-D"
+      "url": "https://kalshi.com/markets/CONTROLH-2026-D",
+      "opened_at": "2026-06-17",
+      "days_held": 93,
+      "annualized": 0.6582009749119726
     },
     {
       "venue": "polymarket",
@@ -126,6 +152,9 @@
       "unrealized_pnl": 0.9802,
       "pct_pnl": 3.2673,
       "fees": 0.04319,
+      "opened_at": "2026-06-16",
+      "days_held": 94,
+      "annualized": 0.1329690960161889,
       "end_date": "2026-10-01",
       "redeemable": false,
       "url": "https://polymarket.com/event/will-the-us-confirm-that-aliens-exist-before-2027"
@@ -142,6 +171,9 @@
       "unrealized_pnl": 3.4801,
       "pct_pnl": 17.4005,
       "fees": 0.0,
+      "opened_at": "2026-06-03",
+      "days_held": 107,
+      "annualized": 0.7284636924651511,
       "end_date": "2027-01-01",
       "redeemable": false,
       "url": "https://polymarket.com/event/will-the-us-invade-cuba-in-2026"
@@ -163,7 +195,10 @@
       "fees": 0.663,
       "end_date": "2027-11-03",
       "redeemable": false,
-      "url": "https://kalshi.com/markets/SENATETX-26-D"
+      "url": "https://kalshi.com/markets/SENATETX-26-D",
+      "opened_at": "2026-08-25",
+      "days_held": 24,
+      "annualized": 2.249970240238231
     },
     {
       "venue": "kalshi",
@@ -182,7 +217,10 @@
       "fees": 0.0,
       "end_date": "2027-01-01",
       "redeemable": false,
-      "url": "https://kalshi.com/markets/KXPAHLAVIHEAD-27JAN-RPAH"
+      "url": "https://kalshi.com/markets/KXPAHLAVIHEAD-27JAN-RPAH",
+      "opened_at": "2026-07-28",
+      "days_held": 52,
+      "annualized": 0.0
     },
     {
       "venue": "polymarket",
@@ -196,6 +234,9 @@
       "unrealized_pnl": -1.9999,
       "pct_pnl": -99.997,
       "fees": 0.0,
+      "opened_at": "2026-06-15",
+      "days_held": 95,
+      "annualized": null,
       "end_date": "2026-06-15",
       "redeemable": true,
       "url": "https://polymarket.com/event/us-x-iran-permanent-peace-deal-by"
@@ -212,8 +253,16 @@
       "cost_basis": 99.9921,
       "realized_pnl": 10.3379,
       "pct_pnl": 10.3387,
+      "opened_at": "2026-06-17",
       "closed_at": "2026-09-17",
-      "url": "https://kalshi.com/markets/KXSWEDENPARLI-26-SDP"
+      "days_held": 92,
+      "annualized": 0.47746912182245116,
+      "url": "https://kalshi.com/markets/KXSWEDENPARLI-26-SDP",
+      "payout": 110.33,
+      "sold": 0.0,
+      "sale_proceeds": 0.0,
+      "settlement_payout": 110.33,
+      "fees": 0.6951
     },
     {
       "venue": "kalshi",
@@ -223,10 +272,18 @@
       "size": 134.55,
       "avg_price": 0.5574,
       "cost_basis": 74.9966,
-      "realized_pnl": -61.5416,
-      "pct_pnl": -82.0592,
+      "realized_pnl": 46.0984,
+      "pct_pnl": 61.4673,
+      "opened_at": "2026-06-18",
       "closed_at": "2026-09-16",
-      "url": "https://kalshi.com/markets/FEDHIKE-26DEC31"
+      "days_held": 90,
+      "annualized": 5.98069726270449,
+      "url": "https://kalshi.com/markets/FEDHIKE-26DEC31",
+      "payout": 121.095,
+      "sold": 134.55,
+      "sale_proceeds": 121.095,
+      "settlement_payout": 0.0,
+      "fees": 2.3396
     },
     {
       "venue": "kalshi",
@@ -236,10 +293,18 @@
       "size": 235.41,
       "avg_price": 0.1274,
       "cost_basis": 29.9894,
-      "realized_pnl": 170.4791,
-      "pct_pnl": 568.4645,
+      "realized_pnl": 0.9839,
+      "pct_pnl": 3.2808,
+      "opened_at": "2026-06-26",
       "closed_at": "2026-07-28",
-      "url": "https://kalshi.com/markets/KXPRESNOMD-28-JOSS"
+      "days_held": 32,
+      "annualized": 0.4451476715809386,
+      "url": "https://kalshi.com/markets/KXPRESNOMD-28-JOSS",
+      "payout": 30.9733,
+      "sold": 235.41,
+      "sale_proceeds": 30.9733,
+      "settlement_payout": 0.0,
+      "fees": 3.7243
     },
     {
       "venue": "kalshi",
@@ -251,8 +316,16 @@
       "cost_basis": 9.9962,
       "realized_pnl": 64.7638,
       "pct_pnl": 647.8842,
+      "opened_at": "2026-07-04",
       "closed_at": "2026-07-19",
-      "url": "https://kalshi.com/markets/KXMENWORLDCUP-26-ES"
+      "days_held": 15,
+      "annualized": 1.8335918166663312e+21,
+      "url": "https://kalshi.com/markets/KXMENWORLDCUP-26-ES",
+      "payout": 74.76,
+      "sold": 0.0,
+      "sale_proceeds": 0.0,
+      "settlement_payout": 74.76,
+      "fees": 0.5764
     },
     {
       "venue": "kalshi",
@@ -264,8 +337,16 @@
       "cost_basis": 29.9928,
       "realized_pnl": -29.9928,
       "pct_pnl": -100.0,
+      "opened_at": "2026-06-18",
       "closed_at": "2026-07-15",
-      "url": "https://kalshi.com/markets/KXMENWORLDCUP-26-GB"
+      "days_held": 27,
+      "annualized": null,
+      "url": "https://kalshi.com/markets/KXMENWORLDCUP-26-GB",
+      "payout": 0.0,
+      "sold": 0.0,
+      "sale_proceeds": 0.0,
+      "settlement_payout": 0.0,
+      "fees": 1.7237
     },
     {
       "venue": "kalshi",
@@ -275,10 +356,18 @@
       "size": 56.04,
       "avg_price": 0.8921,
       "cost_basis": 49.9947,
-      "realized_pnl": -46.0112,
-      "pct_pnl": -92.0322,
+      "realized_pnl": 1.5107,
+      "pct_pnl": 3.0217,
+      "opened_at": "2026-06-17",
       "closed_at": "2026-07-14",
-      "url": "https://kalshi.com/markets/KXALIENS-27"
+      "days_held": 27,
+      "annualized": 0.4954716706142268,
+      "url": "https://kalshi.com/markets/KXALIENS-27",
+      "payout": 51.5054,
+      "sold": 56.04,
+      "sale_proceeds": 51.5054,
+      "settlement_payout": 0.0,
+      "fees": 0.6749
     },
     {
       "venue": "polymarket",
@@ -289,7 +378,10 @@
       "cost_basis": 49.9918,
       "realized_pnl": 13.1164,
       "pct_pnl": 26.2371,
+      "opened_at": "2026-05-26",
       "closed_at": "2026-07-07",
+      "days_held": 42,
+      "annualized": 6.5746654054389895,
       "url": "https://polymarket.com/event/strait-of-hormuz-traffic-returns-to-normal-by-end-of-june"
     },
     {
@@ -301,7 +393,10 @@
       "cost_basis": 49.9917,
       "realized_pnl": 10.6131,
       "pct_pnl": 21.2297,
+      "opened_at": "2026-04-14",
       "closed_at": "2026-07-01",
+      "days_held": 78,
+      "annualized": 1.4617721769311367,
       "url": "https://polymarket.com/event/cl-hit-jun-2026"
     },
     {
@@ -313,7 +408,10 @@
       "cost_basis": 19.9977,
       "realized_pnl": 2.7014,
       "pct_pnl": 13.5086,
+      "opened_at": "2026-05-26",
       "closed_at": "2026-07-01",
+      "days_held": 36,
+      "annualized": 2.6135137729575977,
       "url": "https://polymarket.com/event/ex-cuba-leader-raul-castro-in-us-custody-by"
     },
     {
@@ -325,7 +423,10 @@
       "cost_basis": 66.813,
       "realized_pnl": 1.5172,
       "pct_pnl": 2.2708,
+      "opened_at": "2026-03-26",
       "closed_at": "2026-07-01",
+      "days_held": 97,
+      "annualized": 0.08816462542072756,
       "url": "https://polymarket.com/event/will-ukraine-recapture-crimean-territory-by-june-30-2026"
     },
     {
@@ -337,7 +438,10 @@
       "cost_basis": 29.9967,
       "realized_pnl": 1.2926,
       "pct_pnl": 4.3091,
+      "opened_at": "2026-06-15",
       "closed_at": "2026-07-01",
+      "days_held": 16,
+      "annualized": 1.618055305504487,
       "url": "https://polymarket.com/event/israel-withdraws-from-lebanon-by"
     },
     {
@@ -349,7 +453,10 @@
       "cost_basis": 29.9968,
       "realized_pnl": 1.0669,
       "pct_pnl": 3.5567,
+      "opened_at": "2026-06-07",
       "closed_at": "2026-07-01",
+      "days_held": 24,
+      "annualized": 0.701515422171076,
       "url": "https://polymarket.com/event/kharg-island-no-longer-under-iranian-control-by-march-31"
     },
     {
@@ -361,7 +468,10 @@
       "cost_basis": 9.9988,
       "realized_pnl": 0.7526,
       "pct_pnl": 7.5269,
+      "opened_at": "2026-05-26",
       "closed_at": "2026-07-01",
+      "days_held": 36,
+      "annualized": 1.087120125866841,
       "url": "https://polymarket.com/event/us-obtains-iranian-enriched-uranium-by"
     },
     {
@@ -373,7 +483,10 @@
       "cost_basis": 29.9968,
       "realized_pnl": 0.0596,
       "pct_pnl": 0.1987,
+      "opened_at": "2026-06-07",
       "closed_at": "2026-07-01",
+      "days_held": 24,
+      "annualized": 0.030647353556515045,
       "url": "https://polymarket.com/event/ukraine-agrees-not-to-join-nato-by-june-30"
     },
     {
@@ -384,10 +497,18 @@
       "size": 48.04,
       "avg_price": 0.6035,
       "cost_basis": 28.9923,
-      "realized_pnl": -23.7645,
-      "pct_pnl": -81.9682,
+      "realized_pnl": 13.1322,
+      "pct_pnl": 45.2955,
+      "opened_at": "2026-06-22",
       "closed_at": "2026-06-29",
-      "url": "https://kalshi.com/markets/KXCABILLIONAIRETAX-26NOV03"
+      "days_held": 7,
+      "annualized": 288594135.60957587,
+      "url": "https://kalshi.com/markets/KXCABILLIONAIRETAX-26NOV03",
+      "payout": 42.1245,
+      "sold": 48.04,
+      "sale_proceeds": 42.1245,
+      "settlement_payout": 0.0,
+      "fees": 1.1595
     },
     {
       "venue": "polymarket",
@@ -398,7 +519,10 @@
       "cost_basis": 132.9564,
       "realized_pnl": 1.7786,
       "pct_pnl": 1.3377,
+      "opened_at": "2026-03-23",
       "closed_at": "2026-06-17",
+      "days_held": 86,
+      "annualized": 0.058020208719295585,
       "url": "https://polymarket.com/event/us-military-draft-authorized-in-2026"
     },
     {
@@ -411,8 +535,16 @@
       "cost_basis": 9.9919,
       "realized_pnl": -9.9919,
       "pct_pnl": -100.0,
+      "opened_at": "2026-06-17",
       "closed_at": "2026-06-17",
-      "url": "https://kalshi.com/markets/KXUSIRANMOU-27JAN01-26JUN20"
+      "days_held": 0,
+      "annualized": null,
+      "url": "https://kalshi.com/markets/KXUSIRANMOU-27JAN01-26JUN20",
+      "payout": 0.0,
+      "sold": 0.0,
+      "sale_proceeds": 0.0,
+      "settlement_payout": 0.0,
+      "fees": 0.1651
     },
     {
       "venue": "polymarket",
@@ -423,7 +555,10 @@
       "cost_basis": 70.3669,
       "realized_pnl": -32.5823,
       "pct_pnl": -46.3034,
+      "opened_at": "2026-03-30",
       "closed_at": "2026-06-10",
+      "days_held": 72,
+      "annualized": -0.9572457154704659,
       "url": "https://polymarket.com/event/iran-leadership-change-by"
     },
     {
@@ -435,7 +570,10 @@
       "cost_basis": 10.1916,
       "realized_pnl": 17.5858,
       "pct_pnl": 172.5513,
+      "opened_at": "2026-05-29",
       "closed_at": "2026-05-30",
+      "days_held": 1,
+      "annualized": null,
       "url": "https://polymarket.com/event/wch-can-fin-2026-05-30"
     },
     {
@@ -447,7 +585,10 @@
       "cost_basis": 5.0463,
       "realized_pnl": 2.1998,
       "pct_pnl": 43.5921,
+      "opened_at": "2026-05-29",
       "closed_at": "2026-05-30",
+      "days_held": 1,
+      "annualized": null,
       "url": "https://polymarket.com/event/wch-swi-can1-2026-05-31"
     },
     {
@@ -459,7 +600,10 @@
       "cost_basis": 49.9906,
       "realized_pnl": 0.0061,
       "pct_pnl": 0.0122,
+      "opened_at": "2026-03-15",
       "closed_at": "2026-05-29",
+      "days_held": 75,
+      "annualized": 0.0005939856333205817,
       "url": "https://polymarket.com/event/balance-of-power-2026-midterms"
     },
     {
@@ -471,7 +615,10 @@
       "cost_basis": 49.9928,
       "realized_pnl": 28.6792,
       "pct_pnl": 57.3667,
+      "opened_at": "2026-04-14",
       "closed_at": "2026-05-17",
+      "days_held": 33,
+      "annualized": 149.652173488024,
       "url": "https://polymarket.com/event/eurovision-winner-2026"
     },
     {
@@ -483,7 +630,10 @@
       "cost_basis": 5.219,
       "realized_pnl": -5.2237,
       "pct_pnl": -100.0892,
+      "opened_at": "2026-05-14",
       "closed_at": "2026-05-17",
+      "days_held": 3,
+      "annualized": null,
       "url": "https://polymarket.com/event/eurovision-winner-2026"
     },
     {
@@ -495,7 +645,10 @@
       "cost_basis": 15.6983,
       "realized_pnl": -15.7062,
       "pct_pnl": -100.0505,
+      "opened_at": "2026-05-13",
       "closed_at": "2026-05-17",
+      "days_held": 4,
+      "annualized": null,
       "url": "https://polymarket.com/event/eurovision-winner-2026"
     },
     {
@@ -507,7 +660,10 @@
       "cost_basis": 115.0725,
       "realized_pnl": 52.6629,
       "pct_pnl": 45.765,
+      "opened_at": "2026-04-05",
       "closed_at": "2026-05-09",
+      "days_held": 34,
+      "annualized": 56.130098233104725,
       "url": "https://polymarket.com/event/next-prime-minister-of-hungary"
     },
     {
@@ -519,7 +675,10 @@
       "cost_basis": 83.3831,
       "realized_pnl": -5.3809,
       "pct_pnl": -6.4532,
+      "opened_at": "2026-04-15",
       "closed_at": "2026-05-03",
+      "days_held": 18,
+      "annualized": -0.7414594561532494,
       "url": "https://polymarket.com/event/will-the-us-invade-iran-before-2027"
     },
     {
@@ -531,7 +690,10 @@
       "cost_basis": 78.4803,
       "realized_pnl": 72.2004,
       "pct_pnl": 91.9981,
+      "opened_at": "2026-04-12",
       "closed_at": "2026-04-13",
+      "days_held": 1,
+      "annualized": null,
       "url": "https://polymarket.com/event/what-price-will-wti-hit-in-april-2026"
     },
     {
@@ -543,7 +705,10 @@
       "cost_basis": 49.9997,
       "realized_pnl": 20.3682,
       "pct_pnl": 40.7366,
+      "opened_at": "2026-03-13",
       "closed_at": "2026-04-05",
+      "days_held": 23,
+      "annualized": 225.54671505974326,
       "url": "https://polymarket.com/event/us-forces-enter-iran-by"
     },
     {
@@ -555,7 +720,10 @@
       "cost_basis": 120.9376,
       "realized_pnl": 1.9788,
       "pct_pnl": 1.6362,
+      "opened_at": "2026-03-15",
       "closed_at": "2026-04-01",
+      "days_held": 17,
+      "annualized": 0.4168868644726955,
       "url": "https://polymarket.com/event/ukraine-signs-peace-deal-with-russia-by-march-31"
     },
     {
@@ -567,7 +735,10 @@
       "cost_basis": 64.5524,
       "realized_pnl": 2.2518,
       "pct_pnl": 3.4883,
+      "opened_at": "2026-03-14",
       "closed_at": "2026-03-25",
+      "days_held": 11,
+      "annualized": 2.1197701629147887,
       "url": "https://polymarket.com/event/iran-nuke-before-2027"
     }
   ]
