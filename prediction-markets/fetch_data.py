@@ -55,6 +55,57 @@ def num(value: Any, default: float = 0.0) -> float:
         return default
 
 
+def opt(obj: dict, *keys) -> float | None:
+    """First present, parseable key -> float. None when none of them are set.
+
+    Kalshi serves prices as fixed-point dollar strings (last_price_dollars) and
+    previously as integer cents (last_price). Reading a missing key as 0.0 is
+    what silently priced positions at zero, so absence must stay distinguishable
+    from a real zero.
+    """
+    for k in keys:
+        if obj.get(k) is None:
+            continue
+        try:
+            v = float(obj[k])
+        except (TypeError, ValueError):
+            continue
+        return v / 100 if k.endswith(("_price", "_bid", "_ask")) else v
+    return None
+
+
+def kalshi_price(m: dict, is_yes: bool) -> tuple[float | None, str]:
+    """Value per contract for the side held, and how it was derived.
+
+    Uses the last traded price, because that is what Kalshi's own portfolio
+    screen uses for "Market value" - matching it keeps the dashboard checkable
+    against the app. last_price_dollars is always the YES price, so a NO
+    position is worth its complement.
+
+    The bid/ask midpoint is arguably the better mark on a thin market, where the
+    last trade can sit well away from the live book. It is the fallback here
+    rather than the default only so the two screens agree; swap the order below
+    to prefer it.
+    """
+    last = opt(m, "last_price_dollars", "last_price")
+    if last is not None and 0 < last < 1:
+        return (last if is_yes else 1 - last), "last"
+
+    side = "yes" if is_yes else "no"
+    bid = opt(m, f"{side}_bid_dollars", f"{side}_bid")
+    ask = opt(m, f"{side}_ask_dollars", f"{side}_ask")
+
+    # A 0/1 book means "no quotes", not a real spread - that is not a 50c mid.
+    if bid is not None and ask is not None and ask > bid and (ask - bid) <= 0.25:
+        return (bid + ask) / 2, "mid"
+
+    for one_sided in (bid, ask):
+        if one_sided is not None and 0 < one_sided < 1:
+            return one_sided, "quote"
+
+    return None, "unavailable"
+
+
 def iso(ts: Any) -> str | None:
     """Unix seconds or an ISO string -> ISO date string."""
     if ts is None:
@@ -249,64 +300,133 @@ def fetch_kalshi(key_id: str, pem: str) -> dict:
         ticker = p.get("ticker", "")
         m = meta.get(ticker, {})
         contracts = num(p.get("position_fp") or p.get("position"))
-        side = "Yes" if contracts > 0 else "No"
+        is_yes = contracts > 0
         size = abs(contracts)
 
-        # last_price is the YES price in cents; the NO price is its complement.
-        yes_cents = num(m.get("last_price"))
-        price = (yes_cents if contracts > 0 else 100 - yes_cents) / 100
+        price, basis = kalshi_price(m, is_yes)
 
-        # market_exposure is the cost basis of the position still held.
-        cost = abs(num(p.get("market_exposure_dollars")))
-        if not cost and p.get("market_exposure") is not None:
-            cost = abs(num(p.get("market_exposure"))) / 100
+        # market_exposure is the cost of the position EXCLUDING fees, while the
+        # Kalshi app's "Cost" column includes them - and its "Total return" is
+        # measured against that fee-inclusive cost. Add them back so both the
+        # cost and the return line up with what the app shows.
+        exposure = abs(num(p.get("market_exposure_dollars")))
+        if not exposure and p.get("market_exposure") is not None:
+            exposure = abs(num(p.get("market_exposure"))) / 100
+        fees = num(p.get("fees_paid_dollars"))
+        if not fees and p.get("fees_paid") is not None:
+            fees = num(p.get("fees_paid")) / 100
+        cost = exposure + fees
 
-        current_value = size * price
-        unrealized = current_value - cost
+        if price is None:
+            # Never invent a price: hold the position at cost and say so, rather
+            # than reporting a -100% loss that is really a missing field.
+            current_value, unrealized = cost, 0.0
+        else:
+            current_value = size * price
+            unrealized = current_value - cost
 
         positions.append({
             "venue": "kalshi",
             "title": m.get("title") or ticker,
             "subtitle": m.get("yes_sub_title") or m.get("subtitle"),
             "ticker": ticker,
-            "outcome": side,
+            "outcome": "Yes" if is_yes else "No",
             "size": size,
             "avg_price": round(cost / size, 4) if size else 0.0,
-            "cur_price": round(price, 4),
+            "cur_price": round(price, 4) if price is not None else None,
+            "price_basis": basis,
             "cost_basis": round(cost, 4),
             "current_value": round(current_value, 4),
             "unrealized_pnl": round(unrealized, 4),
             "pct_pnl": round(unrealized / cost * 100, 4) if cost else 0.0,
-            "fees": num(p.get("fees_paid_dollars")) or num(p.get("fees_paid")) / 100,
+            "fees": round(fees, 4),
             "end_date": iso(m.get("close_time")),
             "redeemable": False,
             "url": f"https://kalshi.com/markets/{ticker}" if ticker else None,
         })
 
-    settlements = kalshi_paged(key_id, private_key, "/portfolio/settlements", "settlements")
+    # --- realized P&L, cash basis -------------------------------------------
+    #
+    # Settlements alone are not enough. A market exited by SELLING before it
+    # resolved has a settlement payout of zero (or no settlement row at all),
+    # so a settlement-only calculation books the whole cost as a loss and
+    # silently drops positions traded out entirely.
+    #
+    # So this walks the fills instead: money out on buys, money in on sells,
+    # plus any settlement payout. That is the same cash-in/cash-out framing as
+    # the app's Total cost / Total payout / Total return columns, and it is
+    # correct whether a market was sold out of, held to settlement, or both.
+
+    fills = kalshi_paged(key_id, private_key, "/portfolio/fills", "fills")
+    seen = {f.get("fill_id") for f in fills}
+    try:
+        for f in kalshi_paged(key_id, private_key, "/historical/fills", "fills"):
+            if f.get("fill_id") not in seen:
+                fills.append(f)
+    except requests.RequestException:
+        pass  # older fills unavailable; recent ones still count
+
+    books: dict[str, dict] = {}
+    for f in fills:
+        t = f.get("ticker") or f.get("market_ticker")
+        if not t:
+            continue
+        b = books.setdefault(t, {"cost": 0.0, "payout": 0.0, "bought": 0.0,
+                                 "fees": 0.0, "last": None, "side": None})
+        count = num(f.get("count_fp") or f.get("count"))
+        is_yes = (f.get("outcome_side") or f.get("side")) == "yes"
+        price = opt(f, "yes_price_dollars" if is_yes else "no_price_dollars",
+                    "yes_price" if is_yes else "no_price") or 0.0
+        fee = num(f.get("fee_cost"))
+
+        action = f.get("action")
+        if action not in ("buy", "sell"):
+            action = "buy" if f.get("book_side") == "bid" else "sell"
+
+        if action == "buy":
+            b["cost"] += count * price + fee
+            b["bought"] += count
+            b["side"] = "Yes" if is_yes else "No"
+        else:
+            b["payout"] += count * price - fee
+        b["fees"] += fee
+        when = f.get("created_time") or f.get("ts")
+        if when and (b["last"] is None or str(when) > str(b["last"])):
+            b["last"] = when
+
+    settled_at: dict[str, str] = {}
+    for s in kalshi_paged(key_id, private_key, "/portfolio/settlements", "settlements"):
+        t = s.get("ticker")
+        if not t:
+            continue
+        b = books.setdefault(t, {"cost": 0.0, "payout": 0.0, "bought": 0.0,
+                                 "fees": 0.0, "last": None, "side": None})
+        b["payout"] += num(s.get("revenue")) / 100        # revenue is in cents
+        if s.get("settled_time"):
+            settled_at[t] = s["settled_time"]
+
+    still_open = {p["ticker"] for p in positions}
+    closed_tickers = [t for t in books if t not in still_open]
+    closed_meta = kalshi_market_meta(key_id, private_key, closed_tickers)
+
     closed = []
-    for s in settlements:
-        yes_n = num(s.get("yes_count_fp") or s.get("yes_count"))
-        no_n = num(s.get("no_count_fp") or s.get("no_count"))
-        cost = num(s.get("yes_total_cost_dollars")) + num(s.get("no_total_cost_dollars"))
-        if not cost:
-            cost = (num(s.get("yes_total_cost")) + num(s.get("no_total_cost"))) / 100
-        revenue = num(s.get("revenue")) / 100          # revenue is in cents
-        fees = num(s.get("fee_cost"))
-        realized = revenue - cost - fees
-        size = yes_n + no_n
+    for t in closed_tickers:
+        b = books[t]
+        if b["cost"] <= 0:
+            continue
+        realized = b["payout"] - b["cost"]
         closed.append({
             "venue": "kalshi",
-            "title": s.get("ticker"),
-            "ticker": s.get("ticker"),
-            "outcome": "Yes" if yes_n >= no_n else "No",
-            "size": size,
-            "avg_price": round(cost / size, 4) if size else 0.0,
-            "cost_basis": round(cost, 4),
+            "title": (closed_meta.get(t) or {}).get("title") or t,
+            "ticker": t,
+            "outcome": b["side"] or "—",
+            "size": round(b["bought"], 4),
+            "avg_price": round(b["cost"] / b["bought"], 4) if b["bought"] else 0.0,
+            "cost_basis": round(b["cost"], 4),
             "realized_pnl": round(realized, 4),
-            "pct_pnl": round(realized / cost * 100, 4) if cost else 0.0,
-            "closed_at": iso(s.get("settled_time")),
-            "url": f"https://kalshi.com/markets/{s.get('ticker')}" if s.get("ticker") else None,
+            "pct_pnl": round(realized / b["cost"] * 100, 4),
+            "closed_at": iso(settled_at.get(t) or b["last"]),
+            "url": f"https://kalshi.com/markets/{t}",
         })
 
     cash = None
