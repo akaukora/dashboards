@@ -23,6 +23,12 @@ from datetime import date, timedelta
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(HERE, "data", "weekly_duolingo.json")
 LEAGUE_PATH = os.path.join(HERE, "data", "league_weekly.json")
+# Dated observations of the real course Score / unit position. Every entry here
+# replaces a modeled point, and two or more with a Score make the forecast
+# measurable instead of inferred from XP. See the README for how to add one.
+SCORE_PATH = os.path.join(HERE, "data", "score_history.json")
+# Offline (classroom) French course sessions -- time Duolingo cannot see.
+OFFLINE_PATH = os.path.join(HERE, "data", "offline_sessions.json")
 TEMPLATE_PATH = os.path.join(HERE, "dashboard_template.html")
 OUT_PATH = os.path.join(HERE, "index.html")
 
@@ -145,7 +151,19 @@ def main():
 
     data, n_est = merge_league_estimates(data, league)
 
+    score_obs = []
+    if os.path.exists(SCORE_PATH):
+        with open(SCORE_PATH, encoding="utf-8") as f:
+            score_obs = sorted(json.load(f), key=lambda o: o["date"])
+
+    offline = []
+    if os.path.exists(OFFLINE_PATH):
+        with open(OFFLINE_PATH, encoding="utf-8") as f:
+            offline = sorted(json.load(f), key=lambda o: o["date"])
+
     template = open(TEMPLATE_PATH, encoding="utf-8").read()
+    template = template.replace("__OFFLINE_JSON__", json.dumps(offline, ensure_ascii=False))
+    template = template.replace("__SCORE_OBS_JSON__", json.dumps(score_obs, ensure_ascii=False))
     filled = template.replace("__DATA_JSON__", json.dumps(data, ensure_ascii=False))
 
     # Split the fragment right after the closing </style> tag: everything
@@ -158,8 +176,11 @@ def main():
     out = DOC_HEAD + head_content + DOC_MID + body_content + DOC_TAIL
     with open(OUT_PATH, "w", encoding="utf-8") as f:
         f.write(out)
+    scored = sum(1 for o in score_obs if o.get("score") is not None)
     print(f"Wrote {OUT_PATH} with {len(data)} weeks "
-          f"({len(data) - n_est} from emails, {n_est} XP-only from league scores).")
+          f"({len(data) - n_est} from emails, {n_est} XP-only from league scores); "
+          f"{len(score_obs)} position observation(s), {scored} with a Score; "
+          f"{len(offline)} classroom session(s).")
 
 
 if __name__ == "__main__":
