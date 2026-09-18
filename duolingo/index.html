@@ -21,6 +21,7 @@
   --accent-pink-soft: #FCD4F4;
   --accent-amber: #B8752E;
   --accent-estimate: #748DA3;
+  --accent-class: #004722;
   --shadow: 0 1px 2px rgba(28,36,32,0.04), 0 4px 16px rgba(28,36,32,0.05);
 }
 
@@ -40,6 +41,8 @@
     --accent-pink-soft: #3A2536;
     --accent-amber: #B8752E;
     --accent-estimate: #6FA3D6;
+  --accent-class: #6FDC9C;
+    --accent-class: #6FDC9C;
     --shadow: 0 1px 2px rgba(0,0,0,0.3), 0 8px 24px rgba(0,0,0,0.35);
   }
 }
@@ -215,6 +218,7 @@ h1 {
     rgba(255,255,255,0.55) 0 1.6px, rgba(255,255,255,0) 1.6px 3.6px);
 }
 .swatch-none { background: var(--ink-muted); opacity: 0.35; }
+.swatch-class { background: var(--accent-class); }
 
 .tag-modeled {
   font-family: "Work Sans", sans-serif;
@@ -240,6 +244,11 @@ h1 {
 .ms.ms-future { background: transparent; }
 .ms.ms-future .ms-lvl, .ms.ms-future .ms-date { color: var(--ink-muted); }
 .path-note { font-size: 11.5px; color: var(--ink-muted); line-height: 1.6; margin: 10px 0 6px; }
+.pace-table { width: auto; font-size: 11.5px; margin: 6px 0; border-collapse: collapse; }
+.pace-table td { padding: 2px 14px 2px 0; border: none; text-align: left; color: var(--ink-secondary); white-space: nowrap; }
+.pace-table td:nth-child(2), .pace-table td:nth-child(3) { font-variant-numeric: tabular-nums; }
+.pace-table td:last-child { font-weight: 600; color: var(--ink); }
+.obs-count { color: var(--accent-green); font-weight: 600; }
 .now-strip {
   display: flex; flex-wrap: wrap; gap: 6px 22px;
   padding: 10px 12px; margin: 0 0 14px;
@@ -385,6 +394,7 @@ footer a { color: inherit; }
             <span class="legend-item"><span class="swatch swatch-solid" id="swatchSolid"></span>from report email</span>
             <span class="legend-item"><span class="swatch swatch-est"></span>estimated from league score</span>
             <span class="legend-item"><span class="swatch swatch-none"></span>no data</span>
+            <span class="legend-item"><span class="swatch swatch-class"></span>classroom course</span>
           </div>
         </div>
         <div class="toggle-row">
@@ -392,6 +402,7 @@ footer a { color: inherit; }
             <button data-metric="minutes" class="active">Minutes</button>
             <button data-metric="xp">XP</button>
             <button data-metric="lessons">Lessons</button>
+            <button data-metric="score">Level</button>
           </div>
           <div class="toggle-group" id="periodToggle">
             <button data-period="weekly" class="active">Weekly</button>
@@ -400,36 +411,13 @@ footer a { color: inherit; }
           </div>
         </div>
       </div>
+      <div class="now-strip" id="nowStrip" hidden></div>
       <div id="mainChart"></div>
+      <div class="milestones" id="milestones" hidden></div>
+      <p class="path-note" id="pathNote" hidden></p>
     </div>
   </div>
 
-  <div class="charts">
-    <div class="card">
-      <div class="chart-head">
-        <div>
-          <h2>Progress along the path <span class="tag-modeled">modeled</span></h2>
-          <p class="card-sub">Position in the French course over time, reconstructed from cumulative XP — not recorded data</p>
-        </div>
-      </div>
-      <div class="now-strip" id="nowStrip"></div>
-      <div id="pathChart"></div>
-      <div class="milestones" id="milestones"></div>
-      <p class="path-note">
-        Duolingo records only where you are <em>now</em>, with no history of when you passed each unit —
-        and the report emails never mention level at all. So the line is reconstructed: your units spread
-        across the weeks in proportion to the XP you earned, anchored to end on your recorded position.
-        <br><br>
-        <strong>It does survive one real test.</strong> Duolingo's own Score for the course is
-        <strong>91 of 129</strong>, and mapping unit 499 through the published CEFR score bands
-        (A1 0–29, A2 30–59, B1 60–99, B2 100–129) predicts 89.6 — within 1.4 points. That check is
-        why the shape is trustworthy even though the model is simple. Its weak point is timing rather
-        than position: early units are shorter than later ones, so the late-2024 dates likely run ahead
-        of reality. Read any single date as ±a few weeks, and note the curve ends on the position from
-        the data export (unit 494, Score ≈89) rather than the slightly newer duome figure above, so its
-        final point or two is a touch conservative.
-      </p>
-    </div>
   </div>
 
   <div class="table-card">
@@ -442,7 +430,8 @@ footer a { color: inherit; }
         <thead>
           <tr>
             <th data-key="week_start">Week</th>
-            <th data-key="minutes">Time</th>
+            <th data-key="minutes">Duolingo</th>
+            <th data-key="class_minutes">Classroom</th>
             <th data-key="xp">XP</th>
             <th data-key="lessons">Lessons</th>
             <th data-key="xp_per_min">XP / min</th>
@@ -473,13 +462,33 @@ footer a { color: inherit; }
     would overstate the recent gaps by roughly a third. Lessons are left blank, as nothing in the
     league data implies them. Every estimate is replaced by real figures automatically once a report
     email for that week turns up.
+    <br><br>
+    <strong>Classroom courses</strong> (the dark green cap on the time bars) come from
+    <code>data/offline_sessions.json</code> — offline French courses at the Institut français, which
+    Duolingo knows nothing about. They are stacked on the weekly time rather than added into it, so
+    the app-measured figure stays readable on its own: <span id="classList"></span>. Sessions the
+    course record marks as absences are kept in the file but counted neither as time nor as
+    attendance. A session whose length isn't recorded yet shows in the count but contributes no
+    minutes — set its <code>hours</code> in that file and it starts counting.
   </footer>
 </div>
 
 <div class="tooltip" id="tooltip"></div>
 
 <script>
-const DATA = [{"week_start": "2024-08-03", "week_end": "2024-08-09", "minutes": 19, "xp": 0, "lessons": 2, "sent_date": "2024-08-10", "subject": "📆 Your first progress report is ready", "xp_missing": true, "streak": 2}, {"week_start": "2024-08-10", "week_end": "2024-08-16", "minutes": 49, "xp": 120, "lessons": 5, "sent_date": "2024-08-17", "subject": "🏁 You made progress! See your stats:", "streak": 5}, {"week_start": "2024-08-17", "week_end": "2024-08-23", "minutes": 21, "xp": 147, "lessons": 5, "sent_date": "2024-08-24", "subject": "🏁 You made progress! See your stats:", "streak": 5}, {"week_start": "2024-08-24", "week_end": "2024-08-30", "minutes": 31, "xp": 210, "lessons": 8, "sent_date": "2024-08-31", "subject": "💪 Did you beat last week? See your stats:", "streak": 11}, {"week_start": "2024-08-31", "week_end": "2024-09-06", "minutes": 36, "xp": 274, "lessons": 10, "sent_date": "2024-09-07", "subject": "🏁 You made progress! See your stats:", "streak": 15}, {"week_start": "2024-09-07", "week_end": "2024-09-13", "minutes": 19, "xp": 160, "lessons": 8, "sent_date": "2024-09-14", "subject": "📆 This week’s stats are in", "streak": 15}, {"week_start": "2024-09-14", "week_end": "2024-09-20", "minutes": 41, "xp": 542, "lessons": 18, "sent_date": "2024-09-21", "subject": "🏁 You made progress! See your stats:", "streak": 20}, {"week_start": "2024-09-21", "week_end": "2024-09-27", "minutes": 5, "xp": 75, "lessons": 3, "sent_date": "2024-09-28", "subject": "📈 Your progress report is ready", "streak": 1}, {"week_start": "2024-09-28", "week_end": "2024-10-04", "minutes": 39, "xp": 641, "lessons": 14, "sent_date": "2024-10-05", "subject": "🏁 You made progress! See your stats:", "streak": 2}, {"week_start": "2024-10-05", "week_end": "2024-10-11", "minutes": 4, "xp": 30, "lessons": 1, "sent_date": "2024-10-12", "subject": "📈 Your progress report is ready"}, {"week_start": "2024-10-12", "week_end": "2024-10-18", "minutes": 60, "xp": 621, "lessons": null, "source": "league", "estimated": true, "league_window": "2024-10-12 to 2024-10-18", "competition": "leagues", "xp_per_min_used": 10.4}, {"week_start": "2024-10-19", "week_end": "2024-10-25", "minutes": 523, "xp": 0, "lessons": 160, "sent_date": "2024-10-26", "subject": "📈 Your progress report is ready", "xp_missing": true, "streak": 7}, {"week_start": "2024-10-26", "week_end": "2024-11-01", "minutes": 536, "xp": 6077, "lessons": 155, "sent_date": "2024-11-02", "subject": "💪 Did you beat last week? See your stats:", "streak": 13}, {"week_start": "2024-11-02", "week_end": "2024-11-08", "minutes": 612, "xp": 6431, "lessons": 144, "sent_date": "2024-11-09", "subject": "💪 Did you beat last week? See your stats:", "streak": 21}, {"week_start": "2024-11-09", "week_end": "2024-11-15", "minutes": 883, "xp": 6949, "lessons": 181, "sent_date": "2024-11-16", "subject": "🏁 You made progress! See your stats:", "streak": 27}, {"week_start": "2024-11-16", "week_end": "2024-11-22", "minutes": 670, "xp": 7635, "lessons": 146, "sent_date": "2024-11-23", "subject": "🏁 You made progress! See your stats:", "streak": 34}, {"week_start": "2024-11-23", "week_end": "2024-11-29", "minutes": 520, "xp": 5350, "lessons": 91, "sent_date": "2024-11-30", "subject": "📝 This week’s stats are in", "streak": 41}, {"week_start": "2024-11-30", "week_end": "2024-12-06", "minutes": 249, "xp": 3280, "lessons": 53, "sent_date": "2024-12-07", "subject": "📖 This week’s stats are in", "streak": 48}, {"week_start": "2024-12-07", "week_end": "2024-12-13", "minutes": 392, "xp": 5704, "lessons": 86, "sent_date": "2024-12-14", "subject": "💪 Did you beat last week? See your stats:", "streak": 55}, {"week_start": "2024-12-14", "week_end": "2024-12-20", "minutes": 153, "xp": 1918, "lessons": 35, "sent_date": "2024-12-21", "subject": "📬 This week’s stats are in", "streak": 62}, {"week_start": "2024-12-21", "week_end": "2024-12-27", "minutes": 150, "xp": 881, "lessons": 23, "sent_date": "2024-12-28", "subject": "📈 This week’s stats are in", "streak": 69}, {"week_start": "2024-12-28", "week_end": "2025-01-03", "minutes": 167, "xp": 1394, "lessons": 28, "sent_date": "2025-01-04", "subject": "🏁 You made progress! See your stats:", "streak": 76}, {"week_start": "2025-01-04", "week_end": "2025-01-10", "minutes": 107, "xp": 520, "lessons": 13, "sent_date": "2025-01-11", "subject": "📈 This week’s stats are in", "streak": 83}, {"week_start": "2025-01-11", "week_end": "2025-01-17", "minutes": 114, "xp": 1158, "lessons": 21, "sent_date": "2025-01-18", "subject": "💪 Did you beat last week? See your stats:", "streak": 90}, {"week_start": "2025-01-18", "week_end": "2025-01-24", "minutes": 81, "xp": 620, "lessons": 13, "sent_date": "2025-01-25", "subject": "🗞 This week’s stats are in", "streak": 97}, {"week_start": "2025-01-25", "week_end": "2025-01-31", "minutes": 106, "xp": 601, "lessons": 14, "sent_date": "2025-02-01", "subject": "📝 This week’s stats are in", "streak": 104}, {"week_start": "2025-02-01", "week_end": "2025-02-07", "minutes": 60, "xp": 648, "lessons": 12, "sent_date": "2025-02-08", "subject": "💪 Did you beat last week? See your stats:", "streak": 111}, {"week_start": "2025-02-08", "week_end": "2025-02-14", "minutes": 44, "xp": 377, "lessons": 9, "sent_date": "2025-02-15", "subject": "📝 Your progress report is ready", "streak": 118}, {"week_start": "2025-02-15", "week_end": "2025-02-21", "minutes": 87, "xp": 583, "lessons": 13, "sent_date": "2025-02-22", "subject": "💪 Did you beat last week? See your stats:", "streak": 125}, {"week_start": "2025-02-22", "week_end": "2025-02-28", "minutes": 129, "xp": 992, "lessons": 20, "sent_date": "2025-03-01", "subject": "🏁 You made progress! See your stats:", "streak": 133}, {"week_start": "2025-03-01", "week_end": "2025-03-07", "minutes": 155, "xp": 1512, "lessons": 24, "sent_date": "2025-03-08", "subject": "🏁 You made progress! See your stats:", "streak": 139}, {"week_start": "2025-03-08", "week_end": "2025-03-14", "minutes": 112, "xp": 828, "lessons": 16, "sent_date": "2025-03-15", "subject": "📈 Your progress report is ready", "streak": 146}, {"week_start": "2025-03-15", "week_end": "2025-03-21", "minutes": 85, "xp": 680, "lessons": 13, "sent_date": "2025-03-22", "subject": "📆 Your progress report is ready", "streak": 153}, {"week_start": "2025-03-22", "week_end": "2025-03-28", "minutes": 96, "xp": 512, "lessons": 12, "sent_date": "2025-03-29", "subject": "📬 This week’s stats are in", "streak": 160}, {"week_start": "2025-03-29", "week_end": "2025-04-04", "minutes": 142, "xp": 1348, "lessons": 22, "sent_date": "2025-04-05", "subject": "Progress report! You did great 🥰", "streak": 165}, {"week_start": "2025-04-05", "week_end": "2025-04-11", "minutes": 76, "xp": 678, "lessons": 12, "sent_date": "2025-04-12", "subject": "Antti, your French progress can’t be stopped!", "streak": 172}, {"week_start": "2025-04-12", "week_end": "2025-04-18", "minutes": 105, "xp": 816, "lessons": 16, "sent_date": "2025-04-19", "subject": "Antti, your French progress can’t be stopped!", "streak": 179}, {"week_start": "2025-04-19", "week_end": "2025-04-25", "minutes": 143, "xp": 1114, "lessons": 26, "sent_date": "2025-04-26", "subject": "Progress report! You did great 🥰", "streak": 186}, {"week_start": "2025-04-26", "week_end": "2025-05-02", "minutes": 199, "xp": 2052, "lessons": 33, "sent_date": "2025-05-03", "subject": "👀 Duo sees you with that French progress!", "streak": 193}, {"week_start": "2025-05-03", "week_end": "2025-05-09", "minutes": 88, "xp": 523, "lessons": 14, "sent_date": "2025-05-10", "subject": "Progress report! You did great 🥰", "streak": 200}, {"week_start": "2025-05-10", "week_end": "2025-05-16", "minutes": 71, "xp": 470, "lessons": 10, "sent_date": "2025-05-17", "subject": "Progress report! You did great 🥰", "streak": 206}, {"week_start": "2025-05-17", "week_end": "2025-05-23", "minutes": 87, "xp": 1283, "lessons": 21, "sent_date": "2025-05-24", "subject": "👀 Duo sees you with that French progress!", "streak": 213}, {"week_start": "2025-05-24", "week_end": "2025-05-30", "minutes": 104, "xp": 1043, "lessons": 19, "sent_date": "2025-05-31", "subject": "Antti, your French progress can’t be stopped!", "streak": 219}, {"week_start": "2025-05-31", "week_end": "2025-06-06", "minutes": 58, "xp": 456, "lessons": 9, "sent_date": "2025-06-07", "subject": "📆 Weekly insights unlocked", "streak": 227}, {"week_start": "2025-06-07", "week_end": "2025-06-13", "minutes": 56, "xp": 330, "lessons": 8, "sent_date": "2025-06-14", "subject": "📈 On track this week?", "streak": 233}, {"week_start": "2025-06-14", "week_end": "2025-06-20", "minutes": 52, "xp": 447, "lessons": 10, "sent_date": "2025-06-21", "subject": "👀 Did you beat last week?", "streak": 240}, {"week_start": "2025-06-21", "week_end": "2025-06-27", "minutes": 141, "xp": 959, "lessons": 18, "sent_date": "2025-06-28", "subject": "🫣 Antti, did you make progress?", "streak": 247}, {"week_start": "2025-06-28", "week_end": "2025-07-04", "minutes": 133, "xp": 1619, "lessons": 23, "sent_date": "2025-07-05", "subject": "👀 Duo sees you with that French progress!", "streak": 254}, {"week_start": "2025-07-05", "week_end": "2025-07-11", "minutes": 98, "xp": 1059, "lessons": 20, "sent_date": "2025-07-12", "subject": "Progress report! You did great 🥰", "streak": 261}, {"week_start": "2025-07-12", "week_end": "2025-07-18", "minutes": 153, "xp": 1593, "lessons": 26, "sent_date": "2025-07-19", "subject": "Antti, your French progress can’t be stopped!", "streak": 269}, {"week_start": "2025-07-19", "week_end": "2025-07-25", "minutes": 86, "xp": 687, "lessons": 16, "sent_date": "2025-07-26", "subject": "Progress report! You did great 🥰", "streak": 275}, {"week_start": "2025-07-26", "week_end": "2025-08-01", "minutes": 76, "xp": 570, "lessons": 12, "sent_date": "2025-08-02", "subject": "👀 Duo sees you with that French progress!", "streak": 282}, {"week_start": "2025-08-02", "week_end": "2025-08-08", "minutes": 6, "xp": 44, "lessons": 3, "sent_date": "2025-08-09", "subject": "Weekly stats! Uh oh, you missed 6 days 📉"}, {"week_start": "2025-08-09", "week_end": "2025-08-15", "minutes": 174, "xp": 1554, "lessons": 28, "sent_date": "2025-08-16", "subject": "Progress report! You did great 🥰", "streak": 295}, {"week_start": "2025-08-16", "week_end": "2025-08-22", "minutes": 201, "xp": 1790, "lessons": 33, "sent_date": "2025-08-23", "subject": "👀 Duo sees you with that French progress!", "streak": 302}, {"week_start": "2025-08-23", "week_end": "2025-08-29", "minutes": 170, "xp": 2703, "lessons": 34, "sent_date": "2025-08-30", "subject": "Antti, your French progress can’t be stopped!", "streak": 309}, {"week_start": "2025-08-30", "week_end": "2025-09-05", "minutes": 113, "xp": 876, "lessons": 17, "sent_date": "2025-09-06", "subject": "Antti, your French progress can’t be stopped!", "streak": 316}, {"week_start": "2025-09-06", "week_end": "2025-09-12", "minutes": 125, "xp": 1332, "lessons": 23, "sent_date": "2025-09-13", "subject": "Progress report! You did great 🥰", "streak": 323}, {"week_start": "2025-09-13", "week_end": "2025-09-19", "minutes": 83, "xp": 919, "lessons": 16, "sent_date": "2025-09-20", "subject": "👀 Duo sees you with that French progress!", "streak": 330}, {"week_start": "2025-09-20", "week_end": "2025-09-26", "minutes": 109, "xp": 1527, "lessons": 21, "sent_date": "2025-09-27", "subject": "Progress report! You did great 🥰", "streak": 337}, {"week_start": "2025-09-27", "week_end": "2025-10-03", "minutes": 89, "xp": 1071, "lessons": 15, "sent_date": "2025-10-04", "subject": "Antti, your French progress can’t be stopped!", "streak": 344}, {"week_start": "2025-10-04", "week_end": "2025-10-10", "minutes": 68, "xp": 828, "lessons": 13, "sent_date": "2025-10-11", "subject": "Progress report! You did great 🥰", "streak": 350}, {"week_start": "2025-10-11", "week_end": "2025-10-17", "minutes": 90, "xp": 590, "lessons": 14, "sent_date": "2025-10-18", "subject": "👀 Duo sees you with that French progress!", "streak": 357}, {"week_start": "2025-10-18", "week_end": "2025-10-24", "minutes": 98, "xp": 935, "lessons": 16, "sent_date": "2025-10-25", "subject": "Antti, your French progress can’t be stopped!", "streak": 364}, {"week_start": "2025-10-25", "week_end": "2025-10-31", "minutes": 112, "xp": 928, "lessons": 18, "sent_date": "2025-11-01", "subject": "👀 Duo sees you with that French progress!", "streak": 371}, {"week_start": "2025-11-01", "week_end": "2025-11-07", "minutes": 107, "xp": 997, "lessons": 19, "sent_date": "2025-11-08", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-11-08", "week_end": "2025-11-14", "minutes": 184, "xp": 1948, "lessons": 33, "sent_date": "2025-11-15", "subject": "Progress report! You did great 🥰", "streak": 384}, {"week_start": "2025-11-15", "week_end": "2025-11-21", "minutes": 117, "xp": 1315, "lessons": 21, "sent_date": "2025-11-22", "subject": "Antti, your French progress can’t be stopped!", "streak": 391}, {"week_start": "2025-11-22", "week_end": "2025-11-28", "minutes": 186, "xp": 1697, "lessons": 28, "sent_date": "2025-11-29", "subject": "Antti, your French progress can’t be stopped!", "streak": 398}, {"week_start": "2025-11-29", "week_end": "2025-12-05", "minutes": 88, "xp": 966, "lessons": 17, "sent_date": "2025-12-06", "subject": "👀 Duo sees you with that French progress!", "streak": 405}, {"week_start": "2025-12-06", "week_end": "2025-12-12", "minutes": 180, "xp": 1860, "lessons": 32, "sent_date": "2025-12-13", "subject": "🤩 Your French progress!!!", "streak": 412}, {"week_start": "2025-12-13", "week_end": "2025-12-19", "minutes": 197, "xp": 2106, "lessons": null, "source": "league", "estimated": true, "league_window": "2025-12-15 to 2025-12-21", "competition": "leagues", "xp_per_min_used": 10.7}, {"week_start": "2025-12-20", "week_end": "2025-12-26", "minutes": 154, "xp": 1753, "lessons": 27, "sent_date": "2025-12-27", "subject": "📈 Whoa, Antti… Look at all that French progress!", "streak": 426}, {"week_start": "2025-12-27", "week_end": "2026-01-02", "minutes": 99, "xp": 1495, "lessons": 24, "sent_date": "2026-01-03", "subject": "🚀 French progress unlocked", "streak": 434}, {"week_start": "2026-01-03", "week_end": "2026-01-09", "minutes": 141, "xp": 1680, "lessons": 26, "sent_date": "2026-01-10", "subject": "🚀 French progress unlocked", "streak": 440}, {"week_start": "2026-01-10", "week_end": "2026-01-16", "minutes": 64, "xp": 696, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-01-13 to 2026-01-19", "competition": "leagues", "xp_per_min_used": 10.9}, {"week_start": "2026-01-17", "week_end": "2026-01-23", "minutes": 154, "xp": 1672, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-01-19 to 2026-01-25", "competition": "leagues", "xp_per_min_used": 10.9}, {"week_start": "2026-01-24", "week_end": "2026-01-30", "minutes": 159, "xp": 1691, "lessons": 27, "sent_date": "2026-01-31", "subject": "Antti, stop showing off. Or don’t 😊", "streak": 460}, {"week_start": "2026-01-31", "week_end": "2026-02-06", "minutes": 110, "xp": 1181, "lessons": 23, "sent_date": "2026-02-07", "subject": "🤯 Your French stats? Just wow.", "streak": 467}, {"week_start": "2026-02-07", "week_end": "2026-02-13", "minutes": 76, "xp": 840, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-02-09 to 2026-02-15", "competition": "leagues", "xp_per_min_used": 11.1}, {"week_start": "2026-02-14", "week_end": "2026-02-20", "minutes": 117, "xp": 945, "lessons": 17, "sent_date": "2026-02-21", "subject": "You’re crushing French ✨", "streak": 482}, {"week_start": "2026-02-21", "week_end": "2026-02-27", "minutes": 112, "xp": 1639, "lessons": 21, "sent_date": "2026-02-28", "subject": "🤩 Your French progress!!!", "streak": 488}, {"week_start": "2026-02-28", "week_end": "2026-03-06", "minutes": 198, "xp": 2111, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-03-02 to 2026-03-08", "competition": "leagues", "xp_per_min_used": 10.7}, {"week_start": "2026-03-07", "week_end": "2026-03-13", "minutes": 137, "xp": 1462, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-03-09 to 2026-03-15", "competition": "leagues", "xp_per_min_used": 10.7}, {"week_start": "2026-03-14", "week_end": "2026-03-20", "minutes": 172, "xp": 1632, "lessons": 31, "sent_date": "2026-03-21", "subject": "💪 Crushing it, one French lesson at a time", "streak": 509}, {"week_start": "2026-03-21", "week_end": "2026-03-27", "minutes": 148, "xp": 1730, "lessons": 25, "sent_date": "2026-03-28", "subject": "🤯 Your French stats? Just wow.", "streak": 516}, {"week_start": "2026-03-28", "week_end": "2026-04-03", "minutes": 153, "xp": 2081, "lessons": 31, "sent_date": "2026-04-04", "subject": "🚀 French progress unlocked", "streak": 523}, {"week_start": "2026-04-04", "week_end": "2026-04-10", "minutes": 103, "xp": 1088, "lessons": 19, "sent_date": "2026-04-11", "subject": "📈 Whoa, ‎Antti‎… Look at all that French progress!", "streak": 531}, {"week_start": "2026-04-11", "week_end": "2026-04-17", "minutes": 145, "xp": 2009, "lessons": 34, "sent_date": "2026-04-18", "subject": "Someone’s 👏 been 👏 busy 👏", "streak": 537}, {"week_start": "2026-04-18", "week_end": "2026-04-24", "minutes": 82, "xp": 684, "lessons": 18, "sent_date": "2026-04-25", "subject": "Gold star for ‎Antti‎ ⭐", "streak": 543}, {"week_start": "2026-04-25", "week_end": "2026-05-01", "minutes": 62, "xp": 487, "lessons": 14, "sent_date": "2026-05-02", "subject": "Gold star for ‎Antti‎ ⭐", "streak": 549}, {"week_start": "2026-05-02", "week_end": "2026-05-08", "minutes": 62, "xp": 813, "lessons": 16, "sent_date": "2026-05-09", "subject": "😭 Keep this up and Duo might happy-cry", "streak": 556}, {"week_start": "2026-05-09", "week_end": "2026-05-15", "minutes": 77, "xp": 885, "lessons": 19, "sent_date": "2026-05-16", "subject": "You’re crushing French ✨", "streak": 563}, {"week_start": "2026-05-16", "week_end": "2026-05-22", "minutes": 69, "xp": 708, "lessons": 16, "sent_date": "2026-05-23", "subject": "French? Nailed it ✔️", "streak": 570}, {"week_start": "2026-05-23", "week_end": "2026-05-29", "minutes": 47, "xp": 1051, "lessons": 15, "sent_date": "2026-05-30", "subject": "Weekly French results are in. Nice work 🎉", "streak": 576}, {"week_start": "2026-05-30", "week_end": "2026-06-05", "minutes": 51, "xp": 573, "lessons": 12, "sent_date": "2026-06-06", "subject": "🚀 French progress unlocked", "streak": 582}, {"week_start": "2026-06-06", "week_end": "2026-06-12", "minutes": 84, "xp": 1330, "lessons": 21, "sent_date": "2026-06-13", "subject": "📈 Whoa, ‎Antti‎… Look at all that French progress!", "streak": 589}, {"week_start": "2026-06-13", "week_end": "2026-06-19", "minutes": 104, "xp": 924, "lessons": 19, "sent_date": "2026-06-20", "subject": "🚀 French progress unlocked", "streak": 596}, {"week_start": "2026-06-20", "week_end": "2026-06-26", "minutes": 233, "xp": 3181, "lessons": 44, "sent_date": "2026-06-27", "subject": "📈 You’re making serious French progress", "streak": 603}, {"week_start": "2026-06-27", "week_end": "2026-07-03", "minutes": 245, "xp": 3985, "lessons": 52, "sent_date": "2026-07-04", "subject": "🤩 Your French progress!!!", "streak": 610}, {"week_start": "2026-07-04", "week_end": "2026-07-10", "minutes": 193, "xp": 3286, "lessons": 44, "sent_date": "2026-07-11", "subject": "📈 You’re making serious French progress", "streak": 617}, {"week_start": "2026-07-11", "week_end": "2026-07-17", "minutes": 84, "xp": 1126, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-07-13 to 2026-07-19", "competition": "leagues", "xp_per_min_used": 13.5}, {"week_start": "2026-07-18", "week_end": "2026-07-24", "minutes": 122, "xp": 1828, "lessons": 32, "sent_date": "2026-07-25", "subject": "😭 Keep this up and Duo might happy-cry", "streak": 631}, {"week_start": "2026-07-25", "week_end": "2026-07-31", "minutes": 101, "xp": 1380, "lessons": 23, "sent_date": "2026-08-01", "subject": "You’re in your French era ✨", "streak": 639}, {"week_start": "2026-08-01", "week_end": "2026-08-07", "minutes": 62, "xp": 823, "lessons": 12, "sent_date": "2026-08-08", "subject": "Someone’s 👏 been 👏 busy 👏", "streak": 645}, {"week_start": "2026-08-08", "week_end": "2026-08-14", "minutes": 34, "xp": 287, "lessons": 8, "sent_date": "2026-08-15", "subject": "Duo’s impressed. That’s rare 👀", "streak": 653}, {"week_start": "2026-08-15", "week_end": "2026-08-21", "minutes": 54, "xp": 484, "lessons": 11, "sent_date": "2026-08-22", "subject": "💪 French stats looking strong", "streak": 660}, {"week_start": "2026-08-22", "week_end": "2026-08-28", "minutes": 53, "xp": 446, "lessons": 10, "sent_date": "2026-08-29", "subject": "Duo’s impressed. That’s rare 👀", "streak": 667}, {"week_start": "2026-08-29", "week_end": "2026-09-04", "minutes": 20, "xp": 265, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-08-31 to 2026-09-06", "competition": "leagues", "xp_per_min_used": 13.5}];
+const DATA = [{"week_start": "2024-08-03", "week_end": "2024-08-09", "minutes": 19, "xp": 0, "lessons": 2, "sent_date": "2024-08-10", "subject": "📆 Your first progress report is ready", "xp_missing": true, "streak": 2}, {"week_start": "2024-08-10", "week_end": "2024-08-16", "minutes": 49, "xp": 120, "lessons": 5, "sent_date": "2024-08-17", "subject": "🏁 You made progress! See your stats:", "streak": 5}, {"week_start": "2024-08-17", "week_end": "2024-08-23", "minutes": 21, "xp": 147, "lessons": 5, "sent_date": "2024-08-24", "subject": "🏁 You made progress! See your stats:", "streak": 5}, {"week_start": "2024-08-24", "week_end": "2024-08-30", "minutes": 31, "xp": 210, "lessons": 8, "sent_date": "2024-08-31", "subject": "💪 Did you beat last week? See your stats:", "streak": 11}, {"week_start": "2024-08-31", "week_end": "2024-09-06", "minutes": 36, "xp": 274, "lessons": 10, "sent_date": "2024-09-07", "subject": "🏁 You made progress! See your stats:", "streak": 15}, {"week_start": "2024-09-07", "week_end": "2024-09-13", "minutes": 19, "xp": 160, "lessons": 8, "sent_date": "2024-09-14", "subject": "📆 This week’s stats are in", "streak": 15}, {"week_start": "2024-09-14", "week_end": "2024-09-20", "minutes": 41, "xp": 542, "lessons": 18, "sent_date": "2024-09-21", "subject": "🏁 You made progress! See your stats:", "streak": 20}, {"week_start": "2024-09-21", "week_end": "2024-09-27", "minutes": 5, "xp": 75, "lessons": 3, "sent_date": "2024-09-28", "subject": "📈 Your progress report is ready", "streak": 1}, {"week_start": "2024-09-28", "week_end": "2024-10-04", "minutes": 39, "xp": 641, "lessons": 14, "sent_date": "2024-10-05", "subject": "🏁 You made progress! See your stats:", "streak": 2}, {"week_start": "2024-10-05", "week_end": "2024-10-11", "minutes": 4, "xp": 30, "lessons": 1, "sent_date": "2024-10-12", "subject": "📈 Your progress report is ready"}, {"week_start": "2024-10-12", "week_end": "2024-10-18", "minutes": 60, "xp": 621, "lessons": null, "source": "league", "estimated": true, "league_window": "2024-10-12 to 2024-10-18", "competition": "leagues", "xp_per_min_used": 10.4}, {"week_start": "2024-10-19", "week_end": "2024-10-25", "minutes": 523, "xp": 0, "lessons": 160, "sent_date": "2024-10-26", "subject": "📈 Your progress report is ready", "xp_missing": true, "streak": 7}, {"week_start": "2024-10-26", "week_end": "2024-11-01", "minutes": 536, "xp": 6077, "lessons": 155, "sent_date": "2024-11-02", "subject": "💪 Did you beat last week? See your stats:", "streak": 13}, {"week_start": "2024-11-02", "week_end": "2024-11-08", "minutes": 612, "xp": 6431, "lessons": 144, "sent_date": "2024-11-09", "subject": "💪 Did you beat last week? See your stats:", "streak": 21}, {"week_start": "2024-11-09", "week_end": "2024-11-15", "minutes": 883, "xp": 6949, "lessons": 181, "sent_date": "2024-11-16", "subject": "🏁 You made progress! See your stats:", "streak": 27}, {"week_start": "2024-11-16", "week_end": "2024-11-22", "minutes": 670, "xp": 7635, "lessons": 146, "sent_date": "2024-11-23", "subject": "🏁 You made progress! See your stats:", "streak": 34}, {"week_start": "2024-11-23", "week_end": "2024-11-29", "minutes": 520, "xp": 5350, "lessons": 91, "sent_date": "2024-11-30", "subject": "📝 This week’s stats are in", "streak": 41}, {"week_start": "2024-11-30", "week_end": "2024-12-06", "minutes": 249, "xp": 3280, "lessons": 53, "sent_date": "2024-12-07", "subject": "📖 This week’s stats are in", "streak": 48}, {"week_start": "2024-12-07", "week_end": "2024-12-13", "minutes": 392, "xp": 5704, "lessons": 86, "sent_date": "2024-12-14", "subject": "💪 Did you beat last week? See your stats:", "streak": 55}, {"week_start": "2024-12-14", "week_end": "2024-12-20", "minutes": 153, "xp": 1918, "lessons": 35, "sent_date": "2024-12-21", "subject": "📬 This week’s stats are in", "streak": 62}, {"week_start": "2024-12-21", "week_end": "2024-12-27", "minutes": 150, "xp": 881, "lessons": 23, "sent_date": "2024-12-28", "subject": "📈 This week’s stats are in", "streak": 69}, {"week_start": "2024-12-28", "week_end": "2025-01-03", "minutes": 167, "xp": 1394, "lessons": 28, "sent_date": "2025-01-04", "subject": "🏁 You made progress! See your stats:", "streak": 76}, {"week_start": "2025-01-04", "week_end": "2025-01-10", "minutes": 107, "xp": 520, "lessons": 13, "sent_date": "2025-01-11", "subject": "📈 This week’s stats are in", "streak": 83}, {"week_start": "2025-01-11", "week_end": "2025-01-17", "minutes": 114, "xp": 1158, "lessons": 21, "sent_date": "2025-01-18", "subject": "💪 Did you beat last week? See your stats:", "streak": 90}, {"week_start": "2025-01-18", "week_end": "2025-01-24", "minutes": 81, "xp": 620, "lessons": 13, "sent_date": "2025-01-25", "subject": "🗞 This week’s stats are in", "streak": 97}, {"week_start": "2025-01-25", "week_end": "2025-01-31", "minutes": 106, "xp": 601, "lessons": 14, "sent_date": "2025-02-01", "subject": "📝 This week’s stats are in", "streak": 104}, {"week_start": "2025-02-01", "week_end": "2025-02-07", "minutes": 60, "xp": 648, "lessons": 12, "sent_date": "2025-02-08", "subject": "💪 Did you beat last week? See your stats:", "streak": 111}, {"week_start": "2025-02-08", "week_end": "2025-02-14", "minutes": 44, "xp": 377, "lessons": 9, "sent_date": "2025-02-15", "subject": "📝 Your progress report is ready", "streak": 118}, {"week_start": "2025-02-15", "week_end": "2025-02-21", "minutes": 87, "xp": 583, "lessons": 13, "sent_date": "2025-02-22", "subject": "💪 Did you beat last week? See your stats:", "streak": 125}, {"week_start": "2025-02-22", "week_end": "2025-02-28", "minutes": 129, "xp": 992, "lessons": 20, "sent_date": "2025-03-01", "subject": "🏁 You made progress! See your stats:", "streak": 133}, {"week_start": "2025-03-01", "week_end": "2025-03-07", "minutes": 155, "xp": 1512, "lessons": 24, "sent_date": "2025-03-08", "subject": "🏁 You made progress! See your stats:", "streak": 139}, {"week_start": "2025-03-08", "week_end": "2025-03-14", "minutes": 112, "xp": 828, "lessons": 16, "sent_date": "2025-03-15", "subject": "📈 Your progress report is ready", "streak": 146}, {"week_start": "2025-03-15", "week_end": "2025-03-21", "minutes": 85, "xp": 680, "lessons": 13, "sent_date": "2025-03-22", "subject": "📆 Your progress report is ready", "streak": 153}, {"week_start": "2025-03-22", "week_end": "2025-03-28", "minutes": 96, "xp": 512, "lessons": 12, "sent_date": "2025-03-29", "subject": "📬 This week’s stats are in", "streak": 160}, {"week_start": "2025-03-29", "week_end": "2025-04-04", "minutes": 142, "xp": 1348, "lessons": 22, "sent_date": "2025-04-05", "subject": "Progress report! You did great 🥰", "streak": 165}, {"week_start": "2025-04-05", "week_end": "2025-04-11", "minutes": 76, "xp": 678, "lessons": 12, "sent_date": "2025-04-12", "subject": "Antti, your French progress can’t be stopped!", "streak": 172}, {"week_start": "2025-04-12", "week_end": "2025-04-18", "minutes": 105, "xp": 816, "lessons": 16, "sent_date": "2025-04-19", "subject": "Antti, your French progress can’t be stopped!", "streak": 179}, {"week_start": "2025-04-19", "week_end": "2025-04-25", "minutes": 143, "xp": 1114, "lessons": 26, "sent_date": "2025-04-26", "subject": "Progress report! You did great 🥰", "streak": 186}, {"week_start": "2025-04-26", "week_end": "2025-05-02", "minutes": 199, "xp": 2052, "lessons": 33, "sent_date": "2025-05-03", "subject": "👀 Duo sees you with that French progress!", "streak": 193}, {"week_start": "2025-05-03", "week_end": "2025-05-09", "minutes": 88, "xp": 523, "lessons": 14, "sent_date": "2025-05-10", "subject": "Progress report! You did great 🥰", "streak": 200}, {"week_start": "2025-05-10", "week_end": "2025-05-16", "minutes": 71, "xp": 470, "lessons": 10, "sent_date": "2025-05-17", "subject": "Progress report! You did great 🥰", "streak": 206}, {"week_start": "2025-05-17", "week_end": "2025-05-23", "minutes": 87, "xp": 1283, "lessons": 21, "sent_date": "2025-05-24", "subject": "👀 Duo sees you with that French progress!", "streak": 213}, {"week_start": "2025-05-24", "week_end": "2025-05-30", "minutes": 104, "xp": 1043, "lessons": 19, "sent_date": "2025-05-31", "subject": "Antti, your French progress can’t be stopped!", "streak": 219}, {"week_start": "2025-05-31", "week_end": "2025-06-06", "minutes": 58, "xp": 456, "lessons": 9, "sent_date": "2025-06-07", "subject": "📆 Weekly insights unlocked", "streak": 227}, {"week_start": "2025-06-07", "week_end": "2025-06-13", "minutes": 56, "xp": 330, "lessons": 8, "sent_date": "2025-06-14", "subject": "📈 On track this week?", "streak": 233}, {"week_start": "2025-06-14", "week_end": "2025-06-20", "minutes": 52, "xp": 447, "lessons": 10, "sent_date": "2025-06-21", "subject": "👀 Did you beat last week?", "streak": 240}, {"week_start": "2025-06-21", "week_end": "2025-06-27", "minutes": 141, "xp": 959, "lessons": 18, "sent_date": "2025-06-28", "subject": "🫣 Antti, did you make progress?", "streak": 247}, {"week_start": "2025-06-28", "week_end": "2025-07-04", "minutes": 133, "xp": 1619, "lessons": 23, "sent_date": "2025-07-05", "subject": "👀 Duo sees you with that French progress!", "streak": 254}, {"week_start": "2025-07-05", "week_end": "2025-07-11", "minutes": 98, "xp": 1059, "lessons": 20, "sent_date": "2025-07-12", "subject": "Progress report! You did great 🥰", "streak": 261}, {"week_start": "2025-07-12", "week_end": "2025-07-18", "minutes": 153, "xp": 1593, "lessons": 26, "sent_date": "2025-07-19", "subject": "Antti, your French progress can’t be stopped!", "streak": 269}, {"week_start": "2025-07-19", "week_end": "2025-07-25", "minutes": 86, "xp": 687, "lessons": 16, "sent_date": "2025-07-26", "subject": "Progress report! You did great 🥰", "streak": 275}, {"week_start": "2025-07-26", "week_end": "2025-08-01", "minutes": 76, "xp": 570, "lessons": 12, "sent_date": "2025-08-02", "subject": "👀 Duo sees you with that French progress!", "streak": 282}, {"week_start": "2025-08-02", "week_end": "2025-08-08", "minutes": 6, "xp": 44, "lessons": 3, "sent_date": "2025-08-09", "subject": "Weekly stats! Uh oh, you missed 6 days 📉"}, {"week_start": "2025-08-09", "week_end": "2025-08-15", "minutes": 174, "xp": 1554, "lessons": 28, "sent_date": "2025-08-16", "subject": "Progress report! You did great 🥰", "streak": 295}, {"week_start": "2025-08-16", "week_end": "2025-08-22", "minutes": 201, "xp": 1790, "lessons": 33, "sent_date": "2025-08-23", "subject": "👀 Duo sees you with that French progress!", "streak": 302}, {"week_start": "2025-08-23", "week_end": "2025-08-29", "minutes": 170, "xp": 2703, "lessons": 34, "sent_date": "2025-08-30", "subject": "Antti, your French progress can’t be stopped!", "streak": 309}, {"week_start": "2025-08-30", "week_end": "2025-09-05", "minutes": 113, "xp": 876, "lessons": 17, "sent_date": "2025-09-06", "subject": "Antti, your French progress can’t be stopped!", "streak": 316}, {"week_start": "2025-09-06", "week_end": "2025-09-12", "minutes": 125, "xp": 1332, "lessons": 23, "sent_date": "2025-09-13", "subject": "Progress report! You did great 🥰", "streak": 323}, {"week_start": "2025-09-13", "week_end": "2025-09-19", "minutes": 83, "xp": 919, "lessons": 16, "sent_date": "2025-09-20", "subject": "👀 Duo sees you with that French progress!", "streak": 330}, {"week_start": "2025-09-20", "week_end": "2025-09-26", "minutes": 109, "xp": 1527, "lessons": 21, "sent_date": "2025-09-27", "subject": "Progress report! You did great 🥰", "streak": 337}, {"week_start": "2025-09-27", "week_end": "2025-10-03", "minutes": 89, "xp": 1071, "lessons": 15, "sent_date": "2025-10-04", "subject": "Antti, your French progress can’t be stopped!", "streak": 344}, {"week_start": "2025-10-04", "week_end": "2025-10-10", "minutes": 68, "xp": 828, "lessons": 13, "sent_date": "2025-10-11", "subject": "Progress report! You did great 🥰", "streak": 350}, {"week_start": "2025-10-11", "week_end": "2025-10-17", "minutes": 90, "xp": 590, "lessons": 14, "sent_date": "2025-10-18", "subject": "👀 Duo sees you with that French progress!", "streak": 357}, {"week_start": "2025-10-18", "week_end": "2025-10-24", "minutes": 98, "xp": 935, "lessons": 16, "sent_date": "2025-10-25", "subject": "Antti, your French progress can’t be stopped!", "streak": 364}, {"week_start": "2025-10-25", "week_end": "2025-10-31", "minutes": 112, "xp": 928, "lessons": 18, "sent_date": "2025-11-01", "subject": "👀 Duo sees you with that French progress!", "streak": 371}, {"week_start": "2025-11-01", "week_end": "2025-11-07", "minutes": 107, "xp": 997, "lessons": 19, "sent_date": "2025-11-08", "subject": "Antti, your French progress can't be stopped!"}, {"week_start": "2025-11-08", "week_end": "2025-11-14", "minutes": 184, "xp": 1948, "lessons": 33, "sent_date": "2025-11-15", "subject": "Progress report! You did great 🥰", "streak": 384}, {"week_start": "2025-11-15", "week_end": "2025-11-21", "minutes": 117, "xp": 1315, "lessons": 21, "sent_date": "2025-11-22", "subject": "Antti, your French progress can’t be stopped!", "streak": 391}, {"week_start": "2025-11-22", "week_end": "2025-11-28", "minutes": 186, "xp": 1697, "lessons": 28, "sent_date": "2025-11-29", "subject": "Antti, your French progress can’t be stopped!", "streak": 398}, {"week_start": "2025-11-29", "week_end": "2025-12-05", "minutes": 88, "xp": 966, "lessons": 17, "sent_date": "2025-12-06", "subject": "👀 Duo sees you with that French progress!", "streak": 405}, {"week_start": "2025-12-06", "week_end": "2025-12-12", "minutes": 180, "xp": 1860, "lessons": 32, "sent_date": "2025-12-13", "subject": "🤩 Your French progress!!!", "streak": 412}, {"week_start": "2025-12-13", "week_end": "2025-12-19", "minutes": 197, "xp": 2106, "lessons": null, "source": "league", "estimated": true, "league_window": "2025-12-15 to 2025-12-21", "competition": "leagues", "xp_per_min_used": 10.7}, {"week_start": "2025-12-20", "week_end": "2025-12-26", "minutes": 154, "xp": 1753, "lessons": 27, "sent_date": "2025-12-27", "subject": "📈 Whoa, Antti… Look at all that French progress!", "streak": 426}, {"week_start": "2025-12-27", "week_end": "2026-01-02", "minutes": 99, "xp": 1495, "lessons": 24, "sent_date": "2026-01-03", "subject": "🚀 French progress unlocked", "streak": 434}, {"week_start": "2026-01-03", "week_end": "2026-01-09", "minutes": 141, "xp": 1680, "lessons": 26, "sent_date": "2026-01-10", "subject": "🚀 French progress unlocked", "streak": 440}, {"week_start": "2026-01-10", "week_end": "2026-01-16", "minutes": 64, "xp": 696, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-01-13 to 2026-01-19", "competition": "leagues", "xp_per_min_used": 10.9}, {"week_start": "2026-01-17", "week_end": "2026-01-23", "minutes": 154, "xp": 1672, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-01-19 to 2026-01-25", "competition": "leagues", "xp_per_min_used": 10.9}, {"week_start": "2026-01-24", "week_end": "2026-01-30", "minutes": 159, "xp": 1691, "lessons": 27, "sent_date": "2026-01-31", "subject": "Antti, stop showing off. Or don’t 😊", "streak": 460}, {"week_start": "2026-01-31", "week_end": "2026-02-06", "minutes": 110, "xp": 1181, "lessons": 23, "sent_date": "2026-02-07", "subject": "🤯 Your French stats? Just wow.", "streak": 467}, {"week_start": "2026-02-07", "week_end": "2026-02-13", "minutes": 76, "xp": 840, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-02-09 to 2026-02-15", "competition": "leagues", "xp_per_min_used": 11.1}, {"week_start": "2026-02-14", "week_end": "2026-02-20", "minutes": 117, "xp": 945, "lessons": 17, "sent_date": "2026-02-21", "subject": "You’re crushing French ✨", "streak": 482}, {"week_start": "2026-02-21", "week_end": "2026-02-27", "minutes": 112, "xp": 1639, "lessons": 21, "sent_date": "2026-02-28", "subject": "🤩 Your French progress!!!", "streak": 488}, {"week_start": "2026-02-28", "week_end": "2026-03-06", "minutes": 198, "xp": 2111, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-03-02 to 2026-03-08", "competition": "leagues", "xp_per_min_used": 10.7}, {"week_start": "2026-03-07", "week_end": "2026-03-13", "minutes": 137, "xp": 1462, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-03-09 to 2026-03-15", "competition": "leagues", "xp_per_min_used": 10.7}, {"week_start": "2026-03-14", "week_end": "2026-03-20", "minutes": 172, "xp": 1632, "lessons": 31, "sent_date": "2026-03-21", "subject": "💪 Crushing it, one French lesson at a time", "streak": 509}, {"week_start": "2026-03-21", "week_end": "2026-03-27", "minutes": 148, "xp": 1730, "lessons": 25, "sent_date": "2026-03-28", "subject": "🤯 Your French stats? Just wow.", "streak": 516}, {"week_start": "2026-03-28", "week_end": "2026-04-03", "minutes": 153, "xp": 2081, "lessons": 31, "sent_date": "2026-04-04", "subject": "🚀 French progress unlocked", "streak": 523}, {"week_start": "2026-04-04", "week_end": "2026-04-10", "minutes": 103, "xp": 1088, "lessons": 19, "sent_date": "2026-04-11", "subject": "📈 Whoa, ‎Antti‎… Look at all that French progress!", "streak": 531}, {"week_start": "2026-04-11", "week_end": "2026-04-17", "minutes": 145, "xp": 2009, "lessons": 34, "sent_date": "2026-04-18", "subject": "Someone’s 👏 been 👏 busy 👏", "streak": 537}, {"week_start": "2026-04-18", "week_end": "2026-04-24", "minutes": 82, "xp": 684, "lessons": 18, "sent_date": "2026-04-25", "subject": "Gold star for ‎Antti‎ ⭐", "streak": 543}, {"week_start": "2026-04-25", "week_end": "2026-05-01", "minutes": 62, "xp": 487, "lessons": 14, "sent_date": "2026-05-02", "subject": "Gold star for ‎Antti‎ ⭐", "streak": 549}, {"week_start": "2026-05-02", "week_end": "2026-05-08", "minutes": 62, "xp": 813, "lessons": 16, "sent_date": "2026-05-09", "subject": "😭 Keep this up and Duo might happy-cry", "streak": 556}, {"week_start": "2026-05-09", "week_end": "2026-05-15", "minutes": 77, "xp": 885, "lessons": 19, "sent_date": "2026-05-16", "subject": "You’re crushing French ✨", "streak": 563}, {"week_start": "2026-05-16", "week_end": "2026-05-22", "minutes": 69, "xp": 708, "lessons": 16, "sent_date": "2026-05-23", "subject": "French? Nailed it ✔️", "streak": 570}, {"week_start": "2026-05-23", "week_end": "2026-05-29", "minutes": 47, "xp": 1051, "lessons": 15, "sent_date": "2026-05-30", "subject": "Weekly French results are in. Nice work 🎉", "streak": 576}, {"week_start": "2026-05-30", "week_end": "2026-06-05", "minutes": 51, "xp": 573, "lessons": 12, "sent_date": "2026-06-06", "subject": "🚀 French progress unlocked", "streak": 582}, {"week_start": "2026-06-06", "week_end": "2026-06-12", "minutes": 84, "xp": 1330, "lessons": 21, "sent_date": "2026-06-13", "subject": "📈 Whoa, ‎Antti‎… Look at all that French progress!", "streak": 589}, {"week_start": "2026-06-13", "week_end": "2026-06-19", "minutes": 104, "xp": 924, "lessons": 19, "sent_date": "2026-06-20", "subject": "🚀 French progress unlocked", "streak": 596}, {"week_start": "2026-06-20", "week_end": "2026-06-26", "minutes": 233, "xp": 3181, "lessons": 44, "sent_date": "2026-06-27", "subject": "📈 You’re making serious French progress", "streak": 603}, {"week_start": "2026-06-27", "week_end": "2026-07-03", "minutes": 245, "xp": 3985, "lessons": 52, "sent_date": "2026-07-04", "subject": "🤩 Your French progress!!!", "streak": 610}, {"week_start": "2026-07-04", "week_end": "2026-07-10", "minutes": 193, "xp": 3286, "lessons": 44, "sent_date": "2026-07-11", "subject": "📈 You’re making serious French progress", "streak": 617}, {"week_start": "2026-07-11", "week_end": "2026-07-17", "minutes": 84, "xp": 1126, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-07-13 to 2026-07-19", "competition": "leagues", "xp_per_min_used": 13.5}, {"week_start": "2026-07-18", "week_end": "2026-07-24", "minutes": 122, "xp": 1828, "lessons": 32, "sent_date": "2026-07-25", "subject": "😭 Keep this up and Duo might happy-cry", "streak": 631}, {"week_start": "2026-07-25", "week_end": "2026-07-31", "minutes": 101, "xp": 1380, "lessons": 23, "sent_date": "2026-08-01", "subject": "You’re in your French era ✨", "streak": 639}, {"week_start": "2026-08-01", "week_end": "2026-08-07", "minutes": 62, "xp": 823, "lessons": 12, "sent_date": "2026-08-08", "subject": "Someone’s 👏 been 👏 busy 👏", "streak": 645}, {"week_start": "2026-08-08", "week_end": "2026-08-14", "minutes": 34, "xp": 287, "lessons": 8, "sent_date": "2026-08-15", "subject": "Duo’s impressed. That’s rare 👀", "streak": 653}, {"week_start": "2026-08-15", "week_end": "2026-08-21", "minutes": 54, "xp": 484, "lessons": 11, "sent_date": "2026-08-22", "subject": "💪 French stats looking strong", "streak": 660}, {"week_start": "2026-08-22", "week_end": "2026-08-28", "minutes": 53, "xp": 446, "lessons": 10, "sent_date": "2026-08-29", "subject": "Duo’s impressed. That’s rare 👀", "streak": 667}, {"week_start": "2026-08-29", "week_end": "2026-09-04", "minutes": 19, "xp": 265, "lessons": null, "source": "league", "estimated": true, "league_window": "2026-08-31 to 2026-09-06", "competition": "leagues", "xp_per_min_used": 13.7}, {"week_start": "2026-09-05", "week_end": "2026-09-11", "minutes": 107, "xp": 1561, "lessons": 23, "sent_date": "2026-09-12", "subject": "Duo’s impressed. That’s rare 👀", "streak": 680}];
+// Classroom sessions: hours spent in offline French courses, which Duolingo
+// obviously knows nothing about. Kept as its own source and never folded into
+// the reported minutes -- a session whose length isn't known yet carries
+// hours: null and counts as attendance without contributing time.
+const OFFLINE = [{"date": "2024-10-23", "hours": 1, "course": "A2 conversation course", "source": "Institut français course page"}, {"date": "2024-10-30", "hours": 1, "course": "A2 conversation course", "source": "Institut français course page"}, {"date": "2024-11-05", "hours": 1.0, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2024-11-06", "hours": 1, "course": "A2 conversation course", "source": "Institut français course page"}, {"date": "2024-11-08", "hours": 1.0, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2024-11-13", "hours": 1, "course": "A2 conversation course", "attended": false, "source": "Institut français course page"}, {"date": "2024-11-18", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2024-11-20", "hours": 1, "course": "A2 conversation course", "attended": false, "source": "Institut français course page"}, {"date": "2024-11-25", "hours": 1.0, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2024-11-27", "hours": 1, "course": "A2 conversation course", "source": "Institut français course page"}, {"date": "2024-11-28", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2024-12-02", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2024-12-04", "hours": 1, "course": "A2 conversation course", "attended": false, "source": "Institut français course page"}, {"date": "2024-12-05", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2024-12-11", "hours": 1, "course": "A2 conversation course", "source": "Institut français course page"}, {"date": "2025-01-14", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-01-20", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-01-24", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-01-27", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-02-03", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-02-07", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-02-10", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-02-14", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-02-24", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-02-28", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-03-03", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page", "attended": false}, {"date": "2025-03-10", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-03-14", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-03-17", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-03-24", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-03-28", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-03-31", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page", "attended": false}, {"date": "2025-04-07", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-04-11", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-04-14", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-04-28", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page", "attended": false}, {"date": "2025-05-05", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-05-06", "hours": 1.0, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-05-12", "hours": 1.5, "course": "B1 course (spring 2025)", "source": "Institut français course page"}, {"date": "2025-05-23", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2025-06-03", "hours": 1.5, "course": "Private lessons A2/B1", "source": "Institut français agenda"}, {"date": "2026-08-24", "hours": 1.5, "course": "B1 course (autumn 2026)", "source": "stated"}, {"date": "2026-09-07", "hours": 1.5, "course": "B1 course (autumn 2026)", "source": "stated"}];
+
+// A session the course record marks as an absence is kept in the data file
+// (so the record stays faithful) but contributes neither time nor attendance.
+const ATTENDED = (OFFLINE || []).filter(s => s.attended !== false);
+const classMinutes = ATTENDED.reduce((t, s) => t + (typeof s.hours === 'number' ? s.hours * 60 : 0), 0);
+const classSessions = ATTENDED.length;
+const classUnknown = ATTENDED.filter(s => typeof s.hours !== 'number').length;
 
 const ink = getComputedStyle(document.documentElement);
 function cssVar(name) { return getComputedStyle(document.body).getPropertyValue(name).trim(); }
@@ -543,6 +552,13 @@ const kpis = [
     cls: 'pink' },
   { label: 'Best week', value: fmtDuration(best.minutes), sub: `week of ${best.week_start} · ${fmt(best.xp)} XP` },
 ];
+if (classMinutes > 0 || classSessions > 0) {
+  kpis.splice(3, 0, {
+    label: 'Classroom time', value: fmtDuration(classMinutes),
+    sub: `${fmt(classSessions)} session${classSessions === 1 ? '' : 's'} attended` +
+         (classUnknown ? ` · ${classUnknown} of unknown length` : ''),
+  });
+}
 for (const k of kpis) {
   const el = document.createElement('div');
   el.className = 'kpi';
@@ -552,361 +568,6 @@ for (const k of kpis) {
   el.querySelector('.sub').textContent = k.sub;
   kpiRow.appendChild(el);
 }
-
-// ---------- Gap detection (for the footer note + faded bars) ----------
-function isoDate(d) { return d.toISOString().slice(0, 10); }
-function addDays(d, n) { const r = new Date(d); r.setUTCDate(r.getUTCDate() + n); return r; }
-
-const byWeekStart = new Map(rows.map(r => [r.week_start, r]));
-const firstWeek = new Date(rows[0].week_start + 'T00:00:00Z');
-const lastWeek = new Date(rows[rows.length - 1].week_start + 'T00:00:00Z');
-
-const weeklyFull = [];
-for (let d = new Date(firstWeek); d <= lastWeek; d = addDays(d, 7)) {
-  const key = isoDate(d);
-  const r = byWeekStart.get(key);
-  weeklyFull.push({
-    label: key,
-    weekEnd: r ? r.week_end : isoDate(addDays(d, 6)),
-    minutes: metricValue(r, 'minutes'),
-    xp: metricValue(r, 'xp'),
-    lessons: metricValue(r, 'lessons'),
-    hasData: !!r,
-    estimated: !!(r && r.estimated),
-    leagueWindow: (r && r.league_window) || null,
-    competition: (r && r.competition) || null,
-    ratioUsed: (r && r.xp_per_min_used) || null,
-  });
-}
-
-// Collapse a per-week predicate into contiguous date ranges, for the footnotes.
-function rangesWhere(pred) {
-  const out = [];
-  let start = null;
-  weeklyFull.forEach((w, i) => {
-    if (pred(w)) {
-      if (start === null) start = w.label;
-    } else if (start !== null) {
-      out.push([start, weeklyFull[i - 1].weekEnd]);
-      start = null;
-    }
-  });
-  if (start !== null) out.push([start, weeklyFull[weeklyFull.length - 1].weekEnd]);
-  return out;
-}
-function renderRanges(el, ranges) {
-  const node = document.getElementById(el);
-  if (node) node.textContent = ranges.length ? ranges.map(([a, b]) => `${a} – ${b}`).join('; ') : 'none';
-}
-
-renderRanges('gapList', rangesWhere(w => !w.hasData));
-renderRanges('estList', rangesWhere(w => w.estimated));
-
-// ---------- Monthly / annual aggregation ----------
-function monthKey(dateStr) { return dateStr.slice(0, 7); } // YYYY-MM
-function addMonths(d, n) { const r = new Date(d); r.setUTCMonth(r.getUTCMonth() + n); return r; }
-
-// Sum a metric across a bucket's weeks, counting only weeks where that
-// metric is actually known. A bucket where none of them are known stays null
-// so it renders as "no data" rather than a misleading zero.
-function bucket(label, weeksIn) {
-  const sumKnown = (m) => {
-    const vals = weeksIn.map(r => metricValue(r, m)).filter(v => v !== null);
-    return vals.length ? { total: vals.reduce((s, v) => s + v, 0), n: vals.length } : { total: null, n: 0 };
-  };
-  const mins = sumKnown('minutes'), xp = sumKnown('xp'), less = sumKnown('lessons');
-  return {
-    label,
-    minutes: mins.total, xp: xp.total, lessons: less.total,
-    minutesWeeks: mins.n, xpWeeks: xp.n, lessonsWeeks: less.n,
-    hasData: weeksIn.length > 0,
-    weekCount: weeksIn.length,
-    estCount: weeksIn.filter(r => isEstimated(r, 'xp')).length,
-    estimated: weeksIn.length > 0 && weeksIn.every(r => isEstimated(r, 'xp')),
-  };
-}
-
-function aggregateMonthly() {
-  const out = [];
-  let cursor = new Date(Date.UTC(firstWeek.getUTCFullYear(), firstWeek.getUTCMonth(), 1));
-  const end = new Date(Date.UTC(lastWeek.getUTCFullYear(), lastWeek.getUTCMonth(), 1));
-  while (cursor <= end) {
-    const key = monthKey(isoDate(cursor));
-    out.push(bucket(key, rows.filter(r => monthKey(r.week_start) === key)));
-    cursor = addMonths(cursor, 1);
-  }
-  return out;
-}
-
-function aggregateAnnual() {
-  const out = [];
-  for (let y = firstWeek.getUTCFullYear(); y <= lastWeek.getUTCFullYear(); y++) {
-    out.push(bucket(String(y), rows.filter(r => r.week_start.slice(0, 4) === String(y))));
-  }
-  return out;
-}
-
-const DATASETS = {
-  weekly: weeklyFull,
-  monthly: aggregateMonthly(),
-  annual: aggregateAnnual(),
-};
-
-function formatLabel(period, label) {
-  if (period === 'weekly') {
-    const d = new Date(label + 'T00:00:00Z');
-    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
-  }
-  if (period === 'monthly') {
-    const d = new Date(label + '-01T00:00:00Z');
-    return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' });
-  }
-  return label;
-}
-
-function fullLabel(period, item) {
-  if (period === 'weekly') return `Week of ${item.label} – ${item.weekEnd}`;
-  if (period === 'monthly') {
-    const d = new Date(item.label + '-01T00:00:00Z');
-    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }) +
-      (item.hasData ? ` · ${item.weekCount} week${item.weekCount === 1 ? '' : 's'} reported` : ' · no reports');
-  }
-  return `${item.label}` + (item.hasData ? ` · ${item.weekCount} weeks reported` : ' · no reports');
-}
-
-// ---------- Bar chart ----------
-const METRIC_META = {
-  minutes: { colorVar: '--accent-sage', fallback: '#436F4C', title: 'Time', lower: 'time', verb: 'Time spent learning', format: fmtDuration },
-  xp: { colorVar: '--accent-pink', fallback: '#C2409A', title: 'XP', lower: 'XP', verb: 'Experience points earned', format: v => fmt(v) + ' XP' },
-  lessons: { colorVar: '--accent-amber', fallback: '#B8752E', title: 'Lessons', lower: 'lessons', verb: 'Lessons completed', format: v => fmt(v) + ' lessons' },
-};
-const PERIOD_META = {
-  weekly: 'by report week',
-  monthly: 'by month',
-  annual: 'by year',
-};
-
-let currentMetric = 'minutes';
-let currentPeriod = 'weekly';
-
-function buildBarChart() {
-  const container = document.getElementById('mainChart');
-  container.innerHTML = '';
-  const tooltip = document.getElementById('tooltip');
-
-  const items = DATASETS[currentPeriod];
-  const meta = METRIC_META[currentMetric];
-  const color = cssVar(meta.colorVar) || meta.fallback;
-  const mutedColor = cssVar('--ink-muted') || '#8B948E';
-  const estColor = cssVar('--accent-estimate') || '#748DA3';
-
-  document.getElementById('chartTitle').textContent = `${meta.title} per ${currentPeriod === 'weekly' ? 'week' : currentPeriod === 'monthly' ? 'month' : 'year'}`;
-  document.getElementById('chartSub').textContent = `${meta.verb}, ${PERIOD_META[currentPeriod]}`;
-
-  // The legend only earns its space when this view actually mixes sources.
-  const anyEst = items.some(d => d[currentMetric] !== null && d.estimated);
-  const anyNone = items.some(d => d[currentMetric] === null);
-  const legend = document.getElementById('chartLegend');
-  legend.hidden = !(anyEst || anyNone);
-  document.getElementById('swatchSolid').style.background = color;
-  legend.querySelectorAll('.legend-item')[1].hidden = !anyEst;
-  legend.querySelectorAll('.legend-item')[2].hidden = !anyNone;
-
-  const n = items.length;
-  const isNarrow = window.matchMedia('(max-width: 720px)').matches;
-  // Render the SVG's viewBox in real, on-screen pixel units (the container's
-  // actual measured width) instead of a fixed 980-unit canvas. With a fixed
-  // viewBox, text sized in "SVG units" shrinks along with everything else
-  // once the container is much narrower than 980px -- exactly what made the
-  // axis labels unreadable on phones. 1 viewBox unit == 1 real px this way,
-  // so a 13px label is always a true 13px, whatever the screen width.
-  const W = Math.max(280, Math.round(container.getBoundingClientRect().width || 940));
-  const H = isNarrow ? 560 : 300;
-  const fontSize = isNarrow ? 13 : 10.5;
-  const padL = isNarrow ? 56 : 46, padR = 12, padT = 14, padB = isNarrow ? 34 : 30;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
-  const maxVal = Math.max(...items.map(d => d[currentMetric] === null ? 0 : d[currentMetric])) * 1.12 || 1;
-
-  const gap = currentPeriod === 'weekly' ? 1.5 : 6;
-  const barW = Math.max(1, plotW / n - gap);
-
-  function xLeft(i) { return padL + i * (plotW / n) + gap / 2; }
-  function y(v) { return padT + plotH - (v / maxVal) * plotH; }
-
-  const svgNS = "http://www.w3.org/2000/svg";
-  const svg = document.createElementNS(svgNS, "svg");
-  svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
-  svg.classList.add("chart-svg");
-
-  // Estimated bars get their own colour, distinct from all three metric
-  // colours, plus a diagonal hatch. The hatch isn't decoration: a slate this
-  // legible against the surface is nearly indistinguishable from the XP pink
-  // under deuteranopia (ΔE ~3), so texture is what actually carries the
-  // distinction for red-green colour blindness and in print.
-  const defs = document.createElementNS(svgNS, "defs");
-  const pat = document.createElementNS(svgNS, "pattern");
-  pat.setAttribute("id", "estHatch");
-  pat.setAttribute("patternUnits", "userSpaceOnUse");
-  pat.setAttribute("width", "5");
-  pat.setAttribute("height", "5");
-  pat.setAttribute("patternTransform", "rotate(45)");
-  const patBg = document.createElementNS(svgNS, "rect");
-  patBg.setAttribute("width", "5"); patBg.setAttribute("height", "5");
-  patBg.setAttribute("fill", estColor); patBg.setAttribute("opacity", "0.45");
-  const patLine = document.createElementNS(svgNS, "rect");
-  patLine.setAttribute("width", "2.2"); patLine.setAttribute("height", "5");
-  patLine.setAttribute("fill", estColor);
-  pat.appendChild(patBg); pat.appendChild(patLine);
-  defs.appendChild(pat);
-  svg.appendChild(defs);
-
-  const ticks = 4;
-  for (let t = 0; t <= ticks; t++) {
-    const val = (maxVal / ticks) * t;
-    const yy = y(val);
-    const line = document.createElementNS(svgNS, "line");
-    line.setAttribute("x1", padL); line.setAttribute("x2", W - padR);
-    line.setAttribute("y1", yy); line.setAttribute("y2", yy);
-    line.setAttribute("class", "gridline");
-    svg.appendChild(line);
-    const label = document.createElementNS(svgNS, "text");
-    label.setAttribute("x", padL - 8); label.setAttribute("y", yy + 3);
-    label.setAttribute("text-anchor", "end");
-    label.setAttribute("class", "axis-label");
-    label.setAttribute("style", `font-size:${fontSize}px`);
-    label.textContent = currentMetric === 'minutes' ? fmtDuration(Math.round(val)) : Math.round(val).toLocaleString('en-US');
-    svg.appendChild(label);
-  }
-
-  const maxTicks = isNarrow
-    ? (currentPeriod === 'weekly' ? 5 : currentPeriod === 'monthly' ? 6 : n)
-    : (currentPeriod === 'weekly' ? 12 : currentPeriod === 'monthly' ? 14 : n);
-  const xTickEvery = Math.max(1, Math.ceil(n / maxTicks));
-
-  items.forEach((d, i) => {
-    const bx = xLeft(i);
-    const raw = d[currentMetric];
-    const metricKnown = raw !== null && raw !== undefined;
-    // Hatch only when the whole bar is a stand-in: a single estimated week, or
-    // a month/year every one of whose weeks was estimated. Partly-estimated
-    // buckets stay solid and say so in the tooltip instead. Applies to time as
-    // well as XP now, since an estimated week derives both.
-    const isEst = metricKnown && d.estimated;
-    const val = metricKnown ? raw : 0;
-    const bh = (val / maxVal) * plotH;
-    const rect = document.createElementNS(svgNS, "rect");
-    rect.setAttribute("x", bx);
-    rect.setAttribute("y", y(val));
-    rect.setAttribute("width", barW);
-    rect.setAttribute("height", Math.max(bh, metricKnown ? 1.5 : 1));
-    rect.setAttribute("rx", Math.min(3, barW / 2));
-    rect.setAttribute("fill", metricKnown ? (isEst ? "url(#estHatch)" : color) : mutedColor);
-    rect.setAttribute("class", "bar " + (metricKnown ? (isEst ? "has-data estimated" : "has-data") : "no-data"));
-    svg.appendChild(rect);
-
-    if (i % xTickEvery === 0 || i === n - 1) {
-      const label = document.createElementNS(svgNS, "text");
-      label.setAttribute("x", bx + barW / 2); label.setAttribute("y", H - (isNarrow ? 10 : 8));
-      label.setAttribute("text-anchor", "middle");
-      label.setAttribute("class", "axis-label");
-      label.setAttribute("style", `font-size:${fontSize}px`);
-      label.textContent = formatLabel(currentPeriod, d.label);
-      svg.appendChild(label);
-    }
-
-    // hit target: full column height, bigger than the bar itself
-    const hit = document.createElementNS(svgNS, "rect");
-    hit.setAttribute("x", bx - gap / 2);
-    hit.setAttribute("y", padT);
-    hit.setAttribute("width", barW + gap);
-    hit.setAttribute("height", plotH);
-    hit.setAttribute("class", "bar-hit");
-    hit.addEventListener('pointerenter', () => rect.style.opacity = 0.8);
-    hit.addEventListener('pointerleave', () => { rect.style.opacity = 1; tooltip.style.opacity = 0; });
-    hit.addEventListener('pointermove', (e) => {
-      tooltip.innerHTML = '';
-      const dateEl = document.createElement('div');
-      dateEl.className = 't-date';
-      dateEl.textContent = fullLabel(currentPeriod, d);
-      tooltip.appendChild(dateEl);
-      const raw = d[currentMetric];
-      const metricKnown = raw !== null && raw !== undefined;
-      const addNote = (text) => {
-        const note = document.createElement('div');
-        note.className = 't-row';
-        note.style.color = 'var(--bg)';
-        note.style.opacity = '0.85';
-        note.textContent = text;
-        tooltip.appendChild(note);
-      };
-      // Describe the metrics other than the one currently charted, skipping
-      // any that this week doesn't know.
-      const others = (['minutes', 'xp', 'lessons'])
-        .filter(m => m !== currentMetric)
-        .map(m => d[m] === null || d[m] === undefined
-          ? null
-          : (m === 'minutes' ? fmtDuration(d[m]) : m === 'xp' ? `${fmt(d[m])} XP` : `${fmt(d[m])} lessons`))
-        .filter(Boolean);
-
-      if (metricKnown) {
-        const row = document.createElement('div');
-        row.className = 't-row';
-        const key = document.createElement('span');
-        key.className = 't-key';
-        key.style.background = color;
-        const val = document.createElement('span');
-        val.className = 't-val';
-        val.textContent = (d.estimated ? '≈ ' : '') + meta.format(raw);
-        const name = document.createElement('span');
-        name.className = 't-name';
-        name.textContent = others.length ? '· ' + others.join(' · ') : '';
-        row.appendChild(key); row.appendChild(val); row.appendChild(name);
-        tooltip.appendChild(row);
-
-        if (currentPeriod === 'weekly' && d.estimated) {
-          addNote(`No report email — XP from the ${d.competition === 'diamond-tournament' ? 'tournament' : 'league'} week ${d.leagueWindow}`);
-          if (currentMetric === 'minutes' && d.ratioUsed) {
-            addNote(`Time derived at ${d.ratioUsed} XP/min, the local rate for nearby weeks`);
-          }
-        } else if (currentPeriod !== 'weekly' && d.estCount > 0) {
-          addNote(`Includes ${d.estCount} week${d.estCount === 1 ? '' : 's'} estimated from league scores`);
-        }
-      } else if (d.hasData) {
-        addNote(others.length
-          ? `No ${meta.lower} figure for this week (${others.join(' · ')} known)`
-          : `No ${meta.lower} figure for this week`);
-      }
-      // The tooltip is absolutely positioned with no positioned ancestor, so
-      // its left/top are relative to the whole document -- use page
-      // coordinates (which already include scroll offset), not coordinates
-      // relative to the SVG's viewport position, or the box lands far from
-      // the cursor as soon as the page is scrolled at all.
-      tooltip.style.left = e.pageX + 'px';
-      tooltip.style.top = e.pageY + 'px';
-      tooltip.style.opacity = 1;
-    });
-    svg.appendChild(hit);
-  });
-
-  container.appendChild(svg);
-}
-
-document.getElementById('metricToggle').addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-metric]');
-  if (!btn) return;
-  currentMetric = btn.dataset.metric;
-  document.querySelectorAll('#metricToggle button').forEach(b => b.classList.toggle('active', b === btn));
-  buildBarChart();
-});
-document.getElementById('periodToggle').addEventListener('click', (e) => {
-  const btn = e.target.closest('button[data-period]');
-  if (!btn) return;
-  currentPeriod = btn.dataset.period;
-  document.querySelectorAll('#periodToggle button').forEach(b => b.classList.toggle('active', b === btn));
-  buildBarChart();
-});
-
-buildBarChart();
 
 // ---------- Path progress (modeled) ----------
 // Duolingo's export records only the current position, with no per-unit
@@ -949,133 +610,649 @@ const pathSeries = rows.map(r => {
   return { weekStart: r.week_start, weekEnd: r.week_end,
            unit: CURRENT_UNIT * pathCum / pathTotalXp, estimated: !!r.estimated };
 });
+// Modeled Score per week, keyed by week_start, so it can ride along in the
+// main chart as a fourth metric rather than needing its own chart.
+const scoreByWeek = new Map(pathSeries.map(p => [p.weekStart, unitToScore(p.unit)]));
+
+// Dated observations of the real Score / unit position. Injected at build
+// time; each one replaces a modeled point. Two or more with a Score turn the
+// forecast from inferred into measured.
+const SCORE_OBS = [{"date": "2026-09-07", "unit": 493, "score": null, "source": "Duolingo data export (user-tree-backend.csv, section_index 5 / unit_index 493)"}, {"date": "2026-09-08", "unit": 499, "score": 91, "source": "duome.eu/akaukora"}];
+const scoredObs = SCORE_OBS.filter(o => typeof o.score === 'number');
+
+// Measured Score pace, once there are two or more real readings. Until then
+// this returns null and the forecast falls back to the XP proxy below.
+function measuredScorePace() {
+  if (scoredObs.length < 2) return null;
+  const a = scoredObs[0], b = scoredObs[scoredObs.length - 1];
+  const days = (new Date(b.date) - new Date(a.date)) / 86400000;
+  if (days <= 0 || b.score === a.score) return null;
+  const perWeek = (b.score - a.score) / (days / 7);
+  if (perWeek <= 0) return null;
+  return { perWeek, from: a, to: b, spanDays: Math.round(days) };
+}
+
+// Pace projection to the next CEFR level. Recent pace is genuinely ambiguous,
+// so several windows are computed and the spread is reported rather than one
+// number pretending to precision.
+const XP_PER_UNIT = 302;
+const B2_UNIT = 629;
+function paceForecast() {
+  const needXp = (B2_UNIT - NOW.unit) * XP_PER_UNIT;
+  const lastEnd = new Date(rows[rows.length - 1].week_end + 'T00:00:00Z');
+  const out = [];
+  [4, 12, 26, 52].forEach(w => {
+    const win = rows.slice(-w);
+    const avg = win.reduce((s, r) => s + (metricValue(r, 'xp') || 0), 0) / win.length;
+    if (avg <= 0) return;
+    const weeks = needXp / avg;
+    out.push({ window: w, avgXp: Math.round(avg), weeks: Math.round(weeks),
+               date: new Date(lastEnd.getTime() + weeks * 7 * 86400000) });
+  });
+  return out;
+}
 
 function unitReached(u) {
   const hit = pathSeries.find(p => p.unit >= u);
   return hit ? hit.weekEnd : null;
 }
 
-function buildPathChart() {
-  const container = document.getElementById('pathChart');
+
+// ---------- Gap detection (for the footer note + faded bars) ----------
+function isoDate(d) { return d.toISOString().slice(0, 10); }
+function addDays(d, n) { const r = new Date(d); r.setUTCDate(r.getUTCDate() + n); return r; }
+
+const byWeekStart = new Map(rows.map(r => [r.week_start, r]));
+const firstWeek = new Date(rows[0].week_start + 'T00:00:00Z');
+let lastWeek = new Date(rows[rows.length - 1].week_start + 'T00:00:00Z');
+
+// ---------- Classroom sessions, bucketed onto the same weekly grid ----------
+// The grid is the report-week grid (firstWeek + 7n), so a class lands in the
+// week that contains its date. A class held after the last report week still
+// gets a bucket: the grid is extended rather than the session dropped.
+const MS_WEEK = 7 * 24 * 3600 * 1000;
+function gridWeekStart(dateStr) {
+  const t = new Date(dateStr + 'T00:00:00Z');
+  const k = Math.floor((t - firstWeek) / MS_WEEK);
+  return k < 0 ? null : isoDate(addDays(firstWeek, k * 7));
+}
+const offlineByWeek = new Map();
+ATTENDED.forEach(s => {
+  const key = gridWeekStart(s.date);
+  if (!key) return;
+  const b = offlineByWeek.get(key) || { minutes: 0, sessions: 0, unknown: 0, courses: new Set() };
+  b.sessions += 1;
+  if (typeof s.hours === 'number') b.minutes += s.hours * 60; else b.unknown += 1;
+  if (s.course) b.courses.add(s.course);
+  offlineByWeek.set(key, b);
+});
+for (const key of offlineByWeek.keys()) {
+  const d = new Date(key + 'T00:00:00Z');
+  if (d > lastWeek) lastWeek = d;
+}
+function offlineFor(key) {
+  const b = offlineByWeek.get(key);
+  return b
+    ? { offlineMinutes: b.minutes, offlineSessions: b.sessions,
+        offlineUnknown: b.unknown, offlineCourses: [...b.courses] }
+    : { offlineMinutes: 0, offlineSessions: 0, offlineUnknown: 0, offlineCourses: [] };
+}
+
+const weeklyFull = [];
+for (let d = new Date(firstWeek); d <= lastWeek; d = addDays(d, 7)) {
+  const key = isoDate(d);
+  const r = byWeekStart.get(key);
+  weeklyFull.push({
+    label: key,
+    weekEnd: r ? r.week_end : isoDate(addDays(d, 6)),
+    ...offlineFor(key),
+    minutes: metricValue(r, 'minutes'),
+    xp: metricValue(r, 'xp'),
+    lessons: metricValue(r, 'lessons'),
+    // Modeled, and a stock rather than a flow: it carries forward through
+    // weeks with no report rather than dropping to zero.
+    score: scoreByWeek.has(key) ? scoreByWeek.get(key) : null,
+    hasData: !!r,
+    estimated: !!(r && r.estimated),
+    leagueWindow: (r && r.league_window) || null,
+    competition: (r && r.competition) || null,
+    ratioUsed: (r && r.xp_per_min_used) || null,
+  });
+}
+// Carry the modeled score across any week the model didn't cover, so the line
+// never dips back down.
+let carried = null;
+weeklyFull.forEach(w => {
+  if (w.score === null) w.score = carried;
+  else carried = w.score;
+});
+
+// Collapse a per-week predicate into contiguous date ranges, for the footnotes.
+function rangesWhere(pred) {
+  const out = [];
+  let start = null;
+  weeklyFull.forEach((w, i) => {
+    if (pred(w)) {
+      if (start === null) start = w.label;
+    } else if (start !== null) {
+      out.push([start, weeklyFull[i - 1].weekEnd]);
+      start = null;
+    }
+  });
+  if (start !== null) out.push([start, weeklyFull[weeklyFull.length - 1].weekEnd]);
+  return out;
+}
+function renderRanges(el, ranges) {
+  const node = document.getElementById(el);
+  if (node) node.textContent = ranges.length ? ranges.map(([a, b]) => `${a} – ${b}`).join('; ') : 'none';
+}
+
+renderRanges('gapList', rangesWhere(w => !w.hasData));
+renderRanges('estList', rangesWhere(w => w.estimated));
+
+// Courses are listed by name and date span rather than week-by-week -- that's
+// how the course record itself reads.
+(function listCourses() {
+  const node = document.getElementById('classList');
+  if (!node) return;
+  const byCourse = new Map();
+  ATTENDED.forEach(s => {
+    const c = byCourse.get(s.course) || { n: 0, min: 0, unknown: 0, first: s.date, last: s.date };
+    c.n += 1;
+    if (typeof s.hours === 'number') c.min += s.hours * 60; else c.unknown += 1;
+    if (s.date < c.first) c.first = s.date;
+    if (s.date > c.last) c.last = s.date;
+    byCourse.set(s.course, c);
+  });
+  node.textContent = [...byCourse.entries()]
+    .sort((a, b) => a[1].first.localeCompare(b[1].first))
+    .map(([name, c]) => `${name}, ${c.first} – ${c.last}, ${c.n} session${c.n === 1 ? '' : 's'}` +
+      (c.min ? ` (${fmtDuration(c.min)})` : '') +
+      (c.unknown ? `, ${c.unknown} of unrecorded length` : ''))
+    .join('; ') || 'none recorded';
+})();
+
+// ---------- Monthly / annual aggregation ----------
+function monthKey(dateStr) { return dateStr.slice(0, 7); } // YYYY-MM
+function addMonths(d, n) { const r = new Date(d); r.setUTCMonth(r.getUTCMonth() + n); return r; }
+
+// Sum a metric across a bucket's weeks, counting only weeks where that
+// metric is actually known. A bucket where none of them are known stays null
+// so it renders as "no data" rather than a misleading zero.
+// Classroom time for a month/year is summed straight from the session dates
+// rather than from the weeks in the bucket: a class can fall in a week that
+// has no report email at all, and it shouldn't vanish because of that.
+function offlineInPeriod(prefix) {
+  const hits = ATTENDED.filter(s => s.date.startsWith(prefix));
+  return {
+    offlineMinutes: hits.reduce((s, x) => s + (typeof x.hours === 'number' ? x.hours * 60 : 0), 0),
+    offlineSessions: hits.length,
+    offlineUnknown: hits.filter(x => typeof x.hours !== 'number').length,
+    offlineCourses: [...new Set(hits.map(x => x.course).filter(Boolean))],
+  };
+}
+
+function bucket(label, weeksIn, offline) {
+  const sumKnown = (m) => {
+    const vals = weeksIn.map(r => metricValue(r, m)).filter(v => v !== null);
+    return vals.length ? { total: vals.reduce((s, v) => s + v, 0), n: vals.length } : { total: null, n: 0 };
+  };
+  const mins = sumKnown('minutes'), xp = sumKnown('xp'), less = sumKnown('lessons');
+  // Score is a level, not a quantity, so a period takes the value it ended on
+  // rather than a sum. Monotonic, so the maximum is the closing value.
+  const scores = weeksIn.map(r => scoreByWeek.get(r.week_start)).filter(v => v !== undefined);
+  return {
+    label,
+    ...(offline || { offlineMinutes: 0, offlineSessions: 0, offlineUnknown: 0, offlineCourses: [] }),
+    minutes: mins.total, xp: xp.total, lessons: less.total,
+    score: scores.length ? Math.max(...scores) : null,
+    minutesWeeks: mins.n, xpWeeks: xp.n, lessonsWeeks: less.n,
+    hasData: weeksIn.length > 0 || !!(offline && offline.offlineSessions),
+    weekCount: weeksIn.length,
+    estCount: weeksIn.filter(r => isEstimated(r, 'xp')).length,
+    estimated: weeksIn.length > 0 && weeksIn.every(r => isEstimated(r, 'xp')),
+  };
+}
+
+function aggregateMonthly() {
+  const out = [];
+  let cursor = new Date(Date.UTC(firstWeek.getUTCFullYear(), firstWeek.getUTCMonth(), 1));
+  const end = new Date(Date.UTC(lastWeek.getUTCFullYear(), lastWeek.getUTCMonth(), 1));
+  while (cursor <= end) {
+    const key = monthKey(isoDate(cursor));
+    out.push(bucket(key, rows.filter(r => monthKey(r.week_start) === key), offlineInPeriod(key)));
+    cursor = addMonths(cursor, 1);
+  }
+  return out;
+}
+
+function aggregateAnnual() {
+  const out = [];
+  for (let y = firstWeek.getUTCFullYear(); y <= lastWeek.getUTCFullYear(); y++) {
+    out.push(bucket(String(y), rows.filter(r => r.week_start.slice(0, 4) === String(y))));
+  }
+  return out;
+}
+
+// Carry the closing score forward across periods with no reports, so the
+// level line stays a level instead of collapsing to nothing.
+function carryScore(list) {
+  let last = null;
+  list.forEach(b => { if (b.score === null) b.score = last; else last = b.score; });
+  return list;
+}
+
+const DATASETS = {
+  weekly: weeklyFull,
+  monthly: carryScore(aggregateMonthly()),
+  annual: carryScore(aggregateAnnual()),
+};
+
+function formatLabel(period, label) {
+  if (period === 'weekly') {
+    const d = new Date(label + 'T00:00:00Z');
+    return d.toLocaleDateString('en-US', { month: 'short', day: 'numeric', timeZone: 'UTC' });
+  }
+  if (period === 'monthly') {
+    const d = new Date(label + '-01T00:00:00Z');
+    return d.toLocaleDateString('en-US', { month: 'short', year: '2-digit', timeZone: 'UTC' });
+  }
+  return label;
+}
+
+function fullLabel(period, item) {
+  if (period === 'weekly') return `Week of ${item.label} – ${item.weekEnd}`;
+  if (period === 'monthly') {
+    const d = new Date(item.label + '-01T00:00:00Z');
+    return d.toLocaleDateString('en-US', { month: 'long', year: 'numeric', timeZone: 'UTC' }) +
+      (item.hasData ? ` · ${item.weekCount} week${item.weekCount === 1 ? '' : 's'} reported` : ' · no reports');
+  }
+  return `${item.label}` + (item.hasData ? ` · ${item.weekCount} weeks reported` : ' · no reports');
+}
+
+// ---------- Bar chart ----------
+const METRIC_META = {
+  minutes: { colorVar: '--accent-sage', fallback: '#436F4C', title: 'Time', lower: 'time', verb: 'Time spent learning', format: fmtDuration },
+  xp: { colorVar: '--accent-pink', fallback: '#C2409A', title: 'XP', lower: 'XP', verb: 'Experience points earned', format: v => fmt(v) + ' XP' },
+  lessons: { colorVar: '--accent-amber', fallback: '#B8752E', title: 'Lessons', lower: 'lessons', verb: 'Lessons completed', format: v => fmt(v) + ' lessons' },
+  // A level, not a weekly quantity -- drawn as a line against the CEFR bands,
+  // and in the estimate colour because every point of it is modeled.
+  score: { colorVar: '--accent-estimate', fallback: '#748DA3', title: 'Level', lower: 'level',
+           verb: 'Duolingo Score and CEFR level', format: v => 'Score ' + Math.round(v), isLevel: true },
+};
+const PERIOD_META = {
+  weekly: 'by report week',
+  monthly: 'by month',
+  annual: 'by year',
+};
+
+let currentMetric = 'minutes';
+let currentPeriod = 'weekly';
+
+function buildBarChart() {
+  const container = document.getElementById('mainChart');
   container.innerHTML = '';
   const tooltip = document.getElementById('tooltip');
-  const isNarrow = window.matchMedia('(max-width: 720px)').matches;
-  const W = Math.max(280, Math.round(container.getBoundingClientRect().width || 940));
-  const H = isNarrow ? 380 : 260;
-  const fontSize = isNarrow ? 12 : 10.5;
-  const padL = isNarrow ? 46 : 40, padR = isNarrow ? 34 : 42, padT = 10, padB = isNarrow ? 30 : 26;
-  const plotW = W - padL - padR, plotH = H - padT - padB;
+
+  const items = DATASETS[currentPeriod];
+  const meta = METRIC_META[currentMetric];
+  const color = cssVar(meta.colorVar) || meta.fallback;
+  const mutedColor = cssVar('--ink-muted') || '#8B948E';
   const estColor = cssVar('--accent-estimate') || '#748DA3';
+  const classColor = cssVar('--accent-class') || '#004722';
+
+  const isLevel = !!meta.isLevel;
+  const periodWord = currentPeriod === 'weekly' ? 'week' : currentPeriod === 'monthly' ? 'month' : 'year';
+  document.getElementById('chartTitle').innerHTML = isLevel
+    ? 'French level over time <span class="tag-modeled">modeled</span>'
+    : `${meta.title} per ${periodWord}`;
+  document.getElementById('chartSub').textContent = isLevel
+    ? 'Duolingo Score against its CEFR bands — reconstructed, not recorded'
+    : `${meta.verb}, ${PERIOD_META[currentPeriod]}`;
+
+  // The Level view brings its own furniture: measured-today figures, the CEFR
+  // milestone cards and the method note.
+  document.getElementById('nowStrip').hidden = !isLevel;
+  document.getElementById('milestones').hidden = !isLevel;
+  document.getElementById('pathNote').hidden = !isLevel;
+
+  // The legend only earns its space when this view actually mixes sources.
+  const anyEst = !isLevel && items.some(d => d[currentMetric] !== null && d.estimated);
+  const anyNone = !isLevel && items.some(d => d[currentMetric] === null);
+  const anyClass = currentMetric === 'minutes' && items.some(d => (d.offlineMinutes || 0) > 0);
+  const legend = document.getElementById('chartLegend');
+  legend.hidden = !(anyEst || anyNone || anyClass);
+  document.getElementById('swatchSolid').style.background = color;
+  legend.querySelectorAll('.legend-item')[1].hidden = !anyEst;
+  legend.querySelectorAll('.legend-item')[2].hidden = !anyNone;
+  legend.querySelectorAll('.legend-item')[3].hidden = !anyClass;
+
+  const n = items.length;
+  const isNarrow = window.matchMedia('(max-width: 720px)').matches;
+  // Render the SVG's viewBox in real, on-screen pixel units (the container's
+  // actual measured width) instead of a fixed 980-unit canvas. With a fixed
+  // viewBox, text sized in "SVG units" shrinks along with everything else
+  // once the container is much narrower than 980px -- exactly what made the
+  // axis labels unreadable on phones. 1 viewBox unit == 1 real px this way,
+  // so a 13px label is always a true 13px, whatever the screen width.
+  const W = Math.max(280, Math.round(container.getBoundingClientRect().width || 940));
+  const H = isNarrow ? (isLevel ? 380 : 560) : 300;
+  const fontSize = isNarrow ? 13 : 10.5;
+  // Level needs room on the right for the A1/A2/B1/B2 band labels.
+  const padL = isNarrow ? 56 : 46, padR = isLevel ? (isNarrow ? 34 : 40) : 12,
+        padT = 14, padB = isNarrow ? 34 : 30;
+  const plotW = W - padL - padR, plotH = H - padT - padB;
+  // The Level axis is the score's own fixed 0-129 range, so the CEFR bands sit
+  // in constant positions instead of rescaling with the data.
+  // Classroom time stacks on top of Duolingo time, so the axis has to leave
+  // room for the whole column, not just its Duolingo part.
+  const showClass = currentMetric === 'minutes';
+  const stackTop = (d) => (d.minutes === null ? 0 : d.minutes) + (showClass ? (d.offlineMinutes || 0) : 0);
+  const maxVal = isLevel ? 129
+    : (Math.max(...items.map(d => showClass ? stackTop(d)
+        : (d[currentMetric] === null ? 0 : d[currentMetric]))) * 1.12 || 1);
+
+  const gap = currentPeriod === 'weekly' ? 1.5 : 6;
+  const barW = Math.max(1, plotW / n - gap);
+
+  function xLeft(i) { return padL + i * (plotW / n) + gap / 2; }
+  function y(v) { return padT + plotH - (v / maxVal) * plotH; }
+
   const svgNS = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(svgNS, "svg");
   svg.setAttribute("viewBox", `0 0 ${W} ${H}`);
   svg.classList.add("chart-svg");
 
-  const yTop = COURSE_UNITS;
-  const y = v => padT + plotH - (v / yTop) * plotH;
-  const x = i => padL + (pathSeries.length === 1 ? 0 : (i / (pathSeries.length - 1)) * plotW);
+  // Estimated bars get their own colour, distinct from all three metric
+  // colours, plus a diagonal hatch. The hatch isn't decoration: a slate this
+  // legible against the surface is nearly indistinguishable from the XP pink
+  // under deuteranopia (ΔE ~3), so texture is what actually carries the
+  // distinction for red-green colour blindness and in print.
+  const defs = document.createElementNS(svgNS, "defs");
+  const pat = document.createElementNS(svgNS, "pattern");
+  pat.setAttribute("id", "estHatch");
+  pat.setAttribute("patternUnits", "userSpaceOnUse");
+  pat.setAttribute("width", "5");
+  pat.setAttribute("height", "5");
+  pat.setAttribute("patternTransform", "rotate(45)");
+  const patBg = document.createElementNS(svgNS, "rect");
+  patBg.setAttribute("width", "5"); patBg.setAttribute("height", "5");
+  patBg.setAttribute("fill", estColor); patBg.setAttribute("opacity", "0.45");
+  const patLine = document.createElementNS(svgNS, "rect");
+  patLine.setAttribute("width", "2.2"); patLine.setAttribute("height", "5");
+  patLine.setAttribute("fill", estColor);
+  pat.appendChild(patBg); pat.appendChild(patLine);
+  defs.appendChild(pat);
+  svg.appendChild(defs);
 
-  // CEFR bands: a sequential ramp, since the levels are ordered. Kept very
-  // faint so the progress line stays the figure and these stay ground.
-  // Intro/A1/A2 together are only the first 13% of the course, so on a linear
-  // axis their bands are a few pixels tall. Draw every band, but only label
-  // the ones with room -- the milestone cards below carry the thin ones, and
-  // colliding labels would be worse than none.
-  const labelled = [];
-  CEFR_BANDS.forEach(([label, from, to], k) => {
-    const yFrom = y(from), yTo = y(to);
-    const r = document.createElementNS(svgNS, "rect");
-    r.setAttribute("x", padL); r.setAttribute("width", plotW);
-    r.setAttribute("y", yTo); r.setAttribute("height", Math.max(1, yFrom - yTo));
-    r.setAttribute("fill", cssVar('--accent-green') || '#004722');
-    r.setAttribute("opacity", 0.04 + k * 0.025);
-    svg.appendChild(r);
+  if (isLevel) {
+    // Bands are the CEFR score ranges: the y position of "B1" never moves, so
+    // the line's height reads directly as a level.
+    SCORE_BANDS.forEach(([name, , , s0, s1], k) => {
+      const yTop = y(s1 + 1), yBot = y(s0);
+      const r = document.createElementNS(svgNS, "rect");
+      r.setAttribute("x", padL); r.setAttribute("width", plotW);
+      r.setAttribute("y", yTop); r.setAttribute("height", Math.max(1, yBot - yTop));
+      r.setAttribute("fill", cssVar('--accent-green') || '#004722');
+      r.setAttribute("opacity", 0.045 + k * 0.03);
+      svg.appendChild(r);
 
-    if (yFrom - yTo >= 15) {
-      const mid = (yFrom + yTo) / 2;
-      if (labelled.every(v => Math.abs(v - mid) >= 13)) {
-        const t = document.createElementNS(svgNS, "text");
-        t.setAttribute("x", W - padR + 6);
-        t.setAttribute("y", mid + 3.5);
-        t.setAttribute("class", "band-label");
-        t.setAttribute("style", `font-size:${fontSize}px`);
-        t.textContent = label;
-        svg.appendChild(t);
-        labelled.push(mid);
+      const t = document.createElementNS(svgNS, "text");
+      t.setAttribute("x", W - padR + 6); t.setAttribute("y", (yTop + yBot) / 2 + 3.5);
+      t.setAttribute("class", "band-label");
+      t.setAttribute("style", `font-size:${fontSize}px`);
+      t.textContent = name;
+      svg.appendChild(t);
+
+      const line = document.createElementNS(svgNS, "line");
+      line.setAttribute("x1", padL); line.setAttribute("x2", W - padR);
+      line.setAttribute("y1", yBot); line.setAttribute("y2", yBot);
+      line.setAttribute("class", "gridline");
+      svg.appendChild(line);
+
+      const lab = document.createElementNS(svgNS, "text");
+      lab.setAttribute("x", padL - 8); lab.setAttribute("y", yBot + 3.5);
+      lab.setAttribute("text-anchor", "end");
+      lab.setAttribute("class", "axis-label");
+      lab.setAttribute("style", `font-size:${fontSize}px`);
+      lab.textContent = s0;
+      svg.appendChild(lab);
+    });
+  } else {
+    const ticks = 4;
+    for (let t = 0; t <= ticks; t++) {
+      const val = (maxVal / ticks) * t;
+      const yy = y(val);
+      const line = document.createElementNS(svgNS, "line");
+      line.setAttribute("x1", padL); line.setAttribute("x2", W - padR);
+      line.setAttribute("y1", yy); line.setAttribute("y2", yy);
+      line.setAttribute("class", "gridline");
+      svg.appendChild(line);
+      const label = document.createElementNS(svgNS, "text");
+      label.setAttribute("x", padL - 8); label.setAttribute("y", yy + 3);
+      label.setAttribute("text-anchor", "end");
+      label.setAttribute("class", "axis-label");
+      label.setAttribute("style", `font-size:${fontSize}px`);
+      label.textContent = currentMetric === 'minutes' ? fmtDuration(Math.round(val)) : Math.round(val).toLocaleString('en-US');
+      svg.appendChild(label);
+    }
+  }
+
+  const maxTicks = isNarrow
+    ? (currentPeriod === 'weekly' ? 5 : currentPeriod === 'monthly' ? 6 : n)
+    : (currentPeriod === 'weekly' ? 12 : currentPeriod === 'monthly' ? 14 : n);
+  const xTickEvery = Math.max(1, Math.ceil(n / maxTicks));
+
+  if (isLevel) {
+    const pts = items.map((d, i) => [xLeft(i) + barW / 2, d.score]).filter(p => p[1] !== null);
+    if (pts.length) {
+      const line = document.createElementNS(svgNS, "path");
+      line.setAttribute("d", pts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${y(p[1]).toFixed(1)}`).join(' '));
+      line.setAttribute("class", "path-line");
+      svg.appendChild(line);
+
+      // Projection to the next level, at the pace of the last 12 weeks --
+      // long enough to smooth a quiet fortnight, short enough to be "recent".
+      const fc = paceForecast();
+      const base = fc.find(f => f.window === 12) || fc[0];
+      const lastPt = pts[pts.length - 1];
+      if (base && lastPt[1] < 100 && currentPeriod === 'weekly') {
+        const perWeek = (100 - lastPt[1]) / base.weeks;
+        const stepX = plotW / n;
+        // Clipped to the plot's right edge: the projection runs well past the
+        // last observed week, so without this it would draw over the band labels.
+        const projPts = [];
+        const xMax = W - padR;
+        for (let k = 0; k <= base.weeks; k++) {
+          const px = lastPt[0] + k * stepX;
+          if (px > xMax) {
+            const t = (xMax - lastPt[0]) / stepX;
+            projPts.push([xMax, Math.min(100, lastPt[1] + t * perWeek)]);
+            break;
+          }
+          projPts.push([px, Math.min(100, lastPt[1] + k * perWeek)]);
+        }
+        const proj = document.createElementNS(svgNS, "path");
+        proj.setAttribute("d", projPts.map((p, i) => `${i ? 'L' : 'M'}${p[0].toFixed(1)},${y(p[1]).toFixed(1)}`).join(' '));
+        proj.setAttribute("fill", "none");
+        proj.setAttribute("stroke", estColor);
+        proj.setAttribute("stroke-width", "1.5");
+        proj.setAttribute("stroke-dasharray", "2 4");
+        proj.setAttribute("opacity", "0.6");
+        svg.appendChild(proj);
+      }
+
+      const dot = document.createElementNS(svgNS, "circle");
+      dot.setAttribute("cx", lastPt[0]); dot.setAttribute("cy", y(lastPt[1]));
+      dot.setAttribute("r", 3.5); dot.setAttribute("class", "path-dot");
+      svg.appendChild(dot);
+
+      // Real Score readings, drawn filled so they stand apart from the dashed
+      // modeled line. These are the points the forecast will eventually be
+      // fitted to instead of the XP proxy.
+      if (currentPeriod === 'weekly') {
+        scoredObs.forEach(o => {
+          const i = items.findIndex(d => d.weekEnd >= o.date);
+          if (i < 0) return;
+          const c = document.createElementNS(svgNS, "circle");
+          c.setAttribute("cx", xLeft(i) + barW / 2);
+          c.setAttribute("cy", y(o.score));
+          c.setAttribute("r", 4);
+          c.setAttribute("fill", cssVar('--accent-green') || '#004722');
+          svg.appendChild(c);
+        });
       }
     }
-    const line = document.createElementNS(svgNS, "line");
-    line.setAttribute("x1", padL); line.setAttribute("x2", W - padR);
-    line.setAttribute("y1", yFrom); line.setAttribute("y2", yFrom);
-    line.setAttribute("class", "gridline");
-    svg.appendChild(line);
-  });
+  }
 
-  // y labels: unit numbers, thinned the same way
-  const placed = [];
-  [0, 129, 629, COURSE_UNITS].forEach(u => {
-    const yy = y(u);
-    if (placed.some(v => Math.abs(v - yy) < 12)) return;
-    const t = document.createElementNS(svgNS, "text");
-    t.setAttribute("x", padL - 6); t.setAttribute("y", yy + 3.5);
-    t.setAttribute("text-anchor", "end");
-    t.setAttribute("class", "axis-label");
-    t.setAttribute("style", `font-size:${fontSize}px`);
-    t.textContent = u;
-    svg.appendChild(t);
-    placed.push(yy);
-  });
+  items.forEach((d, i) => {
+    const bx = xLeft(i);
+    const raw = d[currentMetric];
+    const metricKnown = raw !== null && raw !== undefined;
+    // Hatch only when the whole bar is a stand-in: a single estimated week, or
+    // a month/year every one of whose weeks was estimated. Partly-estimated
+    // buckets stay solid and say so in the tooltip instead. Applies to time as
+    // well as XP now, since an estimated week derives both.
+    const isEst = metricKnown && d.estimated;
+    const val = metricKnown ? raw : 0;
+    let rect = null;
+    if (!isLevel) {
+      const bh = (val / maxVal) * plotH;
+      rect = document.createElementNS(svgNS, "rect");
+      rect.setAttribute("x", bx);
+      rect.setAttribute("y", y(val));
+      rect.setAttribute("width", barW);
+      rect.setAttribute("height", Math.max(bh, metricKnown ? 1.5 : 1));
+      rect.setAttribute("rx", Math.min(3, barW / 2));
+      rect.setAttribute("fill", metricKnown ? (isEst ? "url(#estHatch)" : color) : mutedColor);
+      rect.setAttribute("class", "bar " + (metricKnown ? (isEst ? "has-data estimated" : "has-data") : "no-data"));
+      svg.appendChild(rect);
 
-  const path = document.createElementNS(svgNS, "path");
-  path.setAttribute("d", pathSeries.map((p, i) => `${i ? 'L' : 'M'}${x(i).toFixed(1)},${y(p.unit).toFixed(1)}`).join(' '));
-  path.setAttribute("class", "path-line");
-  svg.appendChild(path);
+      // Classroom hours sit on top of the same column: same quantity (time
+      // spent on French), different source, so stacking is honest where a
+      // separate series next to it would imply they compete.
+      const om = showClass ? (d.offlineMinutes || 0) : 0;
+      if (om > 0) {
+        const oh = (om / maxVal) * plotH;
+        const orect = document.createElementNS(svgNS, "rect");
+        orect.setAttribute("x", bx);
+        orect.setAttribute("y", y(val + om));
+        orect.setAttribute("width", barW);
+        orect.setAttribute("height", Math.max(oh, 1.5));
+        orect.setAttribute("rx", Math.min(3, barW / 2));
+        orect.setAttribute("fill", classColor);
+        orect.setAttribute("class", "bar has-data classroom");
+        svg.appendChild(orect);
+      }
+    }
 
-  // x labels
-  const every = Math.max(1, Math.ceil(pathSeries.length / (isNarrow ? 4 : 9)));
-  pathSeries.forEach((p, i) => {
-    if (i % every && i !== pathSeries.length - 1) return;
-    const t = document.createElementNS(svgNS, "text");
-    t.setAttribute("x", x(i)); t.setAttribute("y", H - 8);
-    t.setAttribute("text-anchor", "middle");
-    t.setAttribute("class", "axis-label");
-    t.setAttribute("style", `font-size:${fontSize}px`);
-    t.textContent = formatLabel('weekly', p.weekStart);
-    svg.appendChild(t);
-  });
+    if (i % xTickEvery === 0 || i === n - 1) {
+      const label = document.createElementNS(svgNS, "text");
+      label.setAttribute("x", bx + barW / 2); label.setAttribute("y", H - (isNarrow ? 10 : 8));
+      label.setAttribute("text-anchor", "middle");
+      label.setAttribute("class", "axis-label");
+      label.setAttribute("style", `font-size:${fontSize}px`);
+      label.textContent = formatLabel(currentPeriod, d.label);
+      svg.appendChild(label);
+    }
 
-  // a dot where the line first enters each section actually reached
-  SECTIONS.forEach(([n, cefr, start]) => {
-    if (start === 0 || start > CURRENT_UNIT) return;
-    const i = pathSeries.findIndex(p => p.unit >= start);
-    if (i < 0) return;
-    const c = document.createElementNS(svgNS, "circle");
-    c.setAttribute("cx", x(i)); c.setAttribute("cy", y(start)); c.setAttribute("r", 3.5);
-    c.setAttribute("class", "path-dot");
-    svg.appendChild(c);
-  });
-
-  // hover: one hit column per week
-  const colW = plotW / pathSeries.length;
-  pathSeries.forEach((p, i) => {
+    // hit target: full column height, bigger than the bar itself
     const hit = document.createElementNS(svgNS, "rect");
-    hit.setAttribute("x", x(i) - colW / 2); hit.setAttribute("y", padT);
-    hit.setAttribute("width", colW); hit.setAttribute("height", plotH);
+    hit.setAttribute("x", bx - gap / 2);
+    hit.setAttribute("y", padT);
+    hit.setAttribute("width", barW + gap);
+    hit.setAttribute("height", plotH);
     hit.setAttribute("class", "bar-hit");
-    hit.addEventListener('pointerleave', () => tooltip.style.opacity = 0);
+    hit.addEventListener('pointerenter', () => { if (rect) rect.style.opacity = 0.8; });
+    hit.addEventListener('pointerleave', () => { if (rect) rect.style.opacity = 1; tooltip.style.opacity = 0; });
     hit.addEventListener('pointermove', (e) => {
-      const unit = Math.round(p.unit);
-      const sec = SECTIONS.slice().reverse().find(s => unit >= s[2]) || SECTIONS[0];
       tooltip.innerHTML = '';
-      const d1 = document.createElement('div');
-      d1.className = 't-date';
-      d1.textContent = `Week of ${p.weekStart} – ${p.weekEnd}`;
-      tooltip.appendChild(d1);
-      const d2 = document.createElement('div');
-      d2.className = 't-row';
-      d2.innerHTML = `<span class="t-val">≈ unit ${unit + 1}</span>` +
-        `<span class="t-name">· ≈ Score ${Math.round(unitToScore(p.unit))} · section ${sec[0]} · ${sec[1]}</span>`;
-      tooltip.appendChild(d2);
+      const dateEl = document.createElement('div');
+      dateEl.className = 't-date';
+      dateEl.textContent = fullLabel(currentPeriod, d);
+      tooltip.appendChild(dateEl);
+      const raw = d[currentMetric];
+      const metricKnown = raw !== null && raw !== undefined;
+      const addNote = (text) => {
+        const note = document.createElement('div');
+        note.className = 't-row';
+        note.style.color = 'var(--bg)';
+        note.style.opacity = '0.85';
+        note.textContent = text;
+        tooltip.appendChild(note);
+      };
+      // Describe the metrics other than the one currently charted, skipping
+      // any that this week doesn't know.
+      const others = (isLevel ? [] : ['minutes', 'xp', 'lessons'])
+        .filter(m => m !== currentMetric)
+        .map(m => d[m] === null || d[m] === undefined
+          ? null
+          : (m === 'minutes' ? fmtDuration(d[m]) : m === 'xp' ? `${fmt(d[m])} XP` : `${fmt(d[m])} lessons`))
+        .filter(Boolean);
+
+      if (metricKnown) {
+        const row = document.createElement('div');
+        row.className = 't-row';
+        const key = document.createElement('span');
+        key.className = 't-key';
+        key.style.background = color;
+        const val = document.createElement('span');
+        val.className = 't-val';
+        val.textContent = (d.estimated ? '≈ ' : '') + meta.format(raw);
+        const name = document.createElement('span');
+        name.className = 't-name';
+        name.textContent = others.length ? '· ' + others.join(' · ') : '';
+        row.appendChild(key); row.appendChild(val); row.appendChild(name);
+        tooltip.appendChild(row);
+
+        if (isLevel) {
+          const band = SCORE_BANDS.find(b => raw >= b[3] && raw <= b[4]);
+          const nextBand = SCORE_BANDS.find(b => b[3] > raw);
+          addNote(`CEFR ${band ? band[0] : 'B2'}` +
+            (nextBand ? ` · ${Math.ceil(nextBand[3] - raw)} points to ${nextBand[0]}` : ''));
+        } else if (currentPeriod === 'weekly' && d.estimated) {
+          addNote(`No report email — XP from the ${d.competition === 'diamond-tournament' ? 'tournament' : 'league'} week ${d.leagueWindow}`);
+          if (currentMetric === 'minutes' && d.ratioUsed) {
+            addNote(`Time derived at ${d.ratioUsed} XP/min, the local rate for nearby weeks`);
+          }
+        } else if (currentPeriod !== 'weekly' && d.estCount > 0) {
+          addNote(`Includes ${d.estCount} week${d.estCount === 1 ? '' : 's'} estimated from league scores`);
+        }
+      }
+
+      // Classroom time gets its own row rather than being folded into the
+      // Duolingo figure -- one is measured by the app, the other is a course
+      // timetable, and the difference matters when reading the bar.
+      if (showClass && (d.offlineSessions || 0) > 0) {
+        const row = document.createElement('div');
+        row.className = 't-row';
+        const key = document.createElement('span');
+        key.className = 't-key';
+        key.style.background = classColor;
+        const val = document.createElement('span');
+        val.className = 't-val';
+        val.textContent = d.offlineMinutes > 0 ? fmtDuration(d.offlineMinutes) : '—';
+        const name = document.createElement('span');
+        name.className = 't-name';
+        name.textContent = '· ' + (d.offlineCourses || []).join(', ') +
+          ` (${d.offlineSessions} session${d.offlineSessions === 1 ? '' : 's'})`;
+        row.appendChild(key); row.appendChild(val); row.appendChild(name);
+        tooltip.appendChild(row);
+        if (d.offlineUnknown > 0) {
+          addNote(`${d.offlineUnknown} session${d.offlineUnknown === 1 ? '' : 's'} of unknown length — not counted in the time`);
+        }
+      }
+
+      if (!metricKnown && d.hasData) {
+        addNote(others.length
+          ? `No ${meta.lower} figure for this week (${others.join(' · ')} known)`
+          : `No ${meta.lower} figure for this week`);
+      }
+      // The tooltip is absolutely positioned with no positioned ancestor, so
+      // its left/top are relative to the whole document -- use page
+      // coordinates (which already include scroll offset), not coordinates
+      // relative to the SVG's viewport position, or the box lands far from
+      // the cursor as soon as the page is scrolled at all.
       tooltip.style.left = e.pageX + 'px';
       tooltip.style.top = e.pageY + 'px';
       tooltip.style.opacity = 1;
@@ -1085,6 +1262,23 @@ function buildPathChart() {
 
   container.appendChild(svg);
 }
+
+document.getElementById('metricToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-metric]');
+  if (!btn) return;
+  currentMetric = btn.dataset.metric;
+  document.querySelectorAll('#metricToggle button').forEach(b => b.classList.toggle('active', b === btn));
+  buildBarChart();
+});
+document.getElementById('periodToggle').addEventListener('click', (e) => {
+  const btn = e.target.closest('button[data-period]');
+  if (!btn) return;
+  currentPeriod = btn.dataset.period;
+  document.querySelectorAll('#periodToggle button').forEach(b => b.classList.toggle('active', b === btn));
+  buildBarChart();
+});
+
+buildBarChart();
 
 function buildMilestones() {
   const el = document.getElementById('milestones');
@@ -1134,21 +1328,81 @@ function buildNowStrip() {
   });
 }
 
+function buildPathNote() {
+  const el = document.getElementById('pathNote');
+  const fc = paceForecast();
+  const fmtMon = d => d.toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
+  const measured = measuredScorePace();
+  const base = fc.find(f => f.window === 12);
+  const rangeLo = fc.reduce((a, b) => b.date < a.date ? b : a, fc[0]);
+  const rangeHi = fc.reduce((a, b) => b.date > a.date ? b : a, fc[0]);
+  const paceRows = fc.map(f =>
+    `<tr><td>last ${f.window} weeks</td><td>${fmt(f.avgXp)} XP/wk</td><td>${f.weeks} wks</td><td>${fmtMon(f.date)}</td></tr>`
+  ).join('');
+
+  el.innerHTML = `
+    Duolingo records only your <em>current</em> position, with no history of when you passed each unit,
+    and the report emails never mention level at all — so this line is reconstructed, spreading your
+    units across the weeks in proportion to the XP you earned and anchored to end on the recorded
+    position.
+    <br><br>
+    <strong>It survives one real test.</strong> Duolingo's own Score is <strong>${NOW.score} of ${NOW.scoreMax}</strong>,
+    and mapping unit ${NOW.unit} through the published CEFR bands predicts 89.6 — within 1.4 points.
+    That check only pins down where you are <em>now</em>, though; the timing of everything before it is
+    the weak part.
+    <br><br>
+    <strong>The dates are probably too late — here's why.</strong> The model spends a flat
+    ${XP_PER_UNIT} XP per unit, but that isn't how the course was actually walked. Early on, one lesson
+    then straight to the section test: those units cost far less XP than average, so by any given point
+    the real position was <em>further along</em> than a flat rate implies, and each level was reached
+    <em>sooner</em> than shown. Rerun with a plausible cheap-early shape and A2 moves from Nov 15 to
+    around Nov 1, B1 from Dec 13 to around Nov 8 — i.e. inside the big autumn-2024 push rather than
+    after it. Pulling the other way: legendary reviews earn XP without advancing the path at all, so
+    wherever those happened the model credits progress that didn't occur and drifts too early. The two
+    biases fight, which is why the net error can't be signed without real readings.
+    <br><br>
+    <strong>Why there's no Score line over the bars.</strong> The Score above is derived from your
+    cumulative XP, so plotting it against weekly minutes would draw a relationship this model
+    invented rather than one in your data — XP tracks minutes, and the Score is built from XP, so
+    they can only agree. Real Score readings are needed before that comparison means anything.
+    <span class="obs-count">${scoredObs.length} recorded so far${scoredObs.length < 2 ? ' — two or more make it measurable' : ''}.</span>
+    <br><br>
+    <strong>Next level.</strong> B2 starts at Score 100, ${B2_UNIT - NOW.unit} units away
+    (≈${fmt((B2_UNIT - NOW.unit) * XP_PER_UNIT)} XP). ${measured
+      ? `Fitted to your <strong>measured</strong> Score readings: ${measured.perWeek.toFixed(2)} points/week
+         over ${measured.spanDays} days, putting B2 around <strong>${fmtMon(new Date(Date.now() + (100 - NOW.score) / measured.perWeek * 7 * 86400000))}</strong>.`
+      : `Until there are two Score readings this leans on XP as a proxy, so the dotted continuation
+         uses your last 12 weeks. "Recent" is doing a lot of work here, so all the windows:`}
+    ${measured ? '' : `<table class="pace-table"><tbody>${paceRows}</tbody></table>
+    The 12-, 26- and 52-week windows agree on roughly <strong>${base ? fmtMon(base.date) : '—'}</strong>;
+    the 4-week window says ${fmtMon(rangeHi.date)} only because the last month was unusually quiet
+    (${fmt(fc[0].avgXp)} XP/week against a ${fmt(fc[fc.length-1].avgXp)} XP/week yearly average). Treat
+    ${fmtMon(rangeLo.date)}–${fmtMon(rangeHi.date)} as the honest spread — and read even the near end of
+    it as optimistic. The flat ${XP_PER_UNIT} XP per unit is a lifetime average dragged down by those
+    cheap early units; B1 and B2 units carry genuinely new material and get completed in full, so they
+    cost more than that. Any legendary reviews add XP with no path progress on top. Both push the real
+    date later than the table says, and Duolingo's own raw log agrees — a measured ~2.5 units/week
+    recently against the 4-5 the XP implies.`}`;
+}
+
 buildNowStrip();
-buildPathChart();
 buildMilestones();
+buildPathNote();
 
 let resizeTimer = null;
 window.addEventListener('resize', () => {
   clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(() => { buildBarChart(); buildPathChart(); }, 150);
+  resizeTimer = setTimeout(buildBarChart, 150);
 });
 
 // ---------- Table ----------
 const tableRows = rows.map(r => {
   const mins = metricValue(r, 'minutes'), xp = metricValue(r, 'xp'), less = metricValue(r, 'lessons');
+  const off = offlineFor(r.week_start);
   return {
     ...r,
+    class_minutes: off.offlineSessions ? off.offlineMinutes : -1,
+    class_sessions: off.offlineSessions,
     // Sort keys: unknown values sort as -1 so they group together rather than
     // being treated as zero-value weeks.
     minutes: mins === null ? -1 : mins,
@@ -1175,6 +1429,9 @@ function renderTable() {
     const cells = [
       `${r.week_start} – ${r.week_end}`,
       r.minutes < 0 ? '—' : (r.estimated ? '≈ ' : '') + fmtDuration(r.minutes),
+      r.class_minutes < 0 ? '—'
+        : (r.class_minutes > 0 ? fmtDuration(r.class_minutes) : '')
+          + ` (${r.class_sessions})`,
       r.xp < 0 ? '—' : (r.estimated ? '≈ ' : '') + fmt(r.xp),
       r.lessons < 0 ? '—' : fmt(r.lessons),
       r.xp_per_min < 0 ? '—' : r.xp_per_min.toFixed(1),
