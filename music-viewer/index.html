@@ -120,7 +120,8 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .alist .pill.share { width: 86px; box-sizing: border-box; text-align: center; padding: 0 4px; font-variant-numeric: tabular-nums; }
   .card .note b { color: var(--text-2); font-weight: 600; } .card .note .sw { display: inline-block; width: 9px; height: 9px; border-radius: 2px; vertical-align: -1px; margin-right: 4px; }
   .two { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0 28px; }
-  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } .alist li { grid-template-columns: 22px minmax(0, 1fr) 90px; } .alist .yrs { display: none; } }
+  @media (max-width: 860px) { .two { grid-template-columns: 1fr; } .alist li { grid-template-columns: 22px minmax(0, 1fr) 120px 96px; gap: 10px; } }   /* one column, but the year bars stay */
+  @media (max-width: 480px) { .alist li { grid-template-columns: 22px minmax(0, 1fr) 84px; } .alist .yrs { display: none; } }             /* phones: no room for the bars */
   .bars li { grid-template-columns: 28px minmax(0, 1fr) auto; }
   .bars .track { height: 6px; background: var(--card-2); border-radius: 3px; overflow: hidden; margin-top: 4px; } .bars .track i { display: block; height: 100%; background: var(--green-mark); border-radius: 3px; }
   .more { all: unset; cursor: pointer; font-size: 12px; color: var(--text-3); margin-top: 8px; display: inline-block; } .more:hover { color: var(--text); }
