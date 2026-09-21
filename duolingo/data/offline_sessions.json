@@ -255,12 +255,92 @@
     "date": "2026-08-24",
     "hours": 1.5,
     "course": "B1 course (autumn 2026)",
-    "source": "stated"
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-08-31",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule",
+    "attended": false
   },
   {
     "date": "2026-09-07",
     "hours": 1.5,
     "course": "B1 course (autumn 2026)",
-    "source": "stated"
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-09-14",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule",
+    "attended": false
+  },
+  {
+    "date": "2026-09-21",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-09-28",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-10-05",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-10-19",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-10-26",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-11-02",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-11-09",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-11-16",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-11-23",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-11-30",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
+  },
+  {
+    "date": "2026-12-07",
+    "hours": 1.5,
+    "course": "B1 course (autumn 2026)",
+    "source": "Institut français course schedule"
   }
 ]
