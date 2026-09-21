@@ -3,8 +3,8 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Antti's dashboards</title>
-<meta name="description" content="Personal data dashboards — films, books, music, festivals, a World Cup pool — built as single HTML pages on GitHub Pages, plus drop-in viewers for your own exports.">
+<title>Dashboard gallery</title>
+<meta name="description" content="Antti Kaukoranta's dashboards and tools — films, books, music, festivals, a World Cup pool, Tableau Public vizzes — built as single HTML pages on GitHub Pages, plus drop-in viewers for your own exports.">
 <style>
   :root {
     --bg: #14181c; --card: #1e252d; --card-2: #2c3440; --line: #2c3440; --line-2: #384352;
@@ -23,8 +23,12 @@
   .intro a { color: var(--text-2); text-decoration: underline dotted; }
   .gh { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--text-2); white-space: nowrap; }
   .gh:hover { color: var(--text); border-color: var(--text-3); }
-  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); font-weight: 600; margin: 26px 0 10px; display: flex; align-items: baseline; gap: 10px; }
-  h2 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
+  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--green); font-weight: 700; margin: 28px 0 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
+  h2 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; color: var(--text-2); }
+  h2 .more { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 500; font-size: 12px; color: var(--text-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 3px 10px; } h2 .more:hover { color: var(--text); border-color: var(--text-3); }
+  .intro p { margin: 0 0 8px; } .intro p:first-child { color: var(--text-2); font-size: 14px; }
+  .tableau .card .thumb { background: #fff; } .tableau .card .thumb img { object-position: center top; filter: none; } .tableau .card .t i { background: #2a9dd1; }
+  .tableau .meta .tag { background: #1f5f8b; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
   .card { display: flex; flex-direction: column; gap: 8px; background: var(--card); border-radius: var(--radius); padding: 16px 18px 14px; min-width: 0; border: 1px solid var(--line); transition: border-color .12s, transform .12s; position: relative; overflow: hidden; }
   .card .body { display: contents; }
@@ -59,12 +63,17 @@
 <div class="wrap">
   <header>
     <div>
-      <h1>Antti's <span>dashboards</span></h1>
-      <div class="sub">Personal data, one page each — films, books, music, festivals and a few games.</div>
+      <h1>Dashboard <span>gallery</span></h1>
+      <div class="sub">Antti Kaukoranta · Helsinki</div>
     </div>
     <a class="gh" href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">github.com/akaukora/dashboards ↗</a>
   </header>
-  <p class="intro">Every dashboard here is a single HTML file that reads a CSV or JSON next to it and draws everything in the browser — no backend, no tracking. The diaries refresh themselves from the services' data through scheduled GitHub Actions; the rest are built or updated by hand. The three diaries also come as <em>drop-in viewers</em>: open one, drop your own export on it, and you get the same dashboard for your data without uploading anything. Everything is in the open: each folder has the page, its data file and a README on how the data is refreshed — take any of them and have your own tools (or your AI agent) rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>.</p>
+  <div class="intro">
+    <p>I've created tools and dashboards for various interests of mine. These can be downloaded, copied and adapted to your use.</p>
+    <p>Every dashboard here is a single HTML file that reads a CSV or JSON next to it and draws everything in the browser — no backend or tracking.</p>
+    <p>The diaries refresh themselves from the services' data through scheduled GitHub Actions; the rest are built or updated by hand. The three diaries also come as <em>drop-in viewers</em>: open one, drop your own export (e.g. Spotify) on it, and you get the same dashboard for your data without uploading anything.</p>
+    <p>Everything is in the open: each folder has the page, its data file and a README on how the data is refreshed — take any of them and have your own tools (or your AI agent) rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>. Older work lives on <a href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">Tableau Public</a>, further down.</p>
+  </div>
 
   <h2>Diaries <small>· years of history, refreshed automatically or on upload</small></h2>
   <div class="grid">
@@ -85,7 +94,7 @@
     <div class="card">
       <a class="main" href="music/"><span class="thumb"><img src="thumbs/music.webp" alt="" loading="lazy"></span>
       <div class="t"><i></i>Music<span class="arrow">→</span></div>
-      <p>Twenty years of Last.fm scrobbles, with the Spotify gaps filled in: forgotten favorites and rediscoveries, when each artist was last heard, how favorites were made, listening by year, month and hour.</p>
+      <p>Twenty years of Last.fm scrobbles, with the Spotify gaps filled in. Highlights the favorite artists and tracks you haven't heard for a long time — and the ones you've come back to — plus when each artist was last heard, how favorites were made, and listening by year, month and hour.</p>
       <div class="meta"><span class="tag live">nightly</span> Last.fm API + Spotify export → <code>scrobbles.csv</code></div></a>
       <a class="own" href="music-viewer/"><span>Try it with your own data</span> <small>Last.fm, Spotify or Apple Music</small></a>
     </div>
@@ -102,13 +111,13 @@
     <div class="card">
       <a class="main" href="hiff2026/"><span class="thumb"><img src="thumbs/hiff2026.webp" alt="" loading="lazy"></span>
       <div class="t"><i style="background:#5b8fb9"></i>HIFF 2026 planner<span class="arrow">→</span></div>
-      <p>Helsinki International Film Festival: pick films, pick times, see the clashes on a timetable grid, share a plan with friends.</p>
+      <p>Helsinki International Film Festival: pick films, pick times, see clashes and tight transfers between venues on a timetable grid, share a plan with friends.</p>
       <div class="meta"><span class="tag season">Sept 2026</span></div></a>
     </div>
     <div class="card">
       <a class="main" href="tiff2026/"><span class="thumb"><img src="thumbs/tiff2026.webp" alt="" loading="lazy"></span>
       <div class="t"><i style="background:#5b8fb9"></i>TIFF 2026 planner<span class="arrow">→</span></div>
-      <p>The same planner for the Toronto International Film Festival program: films, times, clashes, a shareable schedule.</p>
+      <p>The same planner for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule.</p>
       <div class="meta"><span class="tag season">Sept 2026</span></div></a>
     </div>
     <div class="card">
@@ -125,9 +134,35 @@
     </div>
   </div>
 
+  <h2>Tableau Public <small>· earlier vizzes, 2018–2025 — the film and music dashboards started here</small><a class="more" href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">All 50 on Tableau Public ↗</a></h2>
+  <div class="grid tableau" id="tableau"></div>
+
   <footer>
     Built by Antti Kaukoranta as plain HTML + Chart.js, hosted on GitHub Pages. Each folder in the <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">repository</a> has its own README describing the data and how it is refreshed.
   </footer>
 </div>
+<script>
+// Tableau Public vizzes shown above — edit this list freely. Thumbnails come from Tableau's own static images
+// (https://public.tableau.com/static/images/<2 letters>/<workbook>/<sheet>/4_3.png); the link opens the viz on Tableau Public.
+const TABLEAU = [
+  ["Musicdashboard-Last_fm-Forgottenfavorites", "Re-discoverfavorites", "Music — forgotten favorites", "The Tableau original of the music dashboard: favorite artists by when they were last played, the big bubbles far from the right edge being the ones to rediscover.", "Last.fm"],
+  ["Musicdashboard-Last_fm-Artistdiscovery", "WhenhaveIdiscoveredmusicians", "Music — artist discovery", "When each artist was first heard, and how many new ones each year brought.", "Last.fm"],
+  ["Myfilmtracker2019", "Filmswatched20192", "Film and subscription tracker", "Films watched by month and service, with what each streaming subscription actually cost per film.", "Letterboxd"],
+  ["TheFilmsIveLovedandnot", "Filmsdashboard", "The films I've loved (and not)", "Ratings, decades and rewatches from the film diary — the ancestor of the Films page.", "Letterboxd"],
+  ["Eurovision2025", "ViewsLine", "Eurovision 2025 YouTube views", "How the entries' official videos gathered views in the weeks before and after the final.", "YouTube"],
+  ["CouchtoHalfMarathon", "CouchtoHalfMarathon", "Couch to half marathon", "A training log from the first run to race day.", "personal"],
+  ["WesAndersonColorPalettes", "PaletteBubbles", "Wes Anderson color palettes", "The dominant colors of each film, as bubbles.", "film"],
+  ["Skitripplanning-drivingtimeandconditions", "Dashboard2", "Ski trip planning", "Driving time from Helsinki against snow conditions at Finnish ski resorts.", "travel"],
+  ["Oscarsimpactonboxoffice", "BestPicBoxOffice2", "Oscars' impact on box office", "What a Best Picture nomination and win did to each film's takings.", "film"],
+  ["HowuniqueareHelsinkimalls", "MallsofHelsinki", "How unique are Helsinki malls?", "Which shops the malls share and which make each one different.", "Helsinki"],
+  ["CoronavirusNewsandGoogleTrends", "NewsandSearch", "Coronavirus news and Google Trends", "News volume against search interest in the first months of 2020.", "2020"],
+  ["BikeRevolution2020-MM2021", "MM2021wk1", "Bike boom 2020", "#MakeoverMonday: how bicycle sales jumped in the pandemic year.", "#MakeoverMonday"],
+];
+document.getElementById("tableau").innerHTML = TABLEAU.map(([wb, sheet, title, blurb, tag]) => {
+  const url = `https://public.tableau.com/app/profile/antti1275/viz/${wb}/${sheet}`, img = `https://public.tableau.com/static/images/${wb.slice(0, 2)}/${wb}/${sheet}/4_3.png`;
+  return `<div class="card"><a class="main" href="${url}" target="_blank" rel="noopener"><span class="thumb"><img src="${img}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
+    <div class="t"><i></i>${title}<span class="arrow">↗</span></div><p>${blurb}</p><div class="meta"><span class="tag">${tag}</span> Tableau Public</div></a></div>`;
+}).join("");
+</script>
 </body>
 </html>
