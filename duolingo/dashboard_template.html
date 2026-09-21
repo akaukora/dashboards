@@ -139,6 +139,7 @@ h1 {
 }
 .kpi .value.accent { color: var(--accent-green); }
 .kpi .value.pink { color: var(--accent-pink); }
+.kpi .value.muted { color: var(--ink-secondary); }
 .kpi .sub { font-size: 12.5px; color: var(--ink-muted); margin-top: 4px; }
 
 .charts {
@@ -528,10 +529,23 @@ const estWeeks = rows.filter(r => isEstimated(r, 'xp'));
 const totalMinutes = minuteWeeks.reduce((s, r) => s + r.minutes, 0);
 const totalXp = xpWeeks.reduce((s, r) => s + r.xp, 0);
 const avgMinutes = minuteWeeks.length ? Math.round(totalMinutes / minuteWeeks.length) : 0;
-// Best week is taken from reported weeks only -- an estimate shouldn't be able
-// to claim the record.
-const reportedMinuteWeeks = minuteWeeks.filter(r => !r.estimated);
-const best = reportedMinuteWeeks.reduce((a, b) => b.minutes > a.minutes ? b : a, reportedMinuteWeeks[0]);
+// The headline's fifth tile reports the most recent week against the four
+// before it. A single week swings far too much to read on its own -- weeks in
+// this data range from 4 minutes to 14 hours -- so the comparison is what
+// carries the meaning, and the four-week base is short enough to still be
+// "lately" without being one noisy week judging another.
+const lastWeekRow = minuteWeeks[minuteWeeks.length - 1];
+const priorFour = minuteWeeks.slice(-5, -1);
+const priorAvg = priorFour.length
+  ? priorFour.reduce((t, r) => t + r.minutes, 0) / priorFour.length : null;
+const trendPct = (priorAvg && priorAvg > 0)
+  ? Math.round(((lastWeekRow.minutes - priorAvg) / priorAvg) * 100) : null;
+function trendSub() {
+  if (priorAvg === null) return `week of ${lastWeekRow.week_start}`;
+  const arrow = trendPct > 0 ? '▲' : trendPct < 0 ? '▼' : '=';
+  const sign = trendPct > 0 ? '+' : '';
+  return `${arrow} ${sign}${trendPct}% vs prior 4 weeks (${fmtDuration(Math.round(priorAvg))})`;
+}
 
 document.getElementById('rangeBadge').textContent =
   `${rows[0].week_start} → ${rows[rows.length - 1].week_end}`;
@@ -551,7 +565,9 @@ const kpis = [
   { label: 'Total XP', value: fmt(totalXp),
     sub: `avg ${fmt(Math.round(totalXp / xpWeeks.length))} / week` + (estWeeks.length ? ` · ${estWeeks.length} est.` : ''),
     cls: 'pink' },
-  { label: 'Best week', value: fmtDuration(best.minutes), sub: `week of ${best.week_start} · ${fmt(best.xp)} XP` },
+  { label: 'Latest week', value: (lastWeekRow.estimated ? '≈ ' : '') + fmtDuration(lastWeekRow.minutes),
+    sub: trendSub(),
+    cls: trendPct === null ? '' : trendPct >= 0 ? 'accent' : 'muted' },
 ];
 if (classMinutes > 0 || classSessions > 0) {
   kpis.splice(3, 0, {
