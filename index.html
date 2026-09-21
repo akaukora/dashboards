@@ -26,9 +26,13 @@
   h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--green); font-weight: 700; margin: 28px 0 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   h2 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; color: var(--text-2); }
   h2 .more { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 12px; color: var(--green); border: 1px solid var(--green-mark); border-radius: 999px; padding: 3px 11px; } h2 .more:hover { background: var(--green-mark); color: #fff; }
-  .intro p { margin: 0 0 8px; } .intro p:first-child { color: var(--text-2); font-size: 14px; }
+  .intro p { margin: 0 0 8px; } .intro > p:first-child { color: var(--text-2); font-size: 14px; }
+  .intro .toggle { color: var(--green); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; margin-left: 4px; } .intro .toggle:hover { text-decoration: underline; }
+  .intro .toggle::after { content: " ▾"; font-size: 11px; } .intro .toggle[aria-expanded="true"]::after { content: " ▴"; }
   .tableau .card .thumb { background: #fff; } .tableau .card .thumb img { object-position: center top; filter: none; } .tableau .card .t i { background: #2a9dd1; }
   .tableau .meta .tag { background: #1f5f8b; }
+  .tableau .meta .tag.type { background: transparent; border: 1px solid var(--line-2); color: var(--text-2); line-height: 16px; }
+  .tableau .meta .tag.type.art { border-color: #7a5aa8; color: #b9a3dd; } .tableau .meta .tag.type.tool { border-color: var(--green-mark); color: var(--green); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
   .card { display: flex; flex-direction: column; gap: 8px; background: var(--card); border-radius: var(--radius); padding: 16px 18px 14px; min-width: 0; border: 1px solid var(--line); transition: border-color .12s, transform .12s; position: relative; overflow: hidden; }
   .card .body { display: contents; }
@@ -69,10 +73,12 @@
     <a class="gh" href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">github.com/akaukora/dashboards ↗</a>
   </header>
   <div class="intro">
-    <p>I've created tools and dashboards for various interests of mine. These can be downloaded, copied and adapted to your use.</p>
+    <p>I've created tools and dashboards for various interests of mine. These can be downloaded, copied and adapted to your use. <a class="toggle" href="#" id="introMore" aria-expanded="false" aria-controls="introRest">Show more</a></p>
+    <div id="introRest" hidden>
     <p>Every dashboard here is a single HTML file that reads a CSV or JSON next to it and draws everything in the browser — no backend or tracking.</p>
     <p>The diaries refresh themselves from the services' data through scheduled GitHub Actions; the rest are built or updated by hand. The three diaries also come as <em>drop-in viewers</em>: open one, drop your own export (e.g. Spotify) on it, and you get the same dashboard for your data without uploading anything.</p>
     <p>Everything is in the open: each folder has the page, its data file and a README on how the data is refreshed — take any of them and have your own tools (or your AI agent) rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>. Older work lives on <a href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">Tableau Public</a>, further down.</p>
+    </div>
   </div>
 
   <h2>Diaries <small>· years of history, refreshed automatically or on upload</small></h2>
@@ -143,75 +149,80 @@
 </div>
 <script>
 // Tableau Public vizzes shown above — edit this list freely. Each entry: workbook and sheet from the viz URL
-// (public.tableau.com/app/profile/antti1275/viz/<workbook>/<sheet>), title, blurb, tag, and optionally a local thumbnail
-// in thumbs/. Without one, Tableau's own static image is used (…/static/images/<2 letters>/<workbook>/<sheet>/4_3.png).
+// (public.tableau.com/app/profile/antti1275/viz/<workbook>/<sheet>), title, blurb, theme (`tag`), kind (`type`: dashboard,
+// tool, chart or data art), an optional #MakeoverMonday week (`mm`) and optionally a local thumbnail in thumbs/.
+// Without a thumbnail, Tableau's own static image is used (…/static/images/<2 letters>/<workbook>/<sheet>/4_3.png).
 const TABLEAU = [
   // — personal data and interests —
-  { wb: "Musicdashboard-Last_fm-Forgottenfavorites", sheet: "Re-discoverfavorites", title: "Music — forgotten favorites", tag: "Last.fm",
+  { wb: "Musicdashboard-Last_fm-Forgottenfavorites", sheet: "Re-discoverfavorites", title: "Music — forgotten favorites", tag: "music", type: "dashboard",
     blurb: "The Tableau original of the music dashboard: favorite artists by when they were last played, the big bubbles far from the right edge being the ones to rediscover." },
-  { wb: "Musicdashboard-Last_fm-Artistdiscovery", sheet: "WhenhaveIdiscoveredmusicians", title: "Music — artist discovery", tag: "Last.fm",
+  { wb: "Musicdashboard-Last_fm-Artistdiscovery", sheet: "WhenhaveIdiscoveredmusicians", title: "Music — artist discovery", tag: "music", type: "dashboard",
     blurb: "When each artist was first heard, and how many new ones each year brought." },
-  { wb: "TheFilmsIveLovedandnot", sheet: "Filmsdashboard", title: "The films I've loved (and not)", tag: "Letterboxd", thumb: "thumbs/tableau-films-loved.webp",
+  { wb: "TheFilmsIveLovedandnot", sheet: "Filmsdashboard", title: "The films I've loved (and not)", tag: "film", type: "dashboard", thumb: "thumbs/tableau-films-loved.webp",
     blurb: "Films by year watched and rating, and where they were seen — cinema, Netflix, Max and the rest. Once fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot." },
-  { wb: "Myfilmtracker2019", sheet: "Filmswatched20192", title: "Film and subscription tracker", tag: "Letterboxd",
-    blurb: "Films watched by month and by service, against what each streaming subscription cost — the most viewed viz on the profile." },
-  { wb: "WesAndersonColorPalettes", sheet: "PaletteBubbles", title: "Wes Anderson color palettes", tag: "film",
+  { wb: "Myfilmtracker2019", sheet: "Filmswatched20192", title: "Film and subscription tracker", tag: "film", type: "dashboard", thumb: "thumbs/tableau-film-tracker.webp",
+    blurb: "Films watched by month and by service, how many were liked or loved, and what each streaming subscription cost per film — the most viewed viz on the profile, since redone for the phone." },
+  { wb: "WesAndersonColorPalettes", sheet: "PaletteBubbles", title: "Wes Anderson color palettes", tag: "film", type: "data art",
     blurb: "Made to get something colorful on the living-room wall, from one of my favorite directors: the principal colors extracted from selected scenes of his films, each bubble sized by how prominent the color is." },
-  { wb: "Eurovision2025", sheet: "ViewsLine", title: "Eurovision 2025 — views on YouTube", tag: "YouTube", thumb: "thumbs/tableau-eurovision-2025.webp",
+  { wb: "Eurovision2025", sheet: "ViewsLine", title: "Eurovision 2025 — views on YouTube", tag: "music", type: "dashboard", thumb: "thumbs/tableau-eurovision-2025.webp",
     blurb: "Daily YouTube view counts for every Eurovision 2025 entry, with who gained the most since yesterday. Static data up to the last collection day." },
-  { wb: "CouchtoHalfMarathon", sheet: "CouchtoHalfMarathon", title: "Couch to half marathon", tag: "running",
+  { wb: "CouchtoHalfMarathon", sheet: "CouchtoHalfMarathon", title: "Couch to half marathon", tag: "sports", type: "dashboard",
     blurb: "A training log from the first run to race day." },
-  { wb: "Skitripplanning-drivingtimeandconditions", sheet: "Dashboard2", title: "Ski trip planning", tag: "travel",
-    blurb: "Driving time from Helsinki against snow conditions at Finnish ski resorts — which trip is worth it this weekend." },
-  { wb: "HowuniqueareHelsinkimalls", sheet: "MallsofHelsinki", title: "How unique are Helsinki's shopping malls?", tag: "Helsinki", thumb: "thumbs/tableau-helsinki-malls.webp",
-    blurb: "The top 20 malls by leasable area and the share of shops unique to each; click a mall for a \"floorplan\" of its shops on three floors — unique, more common and very common." },
-  { wb: "Oscarsimpactonboxoffice", sheet: "BestPicBoxOffice2", title: "Oscars' impact on box office", tag: "film",
+  { wb: "Skitripplanning-drivingtimeandconditions", sheet: "Dashboard2", title: "Ski trip planning", tag: "travel", type: "tool",
+    blurb: "Driving time against snow conditions at ski resorts across the Alps — which trip is worth it this week." },
+  { wb: "HowuniqueareHelsinkimalls", sheet: "MallsofHelsinki", title: "How unique are the shopping malls?", tag: "retail", type: "dashboard", thumb: "thumbs/tableau-helsinki-malls.webp",
+    blurb: "The top 20 malls of a city by leasable area and the share of shops unique to each; click a mall for a \"floorplan\" of its shops on three floors — unique, more common and very common. Built on Helsinki, but the idea works for any city." },
+  { wb: "Oscarsimpactonboxoffice", sheet: "BestPicBoxOffice2", title: "Oscars' impact on box office", tag: "film", type: "chart",
     blurb: "What a Best Picture nomination and win did to each film's box office." },
-  { wb: "Whichtimetochoose", sheet: "Simplebubbles", title: "Which time to choose?", tag: "daylight",
-    blurb: "Permanent summer or winter time: when the sun would rise and set through the year under each choice." },
-  { wb: "CoronavirusNewsandGoogleTrends", sheet: "NewsandSearch", title: "Coronavirus — news and Google searches", tag: "2020", thumb: "thumbs/tableau-coronavirus.webp",
+  { wb: "Whichtimetochoose", sheet: "Simplebubbles", title: "Which time to choose?", tag: "sleep", type: "tool", thumb: "thumbs/tableau-which-time.webp",
+    blurb: "Permanent summer time, permanent winter time or the current switching: pick your place and your sleep schedule, and see which system suits your sleep–wake rhythm — the fewest dark bedtimes, the least sleeping through daylight." },
+  { wb: "CoronavirusNewsandGoogleTrends", sheet: "NewsandSearch", title: "Coronavirus — news and Google searches", tag: "media", type: "dashboard", thumb: "thumbs/tableau-coronavirus.webp",
     blurb: "Daily number of articles in YLE and the NY Times, and daily Google Search Trends for coronavirus and COVID-19 by country. Static data, January–April 2020." },
-  { wb: "VizForSocialGood-JapanFoodBank", sheet: "Foodlossandpovertyviz", title: "Japan Food Bank — food loss and poverty", tag: "#VizForSocialGood",
+  { wb: "VizForSocialGood-JapanFoodBank", sheet: "Foodlossandpovertyviz", title: "Japan Food Bank — food loss and poverty", tag: "food", type: "chart", mm: "#VizForSocialGood",
     blurb: "Food waste against poverty in Japan, for the Viz for Social Good project." },
   // — #MakeoverMonday —
-  { wb: "BikeRevolution2020-MM2021", sheet: "MM2021wk1", title: "The great bicycle boom", tag: "#MakeoverMonday", thumb: "thumbs/tableau-bike-boom.webp",
+  { wb: "BikeRevolution2020-MM2021", sheet: "MM2021wk1", title: "The great bicycle boom", tag: "transport", type: "chart", mm: "#MakeoverMonday 2021 wk 1", thumb: "thumbs/tableau-bike-boom.webp",
     blurb: "Week-by-week change in bikes counted by Rails to Trails' 31 US counters, 2019 to 2020: biking was already trending up, and the pandemic amplified it." },
-  { wb: "AmericasDebt-MM2020wk47", sheet: "PathtoDebtwhitebackground", title: "America's path to debt", tag: "#MakeoverMonday",
+  { wb: "AmericasDebt-MM2020wk47", sheet: "PathtoDebtwhitebackground", title: "America's path to debt", tag: "economy", type: "chart", mm: "#MakeoverMonday 2020 wk 47",
     blurb: "US federal debt over time, as one path." },
-  { wb: "MakeoverMonday2019week53-Mostpopularmakeovermondays", sheet: "MM2019wk53", title: "The most popular Makeover Mondays", tag: "#MakeoverMonday",
-    blurb: "A year of #MakeoverMonday, ranked by participation — the community looking at itself." },
-  { wb: "XmasspendingMakeoverMonday2019wk52", sheet: "Dashboard1", title: "Christmas spending", tag: "#MakeoverMonday",
+  { wb: "XmasspendingMakeoverMonday2019wk52", sheet: "Dashboard1", title: "Christmas spending", tag: "economy", type: "dashboard", mm: "#MakeoverMonday 2019 wk 52",
     blurb: "How much people planned to spend on Christmas, by country." },
-  { wb: "NBAdefensiveratingsvsNBAstandingsMakeoverMonday2019wk51", sheet: "Dashboard1", title: "NBA defensive ratings vs. standings", tag: "#MakeoverMonday",
+  { wb: "NBAdefensiveratingsvsNBAstandingsMakeoverMonday2019wk51", sheet: "Dashboard1", title: "NBA defensive ratings vs. standings", tag: "sports", type: "chart", mm: "#MakeoverMonday 2019 wk 51",
     blurb: "Does defense win? Team defensive rating against league position." },
-  { wb: "MonthlysunshinehoursaroundtheworldMakeoverMonday2019wk44", sheet: "Sunshinehoursaroundtheworld", title: "Monthly sunshine hours around the world", tag: "#MakeoverMonday",
+  { wb: "MonthlysunshinehoursaroundtheworldMakeoverMonday2019wk44", sheet: "Sunshinehoursaroundtheworld", title: "Monthly sunshine hours around the world", tag: "weather", type: "chart", mm: "#MakeoverMonday 2019 wk 44",
     blurb: "Hours of sunshine per month for cities around the world — the Nordic winter in context." },
-  { wb: "SeasonpreferencesintheUS-MakeoverMonday2019wk36", sheet: "Seasonpreference2", title: "Favorite season in the US", tag: "#MakeoverMonday",
-    blurb: "Which season Americans prefer, by region." },
-  { wb: "Gamesmarketrevenuetrend-MakeoverMonday2019wk35", sheet: "Gamerevenuesarea", title: "Games market revenue trend", tag: "#MakeoverMonday",
-    blurb: "Video game revenue by segment over time — mobile overtaking console and PC." },
-  { wb: "MM2019w33-Clinicaltrials", sheet: "MM2019xk33v1", title: "Trends in clinical trials", tag: "#MakeoverMonday",
+  { wb: "SeasonpreferencesintheUS-MakeoverMonday2019wk36", sheet: "Seasonpreference2", title: "Favorite season in the US", tag: "weather", type: "chart", mm: "#MakeoverMonday 2019 wk 36",
+    blurb: "Which season Americans prefer, by age group." },
+  { wb: "Gamesmarketrevenuetrend-MakeoverMonday2019wk35", sheet: "Gamerevenuesarea", title: "Games market revenue trend", tag: "games", type: "chart", mm: "#MakeoverMonday 2019 wk 35", thumb: "thumbs/tableau-games-revenue.webp",
+    blurb: "PC, console and mobile game revenue 2012–2021, actuals and forecast, each segment against the whole market — mobile pulling away from the other two." },
+  { wb: "MM2019w33-Clinicaltrials", sheet: "MM2019xk33v1", title: "Trends in clinical trials", tag: "health", type: "chart", mm: "#MakeoverMonday 2019 wk 33",
     blurb: "Registered clinical trials by year and type." },
-  { wb: "MM2019w26-Alcoholconsumptiontop25income", sheet: "Alcoholdashboardincome", title: "Alcohol consumption — top 25 countries by income", tag: "#MakeoverMonday",
+  { wb: "MM2019w26-Alcoholconsumptiontop25income", sheet: "Alcoholdashboardincome", title: "Alcohol consumption — top 25 countries by income", tag: "health", type: "dashboard", mm: "#MakeoverMonday 2019 wk 26",
     blurb: "Litres of pure alcohol per person in the 25 heaviest-drinking countries, against income level." },
-  { wb: "CO2emissionsbycountry-MakeoverMonday2019wk22", sheet: "CO2dashboard", title: "CO₂ emissions by country", tag: "#MakeoverMonday",
-    blurb: "Emissions per country, total and per person." },
-  { wb: "MakeoverMonday2019w03-USminimumwagepopulation", sheet: "Minimumwagedashboard", title: "US minimum wage by population", tag: "#MakeoverMonday",
+  { wb: "CO2emissionsbycountry-MakeoverMonday2019wk22", sheet: "CO2dashboard", title: "CO₂ emissions by country", tag: "environment", type: "dashboard", mm: "#MakeoverMonday 2019 wk 22", thumb: "thumbs/tableau-co2.webp",
+    blurb: "Every country's emissions since 1960 as gray lines; pick one and it lights up blue or red for whether it fell or rose last year, with its reference group in black." },
+  { wb: "MakeoverMonday2019w03-USminimumwagepopulation", sheet: "Minimumwagedashboard", title: "US minimum wage by population", tag: "economy", type: "dashboard", mm: "#MakeoverMonday 2019 wk 3",
     blurb: "State minimum wages weighted by how many people live under each." },
-  { wb: "MM2019w02-PressFreedomtrail", sheet: "Trail", title: "Press freedom — trails", tag: "#MakeoverMonday",
-    blurb: "How countries' press-freedom scores moved over the years, drawn as trails." },
-  { wb: "NHLattendancechanges2001-2018MakeoverMonday2019wk01lines", sheet: "NHLattendancechange", title: "NHL attendance 2001–2018", tag: "#MakeoverMonday",
+  { wb: "MM2019w02-PressFreedomtrail", sheet: "Trail", title: "Press freedom and the economy — trails", tag: "media", type: "chart", mm: "#MakeoverMonday 2019 wk 2",
+    blurb: "Each country's press-freedom score against its economy, year by year, drawn as a trail — which way has it been drifting?" },
+  { wb: "NHLattendancechanges2001-2018MakeoverMonday2019wk01lines", sheet: "NHLattendancechange", title: "NHL attendance 2001–2018", tag: "sports", type: "chart", mm: "#MakeoverMonday 2019 wk 1",
     blurb: "Home attendance per team across seventeen seasons, one line each." },
-  { wb: "MM2018w50-Landusepergramofprotein", sheet: "Foodlanddashboard", title: "Land use per gram of protein", tag: "#MakeoverMonday",
+  { wb: "MM2018w50-Landusepergramofprotein", sheet: "Foodlanddashboard", title: "Land use per gram of protein", tag: "food", type: "dashboard", mm: "#MakeoverMonday 2018 wk 50",
     blurb: "How much land each food needs to produce a gram of protein — beef against beans." },
-  { wb: "DeathsFromConflicts2017-MakeoverMonday2018w34", sheet: "justtimeline", title: "Deaths from conflicts, 2017", tag: "#MakeoverMonday",
-    blurb: "A timeline of conflict deaths through one year." },
+  { wb: "DeathsFromConflicts2017-MakeoverMonday2018w34", sheet: "justtimeline", title: "Deaths from conflicts, 2017", tag: "conflict", type: "data art", mm: "#MakeoverMonday 2018 wk 34", thumb: "thumbs/tableau-conflict-deaths.webp",
+    blurb: "Yemen in 2017, one circle per day sized by the number of deaths. Data art more than analysis: not the most accurate way to read the numbers, but one that holds attention." },
+  { wb: "Riotandprotestviolence-MakeoverMonday2018w34", sheet: "Conflictsviz-MM2018w34", title: "Riot and protest violence", tag: "conflict", type: "chart", mm: "#MakeoverMonday 2018 wk 34", thumb: "thumbs/tableau-riot-violence.webp",
+    blurb: "Riots and protests that turned violent across Africa, the Middle East and Asia, on a dot-grid map — the redder the square, the more of them. From the same week's data as the Yemen timeline." },
 ];
 document.getElementById("tableau").innerHTML = TABLEAU.map((v) => {
   const url = `https://public.tableau.com/app/profile/antti1275/viz/${v.wb}/${v.sheet}`, img = v.thumb || `https://public.tableau.com/static/images/${v.wb.slice(0, 2)}/${v.wb}/${v.sheet}/4_3.png`;
+  const type = v.type || "chart", cls = type === "data art" ? "art" : type;
   return `<div class="card"><a class="main" href="${url}" target="_blank" rel="noopener"><span class="thumb"><img src="${img}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
-    <div class="t"><i></i>${v.title}<span class="arrow">↗</span></div><p>${v.blurb}</p><div class="meta"><span class="tag">${v.tag}</span> Tableau Public</div></a></div>`;
+    <div class="t"><i></i>${v.title}<span class="arrow">↗</span></div><p>${v.blurb}</p><div class="meta"><span class="tag">${v.tag}</span><span class="tag type ${cls}">${type}</span> ${v.mm || "Tableau Public"}</div></a></div>`;
 }).join("");
+// intro: only the first paragraph shows by default
+const more = document.getElementById("introMore"), rest = document.getElementById("introRest");
+more.addEventListener("click", (e) => { e.preventDefault(); const open = rest.hidden; rest.hidden = !open; more.setAttribute("aria-expanded", open); more.textContent = open ? "Show less" : "Show more"; });
 </script>
 </body>
 </html>
