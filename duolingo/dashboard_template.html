@@ -478,7 +478,15 @@ const OFFLINE = __OFFLINE_JSON__;
 
 // A session the course record marks as an absence is kept in the data file
 // (so the record stays faithful) but contributes neither time nor attendance.
-const ATTENDED = (OFFLINE || []).filter(s => s.attended !== false);
+// A future session is a booking, not time spent: the schedule of a running
+// course is entered in full, but only sessions up to today count toward any
+// total or bar. Nothing needs re-editing as the term goes on -- each Monday
+// moves one session from planned to counted by itself.
+const TODAY_ISO = new Date().toISOString().slice(0, 10);
+const HELD = (OFFLINE || []).filter(s => s.attended !== false);
+const ATTENDED = HELD.filter(s => s.date <= TODAY_ISO);
+const PLANNED = HELD.filter(s => s.date > TODAY_ISO);
+const plannedMinutes = PLANNED.reduce((t, s) => t + (typeof s.hours === 'number' ? s.hours * 60 : 0), 0);
 const classMinutes = ATTENDED.reduce((t, s) => t + (typeof s.hours === 'number' ? s.hours * 60 : 0), 0);
 const classSessions = ATTENDED.length;
 const classUnknown = ATTENDED.filter(s => typeof s.hours !== 'number').length;
@@ -549,7 +557,8 @@ if (classMinutes > 0 || classSessions > 0) {
   kpis.splice(3, 0, {
     label: 'Classroom time', value: fmtDuration(classMinutes),
     sub: `${fmt(classSessions)} session${classSessions === 1 ? '' : 's'} attended` +
-         (classUnknown ? ` · ${classUnknown} of unknown length` : ''),
+         (classUnknown ? ` · ${classUnknown} of unknown length` : '') +
+         (PLANNED.length ? ` · ${PLANNED.length} more booked (${fmtDuration(plannedMinutes)})` : ''),
   });
 }
 for (const k of kpis) {
@@ -579,8 +588,8 @@ const CEFR_BANDS = [['Intro',0,10],['A1',10,69],['A2',69,129],['B1',129,629],['B
 // dates shown. These anchor the reconstruction and are what validates it.
 const NOW = {
   score: 91, scoreMax: 129, unit: 499, units: COURSE_UNITS,
-  streak: 677, skills: '203/302', lessons: '4495/6970', lexemes: '9650/14616',
-  asOf: '2026-09-08',
+  streak: 687, skills: '203/302', lessons: '5444/8389', lexemes: '4651/14616',
+  asOf: '2026-09-18',
 };
 // Duolingo's published CEFR score bands, paired with the unit range each level
 // spans in this course. Score is interpolated linearly inside a band.
@@ -749,6 +758,8 @@ renderRanges('estList', rangesWhere(w => w.estimated));
   const node = document.getElementById('classList');
   if (!node) return;
   const byCourse = new Map();
+  const plannedByCourse = new Map();
+  PLANNED.forEach(s => plannedByCourse.set(s.course, (plannedByCourse.get(s.course) || 0) + 1));
   ATTENDED.forEach(s => {
     const c = byCourse.get(s.course) || { n: 0, min: 0, unknown: 0, first: s.date, last: s.date };
     c.n += 1;
@@ -761,7 +772,8 @@ renderRanges('estList', rangesWhere(w => w.estimated));
     .sort((a, b) => a[1].first.localeCompare(b[1].first))
     .map(([name, c]) => `${name}, ${c.first} – ${c.last}, ${c.n} session${c.n === 1 ? '' : 's'}` +
       (c.min ? ` (${fmtDuration(c.min)})` : '') +
-      (c.unknown ? `, ${c.unknown} of unrecorded length` : ''))
+      (c.unknown ? `, ${c.unknown} of unrecorded length` : '') +
+      (plannedByCourse.get(name) ? `, ${plannedByCourse.get(name)} still to come` : ''))
     .join('; ') || 'none recorded';
 })();
 
