@@ -1,0 +1,133 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Antti's dashboards</title>
+<meta name="description" content="Personal data dashboards — films, books, music, festivals, a World Cup pool — built as single HTML pages on GitHub Pages, plus drop-in viewers for your own exports.">
+<style>
+  :root {
+    --bg: #14181c; --card: #1e252d; --card-2: #2c3440; --line: #2c3440; --line-2: #384352;
+    --text: #e6edf3; --text-2: #9ab; --text-3: #678;
+    --green: #00e054; --green-mark: #00a83f; --blue-mark: #2a9dd1;
+    --radius: 10px; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.45; }
+  a { color: inherit; text-decoration: none; }
+  .wrap { max-width: 1100px; margin: 0 auto; padding: 28px 20px 40px; }
+  header { display: flex; justify-content: space-between; align-items: flex-start; gap: 16px; flex-wrap: wrap; margin-bottom: 8px; }
+  h1 { font-size: 28px; margin: 0; letter-spacing: -0.01em; font-weight: 700; } h1 span { color: var(--green); }
+  .sub { color: var(--text-2); margin-top: 4px; }
+  .intro { color: var(--text-3); font-size: 13px; max-width: 760px; line-height: 1.55; margin: 6px 0 22px; }
+  .intro a { color: var(--text-2); text-decoration: underline dotted; }
+  .gh { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--text-2); white-space: nowrap; }
+  .gh:hover { color: var(--text); border-color: var(--text-3); }
+  h2 { font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--text-3); font-weight: 600; margin: 26px 0 10px; display: flex; align-items: baseline; gap: 10px; }
+  h2 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; }
+  .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
+  .card { display: flex; flex-direction: column; gap: 8px; background: var(--card); border-radius: var(--radius); padding: 16px 18px 14px; min-width: 0; border: 1px solid var(--line); transition: border-color .12s, transform .12s; position: relative; overflow: hidden; }
+  .card .body { display: contents; }
+  .card a.main { color: inherit; display: contents; }
+  .card:hover { border-color: var(--line-2); transform: translateY(-1px); }
+  .card .t { font-size: 16px; font-weight: 600; display: flex; align-items: flex-start; gap: 8px; line-height: 1.3; }
+  .card .t i { width: 10px; height: 10px; border-radius: 3px; background: var(--green-mark); flex: none; margin-top: 5px; }
+  .card .t .arrow { margin-left: auto; color: var(--text-3); font-weight: 400; transition: color .12s, transform .12s; }
+  .card:hover .t .arrow { color: var(--green); transform: translateX(2px); }
+  .card p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.5; }
+  .card .meta { margin-top: auto; padding-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.7; } .card .meta .tag { vertical-align: 1px; margin-right: 4px; }
+  .card .meta .dot { opacity: .6; }
+  .tag { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 11px; line-height: 18px; color: #fff; background: var(--card-2); }
+  .tag.live { background: var(--green-mark); } .tag.manual { background: #5b6e80; } .tag.season { background: #5b8fb9; } .tag.viewer { border: 1px solid var(--green-mark); color: var(--green); background: transparent; line-height: 16px; }
+  .viewer-card { border: 1px dashed var(--line-2); background: transparent; } .viewer-card:hover { border-style: solid; border-color: var(--green-mark); }
+  .viewer-card .t i { background: transparent; border: 2px solid var(--green-mark); }
+  .card .thumb { display: block; margin: -16px -18px 6px; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; aspect-ratio: 16 / 10; background: var(--card-2); border-bottom: 1px solid var(--line); }
+  .card .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; filter: saturate(.95); transition: transform .25s; }
+  .card:hover .thumb img { transform: scale(1.02); }
+  .card .own { display: flex; align-items: center; gap: 8px; margin: 4px -18px -14px; padding: 9px 18px 10px; border-top: 1px solid var(--line); color: var(--green); font-size: 13px; font-weight: 600; border-radius: 0 0 var(--radius) var(--radius); }
+  .card .own:hover { background: rgba(0,168,63,.10); }
+  .card .own small { color: var(--text-3); font-weight: 400; margin-left: auto; text-align: right; }
+  .card .own > span { white-space: nowrap; }
+  .card .own::before { content: ""; width: 10px; height: 10px; border-radius: 3px; border: 2px solid var(--green-mark); flex: none; }
+  a.card { color: inherit; }
+  footer { color: var(--text-3); font-size: 12px; margin-top: 34px; line-height: 1.6; border-top: 1px solid var(--line); padding-top: 14px; }
+  footer a { color: var(--text-2); }
+  @media (max-width: 600px) { .wrap { padding: 20px 14px 32px; } h1 { font-size: 24px; } }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Antti's <span>dashboards</span></h1>
+      <div class="sub">Personal data, one page each — films, books, music, festivals and a few games.</div>
+    </div>
+    <a class="gh" href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">github.com/akaukora/dashboards ↗</a>
+  </header>
+  <p class="intro">Every dashboard here is a single HTML file that reads a CSV or JSON next to it and draws everything in the browser — no backend, no tracking. The diaries refresh themselves from the services' data through scheduled GitHub Actions; the rest are built or updated by hand. The three diaries also come as <em>drop-in viewers</em>: open one, drop your own export on it, and you get the same dashboard for your data without uploading anything. The shared look is written up in <a href="STYLE.md">STYLE.md</a>.</p>
+
+  <h2>Diaries <small>· years of history, refreshed automatically or on upload</small></h2>
+  <div class="grid">
+    <div class="card">
+      <a class="main" href="films-watched/"><span class="thumb"><img src="thumbs/films-watched.webp" alt="" loading="lazy"></span>
+      <div class="t"><i></i>Films<span class="arrow">→</span></div>
+      <p>The Letterboxd diary since 2019: what got watched, when and where, ratings by year and decade, theater vs. home, festival runs, written reviews.</p>
+      <div class="meta"><span class="tag live">nightly</span> Letterboxd RSS + diary pages → <code>films.csv</code></div></a>
+      <a class="own" href="letterboxd-viewer/"><span>Try it with your own data</span> <small>Letterboxd export</small></a>
+    </div>
+    <div class="card">
+      <a class="main" href="books-read/"><span class="thumb"><img src="thumbs/books-read.webp" alt="" loading="lazy"></span>
+      <div class="t"><i></i>Books<span class="arrow">→</span></div>
+      <p>The StoryGraph library: books finished per year and month, ratings, moods, currently reading, recent reviews.</p>
+      <div class="meta"><span class="tag manual">on export</span> StoryGraph library export → <code>books.csv</code></div></a>
+      <a class="own" href="storygraph-viewer/"><span>Try it with your own data</span> <small>StoryGraph or Goodreads export</small></a>
+    </div>
+    <div class="card">
+      <a class="main" href="music/"><span class="thumb"><img src="thumbs/music.webp" alt="" loading="lazy"></span>
+      <div class="t"><i></i>Music<span class="arrow">→</span></div>
+      <p>Twenty years of Last.fm scrobbles, with the Spotify gaps filled in: forgotten favorites and rediscoveries, when each artist was last heard, how favorites were made, listening by year, month and hour.</p>
+      <div class="meta"><span class="tag live">nightly</span> Last.fm API + Spotify export → <code>scrobbles.csv</code></div></a>
+      <a class="own" href="music-viewer/"><span>Try it with your own data</span> <small>Last.fm, Spotify or Apple Music</small></a>
+    </div>
+    <div class="card">
+      <a class="main" href="duolingo/"><span class="thumb"><img src="thumbs/duolingo.webp" alt="" loading="lazy"></span>
+      <div class="t"><i></i>Duolingo<span class="arrow">→</span></div>
+      <p>Time, XP and lessons by week, month or year, reconstructed from Duolingo's weekly progress-report emails and the account data export.</p>
+      <div class="meta"><span class="tag live">weekly</span> progress-report emails</div></a>
+    </div>
+  </div>
+
+  <h2>Seasons and events <small>· built for a moment, kept as a record</small></h2>
+  <div class="grid">
+    <div class="card">
+      <a class="main" href="hiff2026/"><span class="thumb"><img src="thumbs/hiff2026.webp" alt="" loading="lazy"></span>
+      <div class="t"><i style="background:#5b8fb9"></i>HIFF 2026 planner<span class="arrow">→</span></div>
+      <p>Helsinki International Film Festival: pick films, pick times, see the clashes on a timetable grid, share a plan with friends.</p>
+      <div class="meta"><span class="tag season">Sept 2026</span></div></a>
+    </div>
+    <div class="card">
+      <a class="main" href="tiff2026/"><span class="thumb"><img src="thumbs/tiff2026.webp" alt="" loading="lazy"></span>
+      <div class="t"><i style="background:#5b8fb9"></i>TIFF 2026 planner<span class="arrow">→</span></div>
+      <p>The same planner for the Toronto International Film Festival program: films, times, clashes, a shareable schedule.</p>
+      <div class="meta"><span class="tag season">Sept 2026</span></div></a>
+    </div>
+    <div class="card">
+      <a class="main" href="wc2026/"><span class="thumb"><img src="thumbs/wc2026.webp" alt="" loading="lazy"></span>
+      <div class="t"><i style="background:#5b8fb9"></i>World Cup 2026 — how the pool was won<span class="arrow">→</span></div>
+      <p>The story of a prediction pool: the nine parts of the game scored separately, the top five in each, and how the podium came together.</p>
+      <div class="meta"><span class="tag season">Summer 2026</span></div></a>
+    </div>
+    <div class="card">
+      <a class="main" href="prediction-markets/"><span class="thumb"><img src="thumbs/prediction-markets.webp" alt="" loading="lazy"></span>
+      <div class="t"><i style="background:#5b8fb9"></i>Prediction markets<span class="arrow">→</span></div>
+      <p>Open positions and settled markets on Polymarket and Kalshi in one view.</p>
+      <div class="meta"><span class="tag live">scheduled</span> Polymarket + Kalshi → <code>data.json</code></div></a>
+    </div>
+  </div>
+
+  <footer>
+    Built by Antti Kaukoranta as plain HTML + Chart.js, hosted on GitHub Pages. Each folder in the <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">repository</a> has its own README describing the data and how it is refreshed.
+  </footer>
+</div>
+</body>
+</html>
