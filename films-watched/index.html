@@ -163,6 +163,12 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   td.review { color: var(--text-2); max-width: 420px; }
   td.review .clamp { display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; cursor: pointer; }
   td.review .clamp.open { display: block; }
+  .rev .src { font-size: 11px; color: var(--text-3); margin-top: auto; }
+  .rev p.none { color: var(--text-3); font-style: italic; }
+  .dbtn { all: unset; cursor: pointer; display: inline-block; width: 15px; height: 15px; line-height: 15px; text-align: center; border-radius: 50%; border: 1px solid var(--line-2); color: var(--text-3); font-size: 10px; font-weight: 700; margin-left: 6px; vertical-align: 1px; font-family: Georgia, serif; }
+  .dbtn:hover, tr.open .dbtn { color: var(--green); border-color: var(--green-mark); }
+  tr.drow td { color: var(--text-2); padding: 2px 8px 10px 28px; font-size: 12.5px; line-height: 1.5; border-bottom: 1px solid var(--line); background: rgba(0,0,0,.12); }
+  tr.drow td .src { color: var(--text-3); font-size: 11px; margin-left: 6px; }
   @media (max-width: 860px) { .reviews { grid-template-columns: 1fr; } }
 
   /* ---------- lists ---------- */
@@ -300,7 +306,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
 
   <section class="grid one">
     <div class="card">
-      <h2>Latest reviews</h2>
+      <div class="head"><h2 id="reviewsHead">Latest reviews</h2><div class="seg" id="revMode" hidden><button type="button" data-m="review">Review</button><button type="button" data-m="desc">Description</button></div></div>
       <div class="note" id="noteReviews"></div>
       <div class="reviews" id="reviews"></div>
     </div>
@@ -341,7 +347,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
 
   <footer>
     <span id="fetchedAt"></span>
-    <details><summary>About the data</summary>Data: <code>films.csv</code> in the same repository (title, release year, watched date, rating, tags, review, link), read live on every visit — a commit to the CSV is on the page within a minute or so. Have a Letterboxd account? <a href="../letterboxd-viewer/">Drop your own export into a simplified version of this dashboard</a> — nothing is uploaded.</details>
+    <details><summary>About the data</summary>Data: <code>films.csv</code> in the same repository (title, release year, watched date, rating, tags, review, link), read live on every visit — a commit to the CSV is on the page within a minute or so. Have a Letterboxd account? <a href="../letterboxd-viewer/">Drop your own export into a simplified version of this dashboard</a> — nothing is uploaded.<span id="descCredit" hidden> Film descriptions come from <a href="https://www.themoviedb.org/" target="_blank" rel="noopener">TMDB</a>, fetched nightly for new entries into <code>descriptions.json</code>; this page uses the TMDB API but is not endorsed or certified by TMDB.</span></details>
   </footer>
 </div>
 
@@ -354,6 +360,12 @@ const DATA_URL = "https://raw.githubusercontent.com/akaukora/dashboards/main/fil
 const RECENT_COUNT = 12;                 // posters in "Recent watches"
 const RECENT_RATED = 20;                 // dots in "Recent ratings"
 const REVIEW_COUNT = 6;                  // cards in "Latest reviews"
+// descriptions.json (built by fetch_descriptions.py from TMDB) sits next to films.csv; missing file = no descriptions, toggle hidden
+const DESC_URL = DATA_URL.replace(/[^/]*$/, "descriptions.json");
+let DESC = {};                           // key → { desc, tmdb_id, title, year }
+const descKey = (f) => { const m = /\/film\/([^/]+)\/?/.exec(f.url || ""); return m ? m[1].toLowerCase() : `${f.title.trim().toLowerCase()}|${f.year ?? ""}`; };
+const descOf = (f) => DESC[descKey(f)]?.desc || "";
+let revMode = "review"; try { revMode = localStorage.getItem("revMode") === "desc" ? "desc" : "review"; } catch (e) {}
 const MIN_TAG_FILMS = 5;                 // a viewing tag needs this many rated films for a row in "Ratings by service"
 const MIN_SOURCE_CHIP = 10;              // a tag needs this many films to get its own Source button
 const MIN_TAG_CHIP = 5;                  // a secondary tag needs this many films to get a Tags button
@@ -765,13 +777,25 @@ function render() {
   $("#posters").classList.toggle("wide", landscape > recent.filter((f) => f.poster).length / 2);
   $("#noteRecent").textContent = recent.length ? `Latest ${recent.length} entries${active.length ? " in this selection" : ""}.` : "Nothing in this selection.";
 
-  /* Latest reviews — the most recent written reviews in the selection */
-  const reviewed = films.filter((f) => f.review && f.date).slice(-REVIEW_COUNT).reverse();
-  $("#reviews").innerHTML = reviewed.map((f) => `<article class="rev"${f.rating != null ? ` style="background:linear-gradient(180deg, ${hexA(RATING_COLORS[bucket(f.rating)], 0.2)}, ${hexA(RATING_COLORS[bucket(f.rating)], 0.08)}), var(--card-2)"` : ""}><div class="h">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</a>` : `<span class="t">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</span>`}${f.rewatch ? `<span class="rw">rewatch</span>` : ""}<span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"};white-space:nowrap">${starStr(f.rating)}</span></div><div class="m">${fmtDate(f.date)}${f.src ? ` · ${esc(tagsText(f))}` : ""}</div><p>${esc(f.review)}</p>${f.review.length > 260 ? `<button type="button" class="more">Read more</button>` : ""}</article>`).join("");
+  /* Latest reviews — the most recent written reviews in the selection; or, toggled, the latest films with their TMDB description */
+  const hasDesc = Object.keys(DESC).length > 0;
+  $("#revMode").hidden = !hasDesc;
+  if (!hasDesc) revMode = "review";
+  document.querySelectorAll("#revMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === revMode));
+  const descMode = revMode === "desc";
+  const shown = descMode ? films.filter((f) => f.date).slice(-REVIEW_COUNT).reverse() : films.filter((f) => f.review && f.date).slice(-REVIEW_COUNT).reverse();
+  $("#reviewsHead").textContent = descMode ? "Latest films" : "Latest reviews";
+  $("#reviews").innerHTML = shown.map((f) => {
+    const body = descMode ? (descOf(f) || "") : f.review;
+    const text = body ? `<p>${esc(body)}</p>` : `<p class="none">${descMode ? "No description found." : ""}</p>`;
+    return `<article class="rev"${f.rating != null ? ` style="background:linear-gradient(180deg, ${hexA(RATING_COLORS[bucket(f.rating)], 0.2)}, ${hexA(RATING_COLORS[bucket(f.rating)], 0.08)}), var(--card-2)"` : ""}><div class="h">${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</a>` : `<span class="t">${esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}</span>`}${f.rewatch ? `<span class="rw">rewatch</span>` : ""}<span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"};white-space:nowrap">${starStr(f.rating)}</span></div><div class="m">${fmtDate(f.date)}${f.src ? ` · ${esc(tagsText(f))}` : ""}${descMode && f.review ? " · reviewed" : ""}</div>${text}${body.length > 260 ? `<button type="button" class="more">Read more</button>` : ""}</article>`;
+  }).join("");
   document.querySelectorAll("#reviews .more").forEach((b) => b.addEventListener("click", () => { const open = b.parentElement.classList.toggle("open"); b.textContent = open ? "Show less" : "Read more"; }));
-  const nRev = films.filter((f) => f.review).length;
-  $("#noteReviews").textContent = nRev ? `${nRev} written review${nRev === 1 ? "" : "s"} in this selection · showing the latest ${reviewed.length}.` : "No written reviews in this selection.";
-  $("#reviews").parentElement.parentElement.style.display = nRev ? "" : "none";
+  const nRev = films.filter((f) => f.review).length, nDesc = films.filter((f) => descOf(f)).length;
+  $("#noteReviews").textContent = descMode
+    ? `The latest ${shown.length} films in this selection with their TMDB synopsis · ${nDesc} of ${films.length} films have one.`
+    : nRev ? `${nRev} written review${nRev === 1 ? "" : "s"} in this selection · showing the latest ${shown.length}.` : "No written reviews in this selection.";
+  $("#reviews").parentElement.parentElement.style.display = (descMode ? films.length : nRev) ? "" : "none";
 
   /* Ratings by service — filtered by everything but source; the chosen tag's row highlighted */
   const ratedNoS = filtered("source").filter((f) => f.rating != null);
@@ -953,8 +977,9 @@ function drawTable() {
     if (sortKey === "review") return dir * ((a.review ? 1 : 0) - (b.review ? 1 : 0) || a.review.localeCompare(b.review));
     return dir * ((va ?? -1) - (vb ?? -1));
   });
-  $("#table tbody").innerHTML = rows.map((f) => `<tr><td style="white-space:nowrap">${fmtDate(f.date)}</td><td>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}</td><td class="num">${f.year ?? ""}</td><td class="num" title="${f.rating ?? ""}"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating)}</span></td><td style="color:var(--text-2)">${esc(tagsText(f))}</td><td class="review">${f.review ? `<div class="clamp" title="Click to expand">${esc(f.review)}</div>` : ""}</td></tr>`).join("");
+  $("#table tbody").innerHTML = rows.map((f) => `<tr><td style="white-space:nowrap">${fmtDate(f.date)}</td><td>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}${descOf(f) ? `<button type="button" class="dbtn" title="Show description" aria-label="Show description">i</button>` : ""}</td><td class="num">${f.year ?? ""}</td><td class="num" title="${f.rating ?? ""}"><span class="stars" style="color:${f.rating != null ? RATING_COLORS[bucket(f.rating)] : "inherit"}">${starStr(f.rating)}</span></td><td style="color:var(--text-2)">${esc(tagsText(f))}</td><td class="review">${f.review ? `<div class="clamp" title="Click to expand">${esc(f.review)}</div>` : ""}</td></tr>${descOf(f) ? `<tr class="drow" hidden><td colspan="6">${esc(descOf(f))}<span class="src">TMDB</span></td></tr>` : ""}`).join("");
   $("#table tbody").querySelectorAll(".clamp").forEach((el) => el.addEventListener("click", () => el.classList.toggle("open")));
+  $("#table tbody").querySelectorAll(".dbtn").forEach((b) => b.addEventListener("click", () => { const tr = b.closest("tr"), d = tr.nextElementSibling; d.hidden = !d.hidden; tr.classList.toggle("open", !d.hidden); }));
   $("#tableCount").textContent = `${rows.length} of ${tableRows.length} entries`;
   document.querySelectorAll("#table th").forEach((th) => { th.classList.toggle("sorted", th.dataset.k === sortKey); th.classList.toggle("asc", th.dataset.k === sortKey && sortAsc); });
 }
@@ -1000,6 +1025,7 @@ function buildFilters() {
   if (taggedDates.length) { const a = taggedDates[0], b = taggedDates.at(-1); $("#sourceHint").textContent = `tagged entries: ${MONTHS[a.getMonth()]} ${a.getFullYear()} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`; $("#sourceHint").title = tagCoverage(); }
   document.querySelectorAll("#yearsMode button").forEach((b) => b.addEventListener("click", () => { yearsMode = b.dataset.m; try { localStorage.setItem("yearsMode", yearsMode); } catch (e) {} render(); }));
   document.querySelectorAll("#svcMode button").forEach((b) => b.addEventListener("click", () => { svcMode = b.dataset.m; try { localStorage.setItem("svcMode", svcMode); } catch (e) {} render(); }));
+  document.querySelectorAll("#revMode button").forEach((b) => b.addEventListener("click", () => { revMode = b.dataset.m; try { localStorage.setItem("revMode", revMode); } catch (e) {} render(); }));
   let mekkoResize; window.addEventListener("resize", () => { clearTimeout(mekkoResize); mekkoResize = setTimeout(() => { if (svcMode === "mekko" && mekkoData) drawMekko(); }, 150); });
   $("#clearAll").addEventListener("click", () => { Object.keys(F).forEach((k) => (F[k] = null)); syncHash(); paintChips(); render(); });
   $("#heat").addEventListener("click", (e) => { const c = e.target.closest(".c[data-m]"); if (!c) return; const y = +c.dataset.y, m = +c.dataset.m; if (F.month === m && F.year === y) { F.month = null; } else { F.year = y; F.month = m; } syncHash(); paintChips(); render(); });
@@ -1029,9 +1055,13 @@ async function load() {
   const app = $("#app"); app.classList.add("loading");
   const src = new URLSearchParams(location.search).get("src") || DATA_URL;
   try {
-    const res = await fetch(src, { cache: "no-store" });
+    const descSrc = src === DATA_URL ? DESC_URL : src.replace(/[^/]*$/, "descriptions.json");
+    const [res, dres] = await Promise.all([fetch(src, { cache: "no-store" }), fetch(descSrc, { cache: "no-store" }).catch(() => null)]);
     if (!res.ok) throw new Error(`HTTP ${res.status}`);
     const text = await res.text();
+    DESC = {};
+    if (dres && dres.ok) { try { DESC = (await dres.json()).items || {}; } catch (e) { console.warn("descriptions.json unreadable", e); } }
+    $("#descCredit").hidden = !Object.keys(DESC).length;
     ALL = toFilms(parseCSV(text));
     if (!ALL.length) throw new Error("The sheet returned no film rows — has the tab layout changed?");
     YEARS = [...new Set(ALL.filter((f) => f.date).map((f) => f.date.getFullYear()))].sort();
