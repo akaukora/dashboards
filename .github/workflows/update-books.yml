@@ -1,0 +1,33 @@
+name: Update Book Descriptions
+
+# Runs whenever a new StoryGraph export is uploaded as books-read/books.csv (or by hand from the
+# Actions tab). Fetches a description for the books not yet in descriptions.json and commits it.
+on:
+  push:
+    paths:
+      - 'books-read/books.csv'
+      - 'books-read/fetch_descriptions.py'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  describe:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+        with:
+          token: ${{ secrets.GITHUB_TOKEN }}
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - name: Fetch descriptions (Google Books, Open Library)
+        run: python books-read/fetch_descriptions.py
+      - name: Commit and push descriptions.json
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "github-actions[bot]@users.noreply.github.com"
+          git add books-read/descriptions.json
+          git commit -m "Update book descriptions [$(date -u +%Y-%m-%d)]" || echo "No changes to commit"
+          git push

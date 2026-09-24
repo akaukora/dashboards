@@ -22,10 +22,14 @@ jobs:
         run: pip install requests beautifulsoup4 feedparser
       - name: Run scraper
         run: python films-watched/scrape_letterboxd.py
-      - name: Commit and push updated films.csv
+      - name: Fetch film descriptions from TMDB (new films only)
+        env:
+          TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
+        run: python films-watched/fetch_descriptions.py
+      - name: Commit and push updated films.csv and descriptions.json
         run: |
           git config user.name "github-actions[bot]"
           git config user.email "github-actions[bot]@users.noreply.github.com"
-          git add films-watched/films.csv
+          git add films-watched/films.csv films-watched/descriptions.json
           git commit -m "Update films.csv [$(date -u +%Y-%m-%d)]" || echo "No changes to commit"
           git push
