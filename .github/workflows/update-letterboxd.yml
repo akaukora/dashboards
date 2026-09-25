@@ -23,6 +23,7 @@ jobs:
       - name: Run scraper
         run: python films-watched/scrape_letterboxd.py
       - name: Fetch film descriptions from TMDB (new films only)
+        continue-on-error: true   # a TMDB hiccup must not block the films.csv commit
         env:
           TMDB_API_KEY: ${{ secrets.TMDB_API_KEY }}
         run: python films-watched/fetch_descriptions.py
