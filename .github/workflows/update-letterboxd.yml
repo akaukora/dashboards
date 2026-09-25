@@ -33,4 +33,6 @@ jobs:
           git config user.email "github-actions[bot]@users.noreply.github.com"
           git add films-watched/films.csv films-watched/descriptions.json
           git commit -m "Update films.csv [$(date -u +%Y-%m-%d)]" || echo "No changes to commit"
+          # the branch may have moved while this job ran (an upload, another action): rebase our commit on top, then push
+          git pull --rebase origin main
           git push
