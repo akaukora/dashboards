@@ -52,10 +52,14 @@ def get(path, **params):
         except urllib.error.HTTPError as e:
             if e.code == 404:
                 return None
+            if e.code == 401:
+                raise SystemExit("TMDB answered 401 — the TMDB_API_KEY secret is not the v3 'API Key' (the short one)")
             if e.code == 429 or e.code >= 500:
                 time.sleep(2 * (attempt + 1))
                 continue
-            raise
+            return None
+        except (urllib.error.URLError, TimeoutError, OSError, ValueError):
+            time.sleep(2)
     return None
 
 
@@ -104,9 +108,22 @@ def main():
         if k not in data["items"]:
             todo.append((k, r))
     print(f"{len(seen)} films, {len(data['items'])} already described, {len(todo)} to fetch")
-    added = 0
+    def save():
+        with open(OUT, "w", encoding="utf-8") as f:
+            json.dump(data, f, ensure_ascii=False, indent=1, sort_keys=True)
+
+    added, done = 0, 0
     for k, r in todo:
-        record, reason = lookup(r)
+        try:
+            record, reason = lookup(r)
+        except SystemExit:
+            raise
+        except Exception as e:  # never let one film kill the run
+            record, reason = None, f"error: {type(e).__name__}: {e}"
+        done += 1
+        if done % 25 == 0:
+            save()
+            print(f"  … {done}/{len(todo)} ({added} found)", flush=True)
         if record:
             data["items"][k] = record
             data["misses"].pop(k, None)
@@ -120,8 +137,7 @@ def main():
     data["misses"] = {k: v for k, v in data["misses"].items() if k in seen}
     if added or todo:
         data["updated"] = datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")
-    with open(OUT, "w", encoding="utf-8") as f:
-        json.dump(data, f, ensure_ascii=False, indent=1, sort_keys=True)
+    save()
     print(f"{added} added, {len(data['misses'])} unmatched → {os.path.basename(OUT)}")
     return 0
 
