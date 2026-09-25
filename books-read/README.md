@@ -31,9 +31,14 @@ books marked read without a date show in the table only; *currently-reading* get
 
 ## Descriptions (`descriptions.json`)
 
-`fetch_descriptions.py` looks up a description for every book in `books.csv` — Google Books by
-ISBN first, then Open Library, then Google Books by title and author for rows whose *ISBN/UID* is
-an ASIN or empty — and writes them to `descriptions.json`. The workflow `update-books.yml` runs
+`fetch_descriptions.py` looks up a description for every book in `books.csv` — Open Library by
+ISBN first, then Google Books, then Google Books by title and author for rows whose *ISBN/UID* is
+an ASIN or empty — and writes them to `descriptions.json`. Google Books throttles anonymous requests
+from GitHub's runners (HTTP 429); after a few in a row the script skips Google for the rest of the
+run and marks those books "will retry", so a second run picks them up. An optional repository
+secret `GOOGLE_BOOKS_API_KEY` (free, Google Cloud console → APIs → Books API) lifts that limit. The
+file is saved every ten books and the run stops itself after 40 minutes, and the workflow commits
+whatever was fetched even if the step fails. The workflow `update-books.yml` runs
 it automatically whenever `books.csv` changes, so the update process above does not change; it
 can also be started by hand from the Actions tab. Only books not yet in the file are fetched, so
 a new export costs a handful of requests. No API key is needed. Books with nothing found are
