@@ -840,6 +840,12 @@
    "tmdb_id": 14756,
    "year": 2008
   },
+  "iron-boy": {
+   "desc": "In rural France, Christophe (10) tries to live up to his rigid and distant father on the family farm. But the young boy starts to lean over and collapse without warning — on the tractor, at school, at dinner... A doctor finds the solution: Christophe must wear an iron corset to keep himself upright. Forced to reinvent his life away from the farm, Christophe discovers a new passion for music, meets a new friend, and follows her into his first mischief. But will any of this really fix what is out of balance?",
+   "title": "Iron Boy",
+   "tmdb_id": 947493,
+   "year": 2026
+  },
   "iron-man-3": {
    "desc": "When Tony Stark's world is torn apart by a formidable terrorist called the Mandarin, he starts an odyssey of rebuilding and retribution.",
    "title": "Iron Man 3",
@@ -1199,6 +1205,12 @@
    "title": "Navalny",
    "tmdb_id": 926676,
    "year": 2022
+  },
+  "new-group": {
+   "desc": "Ai is a high school girl who feels suffocated by social pressure, but finds it hard to fight going with the flow. One day, the people in her school inexplicably start to form a human pyramid. The principal and other teachers start to act weird and encourage taking part in it, and the various gymnastic formations start to spread and take over the whole town. Eventually only Ai and Yuu, a transfer student who finds it hard to fit in, are left to rebel against the conformity madness.",
+   "title": "New Group",
+   "tmdb_id": 1494715,
+   "year": 2026
   },
   "nightcrawler": {
    "desc": "When Lou Bloom, desperate for work, muscles into the world of L.A. crime journalism, he blurs the line between observer and participant to become the star of his own story. Aiding him in his effort is Nina, a TV-news veteran.",
@@ -2463,5 +2475,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-09-24T18:10:24Z"
+ "updated": "2026-09-27T04:42:40Z"
 }
