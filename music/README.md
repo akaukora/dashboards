@@ -33,10 +33,15 @@ repository as `music/`.
   audiobooks skipped; Spotify's own double rows collapsed), and `fetch_lastfm.py` merges that file
   into `scrobbles.csv` on every run — `merge_backfill()` drops the previously merged rows and
   re-derives them, so the CSV and the rule are the single source of truth. A Spotify play is taken as
-  already scrobbled when Last.fm has the same artist and track within ±10 minutes, or *any* track of
-  that artist within ±60 s of the play's start (Last.fm auto-corrects titles — "Levels - Radio Edit"
-  becomes "Levels", "(feat. …)" is dropped — so titles are compared with brackets and " - …" suffixes
-  removed, and the artist-level rule catches the rest). The run log reports `N Spotify plays added
+  already scrobbled when Last.fm has the same track title within ±10 minutes *under any artist name*
+  (Spotify and Last.fm spell artists differently — "Robin Packalen" / "Robin", "Jorge Ben Jor" /
+  "Jorge Ben", "Grigory Leps" / "Григорий Лепс" — and matching on the artist too once double-counted
+  about 1,900 plays), or *any* track of that artist within ±60 s, or *any* scrobble at all starting
+  within ±30 s of the play (one person plays one song at a time; this catches the plays where both the
+  artist and the title are spelled differently, e.g. transliterated). Last.fm auto-corrects titles —
+  "Levels - Radio Edit" becomes "Levels", "(feat. …)" is dropped — so titles are compared with brackets
+  and " - …" suffixes removed. Where the two names should also be one artist on the page, add a
+  `corrections.csv` row (`Robin,*,Robin Packalen`). The run log reports `N Spotify plays added
   that Last.fm never got (M already scrobbled)`. To refresh after a newer export, re-run the script
   and commit the new CSV; nothing else changes. The export on file covers 28 May 2009 – 2 Jul 2024.
 - `corrections.csv` — fixes applied to the scrobbles on every write, because Last.fm's own data can't

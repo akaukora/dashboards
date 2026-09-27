@@ -135,7 +135,11 @@ def apply_corrections(rows, path: Path):
 
 
 BACKFILL_FILE = "spotify_backfill.csv"
-MATCH_TRACK_S, MATCH_ARTIST_S = 600, 60      # a Spotify play counts as already scrobbled if Last.fm has the same track within ±10 min, or any track of the artist within ±60 s
+# A Spotify play counts as already scrobbled if Last.fm has: the same track within ±10 min (any artist name — Spotify and
+# Last.fm spell artists differently: "Robin Packalen" / "Robin", "Jorge Ben Jor" / "Jorge Ben", "Grigory Leps" / "Григорий Лепс");
+# or any track of the same artist within ±60 s; or any scrobble at all starting within ±30 s (one person plays one song at a time —
+# this catches the cases where both the artist and the title are spelled differently, e.g. transliterated).
+MATCH_TRACK_S, MATCH_ARTIST_S, MATCH_ANY_S = 600, 60, 30
 
 
 def norm_artist(a):
@@ -158,13 +162,15 @@ def merge_backfill(rows, path: Path):
     rows = [r for r in rows if (r.get("source") or "") != "spotify"]
     if not path.exists():
         return rows, 0, 0
-    by_track, by_artist = defaultdict(list), defaultdict(list)
+    by_title, by_artist, all_times = defaultdict(list), defaultdict(list), []
     for r in rows:
-        by_track[(norm_artist(r["artist"]), norm_title(r["track"]))].append(r["uts"])
+        by_title[norm_title(r["track"])].append(r["uts"])
         by_artist[norm_artist(r["artist"])].append(r["uts"])
-    for d in (by_track, by_artist):
+        all_times.append(r["uts"])
+    for d in (by_title, by_artist):
         for k in d:
             d[k].sort()
+    all_times.sort()
 
     def near(times, t, w):
         i = bisect.bisect_left(times, t - w)
@@ -174,7 +180,7 @@ def merge_backfill(rows, path: Path):
     with path.open(encoding="utf-8", newline="") as f:
         for r in csv.DictReader(f):
             uts, a = int(r["uts"]), norm_artist(r["artist"])
-            if near(by_track.get((a, norm_title(r["track"])), []), uts, MATCH_TRACK_S) or near(by_artist.get(a, []), uts, MATCH_ARTIST_S):
+            if near(by_title.get(norm_title(r["track"]), []), uts, MATCH_TRACK_S) or near(by_artist.get(a, []), uts, MATCH_ARTIST_S) or near(all_times, uts, MATCH_ANY_S):
                 matched += 1; continue
             added.append({"uts": uts, "datetime_utc": r["datetime_utc"], "artist": r["artist"], "album": r.get("album", ""),
                           "track": r["track"], "loved": "", "source": "spotify"})
