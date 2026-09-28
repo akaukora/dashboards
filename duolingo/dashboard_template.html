@@ -603,9 +603,10 @@ const CEFR_BANDS = [['Intro',0,10],['A1',10,69],['A2',69,129],['B1',129,629],['B
 // Measured, not modeled: read off Duolingo (data export) and duome on the
 // dates shown. These anchor the reconstruction and are what validates it.
 const NOW = {
-  score: 91, scoreMax: 129, unit: 499, units: COURSE_UNITS,
+  score: 92, scoreMax: 129, unit: 499, units: COURSE_UNITS,
   streak: 687, skills: '203/302', lessons: '5444/8389', lexemes: '4651/14616',
-  asOf: '2026-09-18',
+  asOf: '2026-09-28',           // unit last read 2026-09-18
+  unitAsOf: '2026-09-18',
 };
 // Duolingo's published CEFR score bands, paired with the unit range each level
 // spans in this course. Score is interpolated linearly inside a band.
@@ -647,7 +648,13 @@ function measuredScorePace() {
   if (days <= 0 || b.score === a.score) return null;
   const perWeek = (b.score - a.score) / (days / 7);
   if (perWeek <= 0) return null;
-  return { perWeek, from: a, to: b, spanDays: Math.round(days) };
+  // A pace is only as good as the step it was fitted to. One or two points
+  // over a few weeks is a slope drawn through rounding noise -- the Score is
+  // an integer, so a single tick is worth up to a full point of error either
+  // way. Flag that rather than let two readings pass for a trend.
+  const delta = b.score - a.score;
+  return { perWeek, from: a, to: b, spanDays: Math.round(days), delta,
+           weak: delta <= 2 || days < 60 };
 }
 
 // Pace projection to the next CEFR level. Recent pace is genuinely ambiguous,
@@ -1368,7 +1375,8 @@ function buildPathNote() {
     position.
     <br><br>
     <strong>It survives one real test.</strong> Duolingo's own Score is <strong>${NOW.score} of ${NOW.scoreMax}</strong>,
-    and mapping unit ${NOW.unit} through the published CEFR bands predicts 89.6 — within 1.4 points.
+    and mapping unit ${NOW.unit} (read ${NOW.unitAsOf}) through the published CEFR bands predicts
+    ${unitToScore(NOW.unit).toFixed(1)} — within ${Math.abs(NOW.score - unitToScore(NOW.unit)).toFixed(1)} points.
     That check only pins down where you are <em>now</em>, though; the timing of everything before it is
     the weak part.
     <br><br>
@@ -1391,10 +1399,14 @@ function buildPathNote() {
     <strong>Next level.</strong> B2 starts at Score 100, ${B2_UNIT - NOW.unit} units away
     (≈${fmt((B2_UNIT - NOW.unit) * XP_PER_UNIT)} XP). ${measured
       ? `Fitted to your <strong>measured</strong> Score readings: ${measured.perWeek.toFixed(2)} points/week
-         over ${measured.spanDays} days, putting B2 around <strong>${fmtMon(new Date(Date.now() + (100 - NOW.score) / measured.perWeek * 7 * 86400000))}</strong>.`
+         over ${measured.spanDays} days, putting B2 around <strong>${fmtMon(new Date(Date.now() + (100 - NOW.score) / measured.perWeek * 7 * 86400000))}</strong>.
+         ${measured.weak ? `That is fitted to a ${measured.delta}-point move across ${measured.spanDays} days,
+         which is thin — the Score is a whole number, so one tick carries up to a point of rounding either
+         way, and the slope through it could easily be half or double. The XP windows are kept below until
+         the readings are far enough apart to stand on their own:` : ''}`
       : `Until there are two Score readings this leans on XP as a proxy, so the dotted continuation
          uses your last 12 weeks. "Recent" is doing a lot of work here, so all the windows:`}
-    ${measured ? '' : `<table class="pace-table"><tbody>${paceRows}</tbody></table>
+    ${measured && !measured.weak ? '' : `<table class="pace-table"><tbody>${paceRows}</tbody></table>
     The 12-, 26- and 52-week windows agree on roughly <strong>${base ? fmtMon(base.date) : '—'}</strong>;
     the 4-week window says ${fmtMon(rangeHi.date)} only because the last month was unusually quiet
     (${fmt(fc[0].avgXp)} XP/week against a ${fmt(fc[fc.length-1].avgXp)} XP/week yearly average). Treat
