@@ -10,5 +10,17 @@
     "unit": 499,
     "score": 91,
     "source": "duome.eu/akaukora"
+  },
+  {
+    "date": "2026-09-18",
+    "unit": 499,
+    "score": 91,
+    "source": "duome.eu/akaukora (refreshed 13:56 GMT+3)"
+  },
+  {
+    "date": "2026-09-28",
+    "unit": null,
+    "score": 92,
+    "source": "Duolingo app (duome still reporting 91 — its XP was current, so the Score field looks cached)"
   }
 ]
