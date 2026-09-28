@@ -1512,6 +1512,12 @@
    "tmdb_id": 426426,
    "year": 2018
   },
+  "roma-elastica": {
+   "desc": "1982. French actress Eddie is on the verge of collapse and travels to Rome accompanied by her loyal makeup artist, Valentina, to shoot a science-fiction film – a film that could be her last one.",
+   "title": "Roma elastica",
+   "tmdb_id": 1302994,
+   "year": 2026
+  },
   "ruben-brandt-collector": {
    "desc": "Psychotherapist Ruben Brandt becomes the most wanted criminal in the world when he and four of his patients steal paintings from the world's most renowned museums and art collections.",
    "title": "Ruben Brandt, Collector",
@@ -2424,6 +2430,12 @@
    "tmdb_id": 10681,
    "year": 2008
   },
+  "we-are-aliens-2026": {
+   "desc": "One summer in the third grade, a quiet boy named Tsubasa meets Gyotaro, a boy everyone in the class looked up to, and the two become close friends. Within their small world, they share irreplaceable moments—until a small incident suddenly tears them apart.",
+   "title": "We Are Aliens",
+   "tmdb_id": 1496928,
+   "year": 2026
+  },
   "wheres-my-roy-cohn": {
    "desc": "Roy Cohn personified the dark arts of American politics, turning empty vessels into dangerous demagogues - from Joseph McCarthy to his final project, Donald J. Trump. This thriller-like exposé connects the dots, revealing how a deeply troubled master manipulator shaped our current American nightmare.",
    "title": "Where's My Roy Cohn?",
@@ -2475,5 +2487,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-09-27T04:42:40Z"
+ "updated": "2026-09-28T04:44:45Z"
 }
