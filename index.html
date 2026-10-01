@@ -16,8 +16,8 @@
     color-scheme: dark;
   }
   /* Light theme: follows the system setting unless the ☾/☀ button in the header has picked one (data-theme on <html>). */
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #f2f4f7; --card: #ffffff; --card-2: #e6eaef; --line: #e3e7ec; --line-2: #c9d1da; --text: #14181c; --text-2: #4a5a6a; --text-3: #6b7a89; --green: #00a83f; --green-mark: #00913a; --tag-fg: #fff; --tag-bg: #6b7a89; --art: #6a4aa0; --art-line: #9a84c6; --own-hover: rgba(0,145,58,.08); color-scheme: light; } }
-  :root[data-theme="light"] { --bg: #f2f4f7; --card: #ffffff; --card-2: #e6eaef; --line: #e3e7ec; --line-2: #c9d1da; --text: #14181c; --text-2: #4a5a6a; --text-3: #6b7a89; --green: #00a83f; --green-mark: #00913a; --tag-fg: #fff; --tag-bg: #6b7a89; --art: #6a4aa0; --art-line: #9a84c6; --own-hover: rgba(0,145,58,.08); color-scheme: light; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #f5efe2; --card: #fffdf7; --card-2: #ece5d4; --line: #e6dfcd; --line-2: #d1c7b1; --text: #1e1a13; --text-2: #5a5446; --text-3: #7d7668; --green: #00a83f; --green-mark: #00913a; --tag-fg: #fff; --tag-bg: #7d7668; --art: #6a4aa0; --art-line: #9a84c6; --own-hover: rgba(0,145,58,.08); color-scheme: light; } }
+  :root[data-theme="light"] { --bg: #f5efe2; --card: #fffdf7; --card-2: #ece5d4; --line: #e6dfcd; --line-2: #d1c7b1; --text: #1e1a13; --text-2: #5a5446; --text-3: #7d7668; --green: #00a83f; --green-mark: #00913a; --tag-fg: #fff; --tag-bg: #7d7668; --art: #6a4aa0; --art-line: #9a84c6; --own-hover: rgba(0,145,58,.08); color-scheme: light; }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.45; }
   a { color: inherit; text-decoration: none; }
@@ -158,7 +158,7 @@
   <div class="grid tableau" id="tableau"></div>
 
   <footer>
-    Built by Antti Kaukoranta as plain HTML + Chart.js, hosted on GitHub Pages. Each folder in the <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">repository</a> has its own README describing the data and how it is refreshed.
+    The HTML dashboards were built with AI assistants — mostly Claude, at times ChatGPT and Perplexity — from Antti Kaukoranta's instructions and design decisions — plain HTML + Chart.js, hosted on GitHub Pages. The Tableau Public vizzes are hand-built. Each folder in the <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">repository</a> has its own README describing the data and how it is refreshed.
   </footer>
 </div>
 <script>
