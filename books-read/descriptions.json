@@ -678,6 +678,12 @@
    "src": "open-library",
    "title": "God's Debris"
   },
+  "9780743203043": {
+   "desc": "\"Updated to include a new chapter about the influence of social media and the Internet—the 20th anniversary edition of Bowling Alone remains a seminal work of social analysis, and its examination of what happened to our sense of community remains more relevant than ever in today’s fractured America. Twenty years, ago, Robert Putnam made a seemingly simple observation: once we bowled in leagues, usually after work; but no longer. This seemingly small phenomenon symbolized a significant social change that became the basis of the acclaimed bestseller, Bowling Alone, which The Washington Post called “a very important book” and Putnam, “the de Tocqueville of our generation.” Bowling Alone surveyed in detail Americans’ changing behavior over the decades, showing how we had become increasingly disconnected from family, friends, neighbors, and social structures, whether it’s with the PTA, church, clubs, political parties, or bowling leagues. In the revised edition of his classic work, Putnam shows how our shrinking access to the “social capital” that is the reward of communal activity and community sharing still poses a serious threat to our civic and personal health, and how these consequences have a new resonance for our divided country today. He includes critical new material on the pervasive influence of social media and the internet, which has introduced previously unthinkable opportunities for social connection—as well as unprecedented levels of alienation and isolation. At the time of its publication, Putnam’s then-groundbreaking work showed how social bonds are the most powerful predictor of life satisfaction, and how the loss of social capital is felt in critical ways, acting as a strong predictor of crime rates and other measures of neighborhood quality of life, and affecting our health in other ways. While the ways in which we connect, or become disconnected, have changed over the decades, his central argument remains as powerful and urgent as ever: mending our frayed social capital is key to preserving the very fabric of our society\"--Simon & Schuster.",
+   "id": "/works/OL4291077W",
+   "src": "open-library",
+   "title": "Bowling Alone"
+  },
   "9780743477116": {
    "desc": "“Romeo and Juliet” is one of William Shakespeare’s most renowned tragedies, blending young love, family conflict, and fate into a timeless tale. Set in Verona, Italy, it follows Romeo Montague and Juliet Capulet—two teenagers from feuding families—whose love ignites amid long-standing enmity. Their relationship flourishes quickly, yet it exists under the heavy weight of family obligations, social expectations, and bitter rivalries. Shakespeare’s poetic language—from the haunting prologue to Juliet’s iconic balcony soliloquies—vividly captures both the beauty and the anguish of first love.\r\n\r\nThrough characters like Mercutio, Tybalt, the Nurse, and Friar Laurence, the play explores not only romance but also the consequences of stubborn hatred and impulsive decisions. Despite numerous attempts to overcome obstacles, tragedy builds relentlessly: miscommunication, desperation, and timing all play crucial roles. The deaths of Romeo and Juliet ultimately compel their families to confront the devastating cost of their feud.",
    "id": "/works/OL44050420W",
@@ -713,6 +719,12 @@
    "id": "/works/OL17914663W",
    "src": "open-library",
    "title": "All Systems Red"
+  },
+  "9780767919388": {
+   "desc": "“Houses aren’t refuges from history. They are where history ends up.”\r\n\r\nBill Bryson and his family live in a Victorian parsonage in a part of England where nothing of any great significance has happened since the Romans decamped. Yet one day, he began to consider how very little he knew about the ordinary things of life as he found it in that comfortable home. To remedy this, he formed the idea of journeying about his house from room to room to “write a history of the world without leaving home.” The bathroom provides the occasion for a history of hygiene; the bedroom, sex, death, and sleep; the kitchen, nutrition and the spice trade; and so on, as Bryson shows how each has figured in the evolution of private life. Whatever happens in the world, he demonstrates, ends up in our house, in the paint and the pipes and the pillows and every item of furniture.\r\n(front flap)",
+   "id": "/works/OL15100470W",
+   "src": "open-library",
+   "title": "At Home"
   },
   "9780780797086": {
    "desc": "Turning the envelope over, his hand trembling, Harry saw a purple wax seal bearing a coat of arms; a lion, an eagle, a badger and a snake surrounding a large letter 'H'.\r\n\r\nHARRY POTTER has never even heard of Hogwarts when the LETTERS start dropping on the doormat at number four, Privet Drive. Addressed in GREEN INK on yellowish parchment with a PURPLE SEAL, they are swiftly confiscated by his GRISLY aunt and uncle. Then, on Harry's eleventh birthday, a great beetle-eyed giant of a man called RUBEUS HAGRID bursts in with some ASTONISHING news: Harry Potter is a wizard, and he has a place at Hogwarts School of Witchcraft and Wizardry. An incredible adventure is about to begin!",
@@ -755,12 +767,6 @@
    "id": "/works/OL31123W",
    "src": "open-library",
    "title": "Ain't I A Woman"
-  },
-  "9780989794800": {
-   "desc": "Twelve Years a Slave is a harrowing memoir about one of the darkest periods in American history. It recounts how Solomon Northup, born a free man in New York, was lured to Washington, D.C., in 1841 with the promise of fast money, then drugged and beaten and sold into slavery. He spent the next twelve years of his life in captivity on a Louisiana cotton plantation.",
-   "id": "/works/OL78871W",
-   "src": "open-library",
-   "title": "Twelve Years a Slave"
   },
   "9781101906323": {
    "desc": "weekend update’s co-anchor and snl writer colin jost takes people through his life narrating many episodes varying from ones that keep his comedic image true to reality and some that changed his life.",
@@ -1094,7 +1100,6 @@
   }
  },
  "misses": {
-  "#makeovermonday: improving how we visualize and analyze data, one chart at a time|eva murray": "Google Books throttled this run — will retry",
   "0241573084": "Google Books throttled this run — will retry",
   "9510213144": "no description found",
   "9510297763": "Google Books throttled this run — will retry",
@@ -1106,7 +1111,6 @@
   "9780062802231": "Google Books throttled this run — will retry",
   "9780062803993": "Google Books throttled this run — will retry",
   "9780062883674": "Google Books throttled this run — will retry",
-  "9780062948083": "Google Books throttled this run — will retry",
   "9780141036021": "Google Books throttled this run — will retry",
   "9780197550779": "Google Books throttled this run — will retry",
   "9780241435311": "Google Books throttled this run — will retry",
@@ -1164,7 +1168,6 @@
   "9788252574586": "Google Books throttled this run — will retry",
   "9788854165526": "Google Books throttled this run — will retry",
   "9789510098752": "Google Books throttled this run — will retry",
-  "9789510195741": "no description found",
   "9789510207482": "Google Books throttled this run — will retry",
   "9789510207505": "Google Books throttled this run — will retry",
   "9789510318195": "Google Books throttled this run — will retry",
@@ -1176,7 +1179,7 @@
   "9789510433836": "Google Books throttled this run — will retry",
   "9789510438299": "Google Books throttled this run — will retry",
   "9789510443361": "Google Books throttled this run — will retry",
-  "9789510446287": "Google Books throttled this run — will retry",
+  "9789510446287": "no description found",
   "9789510452592": "Google Books throttled this run — will retry",
   "9789510461778": "Google Books throttled this run — will retry",
   "9789510468777": "Google Books throttled this run — will retry",
@@ -1239,7 +1242,6 @@
   "into the wild|jon krakauer": "Google Books throttled this run — will retry",
   "jali ja suklaatehdas|nina pitkänen": "Google Books throttled this run — will retry",
   "johannes angelos|mika waltari": "Google Books throttled this run — will retry",
-  "jäätyvä helvetti|ilkka remes": "Google Books throttled this run — will retry",
   "kaikkien aikojen avaruuskirja|mauri kunnas": "Google Books throttled this run — will retry",
   "kepler62 uusi maailma: kaksi heimoa|timo parvela": "Google Books throttled this run — will retry",
   "keskiyön jengi|david walliams": "Google Books throttled this run — will retry",
@@ -1268,5 +1270,5 @@
   "viikingit tulevat!|mauri kunnas": "Google Books throttled this run — will retry",
   "vuosisadan rakkaustarina|märta tikkanen": "Google Books throttled this run — will retry"
  },
- "updated": "2026-09-25T10:16:28Z"
+ "updated": "2026-10-01T14:02:36Z"
 }
