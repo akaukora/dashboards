@@ -5,13 +5,19 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>Dashboard gallery</title>
 <meta name="description" content="Antti Kaukoranta's dashboards and tools — films, books, music, festivals, a World Cup pool, Tableau Public vizzes — built as single HTML pages on GitHub Pages, plus drop-in viewers for your own exports.">
+<script>try { const t = localStorage.getItem("galleryTheme"); if (t === "light" || t === "dark") document.documentElement.dataset.theme = t; } catch (e) {}</script>
 <style>
   :root {
     --bg: #14181c; --card: #1e252d; --card-2: #2c3440; --line: #2c3440; --line-2: #384352;
     --text: #e6edf3; --text-2: #9ab; --text-3: #678;
     --green: #00e054; --green-mark: #00a83f; --blue-mark: #2a9dd1;
+    --tag-fg: #fff; --tag-bg: #2c3440; --art: #b9a3dd; --art-line: #7a5aa8; --own-hover: rgba(0,168,63,.10);
     --radius: 10px; --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color-scheme: dark;
   }
+  /* Light theme: follows the system setting unless the ☾/☀ button in the header has picked one (data-theme on <html>). */
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) { --bg: #f2f4f7; --card: #ffffff; --card-2: #e6eaef; --line: #e3e7ec; --line-2: #c9d1da; --text: #14181c; --text-2: #4a5a6a; --text-3: #6b7a89; --green: #00a83f; --green-mark: #00913a; --tag-fg: #fff; --tag-bg: #6b7a89; --art: #6a4aa0; --art-line: #9a84c6; --own-hover: rgba(0,145,58,.08); color-scheme: light; } }
+  :root[data-theme="light"] { --bg: #f2f4f7; --card: #ffffff; --card-2: #e6eaef; --line: #e3e7ec; --line-2: #c9d1da; --text: #14181c; --text-2: #4a5a6a; --text-3: #6b7a89; --green: #00a83f; --green-mark: #00913a; --tag-fg: #fff; --tag-bg: #6b7a89; --art: #6a4aa0; --art-line: #9a84c6; --own-hover: rgba(0,145,58,.08); color-scheme: light; }
   * { box-sizing: border-box; }
   html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.45; }
   a { color: inherit; text-decoration: none; }
@@ -23,6 +29,10 @@
   .intro a { color: var(--text-2); text-decoration: underline dotted; }
   .gh { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--text-2); white-space: nowrap; }
   .gh:hover { color: var(--text); border-color: var(--text-3); }
+  .hdr-right { display: flex; gap: 8px; align-items: center; }
+  .theme { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-2); color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1; } .theme:hover { color: var(--text); border-color: var(--text-3); }
+  .theme .sun { display: none; } :root[data-theme="light"] .theme .sun { display: inline; } :root[data-theme="light"] .theme .moon { display: none; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .theme .sun { display: inline; } :root:not([data-theme="dark"]) .theme .moon { display: none; } }
   h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--green); font-weight: 700; margin: 28px 0 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   h2 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; color: var(--text-2); }
   h2 .more { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 12px; color: var(--green); border: 1px solid var(--green-mark); border-radius: 999px; padding: 3px 11px; } h2 .more:hover { background: var(--green-mark); color: #fff; }
@@ -32,7 +42,7 @@
   .tableau .card .thumb { background: #fff; } .tableau .card .thumb img { object-position: center top; filter: none; } .tableau .card .t i { background: #2a9dd1; }
   .tableau .meta .tag { background: #1f5f8b; }
   .tableau .meta .tag.type { background: transparent; border: 1px solid var(--line-2); color: var(--text-2); line-height: 16px; }
-  .tableau .meta .tag.type.art { border-color: #7a5aa8; color: #b9a3dd; } .tableau .meta .tag.type.tool { border-color: var(--green-mark); color: var(--green); }
+  .tableau .meta .tag.type.art { border-color: var(--art-line); color: var(--art); } .tableau .meta .tag.type.tool { border-color: var(--green-mark); color: var(--green); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
   .card { display: flex; flex-direction: column; gap: 8px; background: var(--card); border-radius: var(--radius); padding: 16px 18px 14px; min-width: 0; border: 1px solid var(--line); transition: border-color .12s, transform .12s; position: relative; overflow: hidden; }
   .card .body { display: contents; }
@@ -45,15 +55,16 @@
   .card p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.5; }
   .card .meta { margin-top: auto; padding-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.7; } .card .meta .tag { vertical-align: 1px; margin-right: 4px; }
   .card .meta .dot { opacity: .6; }
-  .tag { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 11px; line-height: 18px; color: #fff; background: var(--card-2); }
+  .tag { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 11px; line-height: 18px; color: var(--tag-fg); background: var(--tag-bg); }
   .tag.live { background: var(--green-mark); } .tag.manual { background: #5b6e80; } .tag.season { background: #5b8fb9; } .tag.viewer { border: 1px solid var(--green-mark); color: var(--green); background: transparent; line-height: 16px; }
   .viewer-card { border: 1px dashed var(--line-2); background: transparent; } .viewer-card:hover { border-style: solid; border-color: var(--green-mark); }
   .viewer-card .t i { background: transparent; border: 2px solid var(--green-mark); }
   .card .thumb { display: block; margin: -16px -18px 6px; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; aspect-ratio: 16 / 10; background: var(--card-2); border-bottom: 1px solid var(--line); }
   .card .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; filter: saturate(.95); transition: transform .25s; }
+  :root[data-theme="light"] .card .thumb { border-bottom-color: var(--line-2); } @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .card .thumb { border-bottom-color: var(--line-2); } }
   .card:hover .thumb img { transform: scale(1.02); }
   .card .own { display: flex; align-items: center; gap: 8px; margin: 4px -18px -14px; padding: 9px 18px 10px; border-top: 1px solid var(--line); color: var(--green); font-size: 13px; font-weight: 600; border-radius: 0 0 var(--radius) var(--radius); }
-  .card .own:hover { background: rgba(0,168,63,.10); }
+  .card .own:hover { background: var(--own-hover); }
   .card .own small { color: var(--text-3); font-weight: 400; margin-left: auto; text-align: right; }
   .card .own > span { white-space: nowrap; }
   .card .own::before { content: ""; width: 10px; height: 10px; border-radius: 3px; border: 2px solid var(--green-mark); flex: none; }
@@ -70,7 +81,10 @@
       <h1>Dashboard <span>gallery</span></h1>
       <div class="sub">Antti Kaukoranta · Helsinki</div>
     </div>
-    <a class="gh" href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">github.com/akaukora/dashboards ↗</a>
+    <div class="hdr-right">
+      <a class="gh" href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">github.com/akaukora/dashboards ↗</a>
+      <button type="button" class="theme" id="themeBtn" title="Switch between light and dark" aria-label="Switch between light and dark"><span class="moon">☾</span><span class="sun">☀</span></button>
+    </div>
   </header>
   <div class="intro">
     <p>I've created tools and dashboards for various interests of mine. These can be downloaded, copied and adapted to your use. <a class="toggle" href="#" id="introMore" aria-expanded="false" aria-controls="introRest">Show more</a></p>
@@ -220,6 +234,13 @@ document.getElementById("tableau").innerHTML = TABLEAU.map((v) => {
   return `<div class="card"><a class="main" href="${url}" target="_blank" rel="noopener"><span class="thumb"><img src="${img}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
     <div class="t"><i></i>${v.title}<span class="arrow">↗</span></div><p>${v.blurb}</p><div class="meta"><span class="tag">${v.tag}</span><span class="tag type ${cls}">${type}</span> ${v.mm || "Tableau Public"}</div></a></div>`;
 }).join("");
+// theme button: flips the current look and remembers it; the system setting applies when nothing is remembered
+document.getElementById("themeBtn").addEventListener("click", () => {
+  const root = document.documentElement, systemLight = matchMedia("(prefers-color-scheme: light)").matches;
+  const current = root.dataset.theme || (systemLight ? "light" : "dark"), next = current === "light" ? "dark" : "light";
+  root.dataset.theme = next;
+  try { localStorage.setItem("galleryTheme", next); } catch (e) {}
+});
 // intro: only the first paragraph shows by default
 const more = document.getElementById("introMore"), rest = document.getElementById("introRest");
 more.addEventListener("click", (e) => { e.preventDefault(); const open = rest.hidden; rest.hidden = !open; more.setAttribute("aria-expanded", open); more.textContent = open ? "Show less" : "Show more"; });
