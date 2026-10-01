@@ -437,33 +437,15 @@ footer a { color: inherit; }
   </div>
 
   <footer>
-    <strong>Time and lessons</strong> come from Duolingo's weekly progress-report emails
-    (<code>hello@duolingo.com</code>) — a Proton Mail export plus reports recovered from an old Gmail
-    account. Duolingo sends one report per course, so a week often arrives several times over with
-    very different figures; the one kept is whichever carries the account's long French streak, since
-    a secondary course's report covers only a sliver of the week and sometimes logs more minutes than
-    French did. Faded bars mark weeks no report covers, which is a gap in the mail rather than a week
-    without studying. One week (Oct 19–25, 2024) used a template that stated no XP at all, so only
-    its XP is unknown.
+    <strong>Sources.</strong> Duolingo weekly progress emails — time, XP and lessons per week.
+    Duolingo league scores from the account data export — <span class="swatch swatch-est"
+    style="vertical-align:-1px"></span> hatched bars are weeks with no email, where time is estimated
+    from the XP the league recorded. Institut français course records —
+    <span class="swatch swatch-class" style="vertical-align:-1px"></span> classroom hours, stacked on
+    the weekly time rather than mixed into it. Score and unit readings from the Duolingo app and
+    duome.eu/akaukora.
     <br><br>
-    <strong>Hatched slate bars</strong> are estimates, shown in their own color so they never pass
-    for measured data. They cover the weeks with no report email: <span id="estList"></span>. Their
-    XP comes from Duolingo's own league scores (<code>leaderboards.csv</code> in the account data
-    export); since the league week ends about three days off from the report week, treat these as
-    close approximations rather than exact figures. Their <em>time</em> is derived from that XP using
-    the median XP-per-minute of the twelve nearest reported weeks — local rather than lifetime,
-    because the rate climbs from about 7.9 in early 2025 to 13.8 by mid-2026, and a lifetime average
-    would overstate the recent gaps by roughly a third. Lessons are left blank, as nothing in the
-    league data implies them. Every estimate is replaced by real figures automatically once a report
-    email for that week turns up.
-    <br><br>
-    <strong>Classroom courses</strong> (the dark green cap on the time bars) come from
-    <code>data/offline_sessions.json</code> — offline French courses at the Institut français, which
-    Duolingo knows nothing about. They are stacked on the weekly time rather than added into it, so
-    the app-measured figure stays readable on its own: <span id="classList"></span>. Sessions the
-    course record marks as absences are kept in the file but counted neither as time nor as
-    attendance. A session whose length isn't recorded yet shows in the count but contributes no
-    minutes — set its <code>hours</code> in that file and it starts counting.
+    <span id="buildLine"></span>
   </footer>
 </div>
 
@@ -476,6 +458,7 @@ const DATA = __DATA_JSON__;
 // the reported minutes -- a session whose length isn't known yet carries
 // hours: null and counts as attendance without contributing time.
 const OFFLINE = __OFFLINE_JSON__;
+const BUILT_AT = __BUILT_AT__;
 
 // A session the course record marks as an absence is kept in the data file
 // (so the record stays faithful) but contributes neither time nor attendance.
@@ -773,6 +756,21 @@ function renderRanges(el, ranges) {
 }
 
 renderRanges('gapList', rangesWhere(w => !w.hasData));
+
+// Rebuilt-at and data-coverage line. This exists because the page is served
+// from two places -- the GitHub Pages copy the Monday job rebuilds, and any
+// standalone copy -- and without a stamp a stale copy looks exactly like a
+// broken email pipeline.
+(function buildLine() {
+  const el = document.getElementById('buildLine');
+  if (!el) return;
+  const lastEmail = rows.filter(r => !r.estimated).slice(-1)[0];
+  const built = BUILT_AT ? new Date(BUILT_AT) : null;
+  el.innerHTML =
+    `Weekly data through <strong>${rows[rows.length - 1].week_end}</strong>` +
+    (lastEmail ? ` · last report email covers ${lastEmail.week_end}` : '') +
+    (built ? ` · page rebuilt ${built.toISOString().slice(0, 16).replace('T', ' ')} UTC` : '');
+})();
 renderRanges('estList', rangesWhere(w => w.estimated));
 
 // Courses are listed by name and date span rather than week-by-week -- that's

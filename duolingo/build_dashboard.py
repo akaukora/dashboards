@@ -18,7 +18,7 @@ desktop page instead of a responsive one.
 """
 import json
 import os
-from datetime import date, timedelta
+from datetime import date, datetime, timedelta, timezone
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 DATA_PATH = os.path.join(HERE, "data", "weekly_duolingo.json")
@@ -163,6 +163,9 @@ def main():
 
     template = open(TEMPLATE_PATH, encoding="utf-8").read()
     template = template.replace("__OFFLINE_JSON__", json.dumps(offline, ensure_ascii=False))
+    template = template.replace(
+        "__BUILT_AT__",
+        json.dumps(datetime.now(timezone.utc).strftime("%Y-%m-%dT%H:%M:%SZ")))
     template = template.replace("__SCORE_OBS_JSON__", json.dumps(score_obs, ensure_ascii=False))
     filled = template.replace("__DATA_JSON__", json.dumps(data, ensure_ascii=False))
 
