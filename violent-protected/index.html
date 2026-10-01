@@ -92,6 +92,8 @@
   #info .method{font-family:var(--ui);font-size:11.5px;line-height:1.65;
                 color:var(--faint);margin:0 0 12px}
   #info .method b{color:var(--body);font-weight:500}
+  #info a{color:var(--body);text-decoration:underline;text-underline-offset:2px}
+  #info a:hover{color:var(--ink)}
   #info .close{position:absolute;top:16px;right:16px}
   .key{display:grid;grid-template-columns:auto 1fr;gap:7px 10px;align-items:center;margin:0 0 16px}
   .key i{display:block;border-radius:1px}
@@ -182,7 +184,7 @@ const COPY = {
     key: ['0', '1–9', '10–99', '100–999', '1 000–9 999', '10 000 or more'],
     keyNote: 'deaths recorded in one square',
     body: 'The map of the world, drawn with violence. Over 37 years, 355 217 recorded events and 2 954 934 deaths. With no underlying map image, drawn purely in coordinate-based squares, each colored by the number of deaths from organized violence, the shape of the world is unfortunately easy to make out. Violence paints a depressing picture of our world.',
-    method: '<b>UCDP Georeferenced Event Dataset v26.1.</b> The Uppsala Conflict Data Program, at Uppsala University, has recorded organized violence since 1979 and is the longest-running such effort; its georeferenced dataset tags each lethal event with coordinates and a date. The map divides the world into a grid of half-degree squares, each colored in intensity by the deaths recorded there between 1989 and 2025. Only events located to district precision or better are included: 355 217 of 417 968.',
+    method: '<b>UCDP Georeferenced Event Dataset v26.1</b>, free to download at <a href="https://ucdp.uu.se/downloads/" target="_blank" rel="noopener">ucdp.uu.se/downloads</a>. The Uppsala Conflict Data Program, at Uppsala University, has recorded organized violence since 1979 and is the longest-running such effort; its georeferenced dataset tags each lethal event with coordinates and a date. The map divides the world into a grid of half-degree squares, each colored in intensity by the deaths recorded there between 1989 and 2025. Only events located to district precision or better are included: 355 217 of 417 968.',
     credit: 'UCDP GED v26.1',
     full: 'Shawn Davies, Therése Pettersson, Magnus Öberg, <i>Organized violence 1989–2025, and violent political protests</i>, Journal of Peace Research, 2026. Sundberg, Ralph and Erik Melander (2013) <i>Introducing the UCDP Georeferenced Event Dataset</i>, Journal of Peace Research 50(4). UCDP is part of and funded by DEMSCORE, national research infrastructure grant 2021-00162 from the Swedish Research Council.'
   },
@@ -193,7 +195,7 @@ const COPY = {
     key: ['under 1', '1–10', '10–100', '100–1 000', '1 000–10 000', '10 000 or more'],
     keyNote: 'km² protected in one square — green on land, blue at sea',
     body: 'The map of the world, drawn with protected areas. 262 050 areas set aside for nature, across 272 countries and territories. The same planet, same coordinate squares, but environmental protection draws a fuller map than violence does. Violence dominates our news, but there exists a more hopeful, more optimistic view of the world.',
-    method: '<b>World Database on Protected Areas, September 2026 release.</b> Compiled by UNEP-WCMC and IUCN from government and other authoritative sources, and republished monthly. Each site is reduced to one point inside its boundary, and the same half-degree grid is colored by the total protected km² whose center falls in each square. Lived-in landscapes (IUCN category V — farmed and inhabited country) are left out. Because a large site counts entirely in one square, this shows protected area per square rather than protected coverage, and overlapping designations are summed.',
+    method: '<b>World Database on Protected Areas, September 2026 release</b>, free to download at <a href="https://www.protectedplanet.net" target="_blank" rel="noopener">protectedplanet.net</a>. Compiled by UNEP-WCMC and IUCN from government and other authoritative sources, and republished monthly. Each site is reduced to one point inside its boundary, and the same half-degree grid is colored by the total protected km² whose center falls in each square. Lived-in landscapes (IUCN category V — farmed and inhabited country) are left out. Because a large site counts entirely in one square, this shows protected area per square rather than protected coverage, and overlapping designations are summed.',
     credit: 'WDPA, September 2026',
     full: 'UNEP-WCMC and IUCN (2026), Protected Planet: The World Database on Protected Areas (WDPA) and World Database on Other Effective Area-based Conservation Measures (WD-OECM) [Online], September 2026, Cambridge, UK: UNEP-WCMC and IUCN. Available at <a href="https://www.protectedplanet.net">www.protectedplanet.net</a>.'
   }
