@@ -31,13 +31,16 @@
   .gh:hover { color: var(--text); border-color: var(--text-3); }
   .hdr-right { display: flex; gap: 8px; align-items: center; }
   .theme { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-2); color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1; } .theme:hover { color: var(--text); border-color: var(--text-3); }
-  .theme .sun { display: none; } :root[data-theme="light"] .theme .sun { display: inline; } :root[data-theme="light"] .theme .moon { display: none; }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .theme .sun { display: inline; } :root:not([data-theme="dark"]) .theme .moon { display: none; } }
+  .theme .moon { display: none; } :root[data-theme="light"] .theme .moon { display: inline; } :root[data-theme="light"] .theme .sun { display: none; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .theme .moon { display: inline; } :root:not([data-theme="dark"]) .theme .sun { display: none; } }
   h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--green); font-weight: 700; margin: 28px 0 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
   h2 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; color: var(--text-2); }
   h2 .more { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 12px; color: var(--green); border: 1px solid var(--green-mark); border-radius: 999px; padding: 3px 11px; } h2 .more:hover { background: var(--green-mark); color: #fff; }
   .intro p { margin: 0 0 8px; } .intro > p:first-child { color: var(--text-2); font-size: 14px; }
   .intro .toggle { color: var(--green); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; margin-left: 4px; } .intro .toggle:hover { text-decoration: underline; }
+  .jump { display: flex; gap: 8px; flex-wrap: wrap; margin: -8px 0 6px; }
+  .jump a { border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 12px; font-size: 12px; color: var(--text-2); } .jump a:hover { color: var(--green); border-color: var(--green-mark); }
+  h2[id] { scroll-margin-top: 16px; }
   .intro .toggle::after { content: " ▾"; font-size: 11px; } .intro .toggle[aria-expanded="true"]::after { content: " ▴"; }
   .tableau .card .thumb { background: #fff; } .tableau .card .thumb img { object-position: center top; filter: none; } .tableau .card .t i { background: #2a9dd1; }
   .tableau .meta .tag { background: #1f5f8b; }
@@ -83,7 +86,7 @@
     </div>
     <div class="hdr-right">
       <a class="gh" href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">github.com/akaukora/dashboards ↗</a>
-      <button type="button" class="theme" id="themeBtn" title="Switch between light and dark" aria-label="Switch between light and dark"><span class="moon">☾</span><span class="sun">☀</span></button>
+      <button type="button" class="theme" id="themeBtn" title="Switch to the other look" aria-label="Switch between light and dark"><span class="moon">☾</span><span class="sun">☀</span></button>
     </div>
   </header>
   <div class="intro">
@@ -94,8 +97,9 @@
     <p>Everything is in the open: each folder has the page, its data file and a README on how the data is refreshed — take any of them and have your own tools (or your AI agent) rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>. Older work lives on <a href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">Tableau Public</a>, further down.</p>
     </div>
   </div>
+  <nav class="jump" aria-label="Sections"><a href="#diaries">Diaries</a><a href="#seasons">Seasons and events</a><a href="#tableau-public">Tableau Public</a></nav>
 
-  <h2>Diaries <small>· years of history, refreshed automatically or on upload</small></h2>
+  <h2 id="diaries">Diaries <small>· years of history, refreshed automatically or on upload</small></h2>
   <div class="grid">
     <div class="card">
       <a class="main" href="films-watched/"><span class="thumb"><img src="thumbs/films-watched.webp" alt="" loading="lazy"></span>
@@ -126,7 +130,7 @@
     </div>
   </div>
 
-  <h2>Seasons and events <small>· built for a moment, kept as a record</small></h2>
+  <h2 id="seasons">Seasons and events <small>· built for a moment, kept as a record</small></h2>
   <div class="grid">
     <div class="card">
       <a class="main" href="hiff2026/"><span class="thumb"><img src="thumbs/hiff2026.webp" alt="" loading="lazy"></span>
@@ -154,7 +158,7 @@
     </div>
   </div>
 
-  <h2>Tableau Public <small>· earlier vizzes, 2018–2025 — the film and music dashboards started here</small><a class="more" href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">All vizzes on Tableau Public ↗</a></h2>
+  <h2 id="tableau-public">Tableau Public <small>· earlier vizzes, 2018–2025 — the film and music dashboards started here</small><a class="more" href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">All vizzes on Tableau Public ↗</a></h2>
   <div class="grid tableau" id="tableau"></div>
 
   <footer>
