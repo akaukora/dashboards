@@ -30,22 +30,31 @@
   .gh { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--text-2); white-space: nowrap; }
   .gh:hover { color: var(--text); border-color: var(--text-3); }
   .hdr-right { display: flex; gap: 8px; align-items: center; }
-  .theme { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-2); color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1; } .theme:hover { color: var(--text); border-color: var(--text-3); }
-  .theme .moon { display: none; } :root[data-theme="light"] .theme .moon { display: inline; } :root[data-theme="light"] .theme .sun { display: none; }
-  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .theme .moon { display: inline; } :root:not([data-theme="dark"]) .theme .sun { display: none; } }
-  h2 { font-size: 13px; text-transform: uppercase; letter-spacing: 0.08em; color: var(--green); font-weight: 700; margin: 28px 0 10px; display: flex; align-items: baseline; gap: 10px; flex-wrap: wrap; }
-  h2 small { text-transform: none; letter-spacing: 0; font-weight: 400; font-size: 12px; color: var(--text-2); }
-  h2 .more { margin-left: auto; text-transform: none; letter-spacing: 0; font-weight: 600; font-size: 12px; color: var(--green); border: 1px solid var(--green-mark); border-radius: 999px; padding: 3px 11px; } h2 .more:hover { background: var(--green-mark); color: #fff; }
+  .themebtn { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-2); color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1; } .themebtn:hover { color: var(--text); border-color: var(--text-3); }
+  .themebtn .moon { display: none; } :root[data-theme="light"] .themebtn .moon { display: inline; } :root[data-theme="light"] .themebtn .sun { display: none; }
+  @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .themebtn .moon { display: inline; } :root:not([data-theme="dark"]) .themebtn .sun { display: none; } }
   .intro p { margin: 0 0 8px; } .intro > p:first-child { color: var(--text-2); font-size: 14px; }
   .intro .toggle { color: var(--green); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; margin-left: 4px; } .intro .toggle:hover { text-decoration: underline; }
-  .jump { display: flex; gap: 8px; flex-wrap: wrap; margin: -8px 0 6px; }
-  .jump a { border: 1px solid var(--line-2); border-radius: 999px; padding: 4px 12px; font-size: 12px; color: var(--text-2); } .jump a:hover { color: var(--green); border-color: var(--green-mark); }
-  h2[id] { scroll-margin-top: 16px; }
+  /* filter chips: one row per facet, single choice per row, rows combine */
+  .filters { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 18px; }
+  .frow { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .frow .lbl { font-size: 11px; text-transform: uppercase; letter-spacing: .08em; color: var(--text-3); width: 62px; flex: none; }
+  .chip { all: unset; cursor: pointer; border: 1px solid var(--line-2); border-radius: 999px; padding: 3px 11px; font-size: 12px; color: var(--text-2); line-height: 1.3; white-space: nowrap; }
+  .chip:hover { color: var(--text); border-color: var(--text-3); }
+  .chip.active { background: var(--green-mark); border-color: var(--green-mark); color: #fff; font-weight: 600; }
+  .chip small { color: inherit; opacity: .65; margin-left: 4px; font-size: 11px; } .chip.active small { opacity: .85; }
+  .frow .ext { margin-left: auto; font-size: 12px; color: var(--green); border: 1px solid var(--green-mark); border-radius: 999px; padding: 3px 11px; } .frow .ext:hover { background: var(--green-mark); color: #fff; }
+  .count { color: var(--text-3); font-size: 12px; margin: -8px 0 10px; }
+  .divider { grid-column: 1 / -1; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--green); font-weight: 700; margin: 14px 0 -4px; display: flex; align-items: baseline; gap: 8px; }
+  .divider:first-child { margin-top: 0; }
+  .divider small { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text-3); }
+  .empty { grid-column: 1 / -1; color: var(--text-3); padding: 30px 0; text-align: center; }
   .intro .toggle::after { content: " ▾"; font-size: 11px; } .intro .toggle[aria-expanded="true"]::after { content: " ▴"; }
-  .tableau .card .thumb { background: #fff; } .tableau .card .thumb img { object-position: center top; filter: none; } .tableau .card .t i { background: #2a9dd1; }
-  .tableau .meta .tag { background: #1f5f8b; }
-  .tableau .meta .tag.type { background: transparent; border: 1px solid var(--line-2); color: var(--text-2); line-height: 16px; }
-  .tableau .meta .tag.type.art { border-color: var(--art-line); color: var(--art); } .tableau .meta .tag.type.tool { border-color: var(--green-mark); color: var(--green); }
+  .card.tableau .thumb { background: #fff; } .card.tableau .thumb img { object-position: center top; filter: none; } .card.tableau .t i { background: #2a9dd1; }
+  .tag.theme { background: #1f5f8b; }
+  .tag.kind { background: transparent; border: 1px solid var(--line-2); color: var(--text-2); line-height: 16px; }
+  .tag.kind.art { border-color: var(--art-line); color: var(--art); } .tag.kind.tool { border-color: var(--green-mark); color: var(--green); } .tag.kind.diary { border-color: var(--green-mark); color: var(--green); }
+  .card .meta .src { display: block; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
   .card { display: flex; flex-direction: column; gap: 8px; background: var(--card); border-radius: var(--radius); padding: 16px 18px 14px; min-width: 0; border: 1px solid var(--line); transition: border-color .12s, transform .12s; position: relative; overflow: hidden; }
   .card .body { display: contents; }
@@ -59,9 +68,7 @@
   .card .meta { margin-top: auto; padding-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.7; } .card .meta .tag { vertical-align: 1px; margin-right: 4px; }
   .card .meta .dot { opacity: .6; }
   .tag { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 11px; line-height: 18px; color: var(--tag-fg); background: var(--tag-bg); }
-  .tag.live { background: var(--green-mark); } .tag.manual { background: #5b6e80; } .tag.season { background: #5b8fb9; } .tag.viewer { border: 1px solid var(--green-mark); color: var(--green); background: transparent; line-height: 16px; }
-  .viewer-card { border: 1px dashed var(--line-2); background: transparent; } .viewer-card:hover { border-style: solid; border-color: var(--green-mark); }
-  .viewer-card .t i { background: transparent; border: 2px solid var(--green-mark); }
+  .tag.live { background: var(--green-mark); } .tag.manual { background: #5b6e80; } .tag.season { background: #5b8fb9; }
   .card .thumb { display: block; margin: -16px -18px 6px; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; aspect-ratio: 16 / 10; background: var(--card-2); border-bottom: 1px solid var(--line); }
   .card .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; filter: saturate(.95); transition: transform .25s; }
   :root[data-theme="light"] .card .thumb { border-bottom-color: var(--line-2); } @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .card .thumb { border-bottom-color: var(--line-2); } }
@@ -74,7 +81,7 @@
   a.card { color: inherit; }
   footer { color: var(--text-3); font-size: 12px; margin-top: 34px; line-height: 1.6; border-top: 1px solid var(--line); padding-top: 14px; }
   footer a { color: var(--text-2); }
-  @media (max-width: 600px) { .wrap { padding: 20px 14px 32px; } h1 { font-size: 24px; } }
+  @media (max-width: 600px) { .wrap { padding: 20px 14px 32px; } h1 { font-size: 24px; } .frow .lbl { width: 100%; } .frow .ext { margin-left: 0; } }
 </style>
 </head>
 <body>
@@ -86,7 +93,7 @@
     </div>
     <div class="hdr-right">
       <a class="gh" href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">github.com/akaukora/dashboards ↗</a>
-      <button type="button" class="theme" id="themeBtn" title="Switch to the other look" aria-label="Switch between light and dark"><span class="moon">☾</span><span class="sun">☀</span></button>
+      <button type="button" class="themebtn" id="themeBtn" title="Switch to the other look" aria-label="Switch between light and dark"><span class="moon">☾</span><span class="sun">☀</span></button>
     </div>
   </header>
   <div class="intro">
@@ -94,150 +101,590 @@
     <div id="introRest" hidden>
     <p>Every dashboard here is a single HTML file that reads a CSV or JSON next to it and draws everything in the browser — no backend or tracking.</p>
     <p>The diaries refresh themselves from the services' data through scheduled GitHub Actions; the rest are built or updated by hand. The three diaries also come as <em>drop-in viewers</em>: open one, drop your own export (e.g. Spotify) on it, and you get the same dashboard for your data without uploading anything.</p>
-    <p>Everything is in the open: each folder has the page, its data file and a README on how the data is refreshed — take any of them and have your own tools (or your AI agent) rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>. Older work lives on <a href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">Tableau Public</a>, further down.</p>
+    <p>Everything is in the open: each folder has the page, its data file and a README on how the data is refreshed — take any of them and have your own tools (or your AI agent) rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>. Older work lives on <a href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">Tableau Public</a>; the chips below filter by theme, by kind, and by where a piece was made.</p>
     </div>
   </div>
-  <nav class="jump" aria-label="Sections"><a href="#diaries">Diaries</a><a href="#seasons">Seasons and events</a><a href="#tableau-public">Tableau Public</a></nav>
-
-  <h2 id="diaries">Diaries <small>· years of history, refreshed automatically or on upload</small></h2>
-  <div class="grid">
-    <div class="card">
-      <a class="main" href="films-watched/"><span class="thumb"><img src="thumbs/films-watched.webp" alt="" loading="lazy"></span>
-      <div class="t"><i></i>Films<span class="arrow">→</span></div>
-      <p>The Letterboxd diary since 2019: what got watched, when and where, ratings by year and decade, theater vs. home, festival runs, written reviews.</p>
-      <div class="meta"><span class="tag live">nightly</span> Letterboxd RSS + diary pages → <code>films.csv</code></div></a>
-      <a class="own" href="letterboxd-viewer/"><span>Try it with your own data</span> <small>Letterboxd export</small></a>
-    </div>
-    <div class="card">
-      <a class="main" href="books-read/"><span class="thumb"><img src="thumbs/books-read.webp" alt="" loading="lazy"></span>
-      <div class="t"><i></i>Books<span class="arrow">→</span></div>
-      <p>The StoryGraph library: books finished per year and month, ratings, moods, currently reading, recent reviews.</p>
-      <div class="meta"><span class="tag manual">on export</span> StoryGraph library export → <code>books.csv</code></div></a>
-      <a class="own" href="storygraph-viewer/"><span>Try it with your own data</span> <small>StoryGraph or Goodreads export</small></a>
-    </div>
-    <div class="card">
-      <a class="main" href="music/"><span class="thumb"><img src="thumbs/music.webp" alt="" loading="lazy"></span>
-      <div class="t"><i></i>Music<span class="arrow">→</span></div>
-      <p>Twenty years of Last.fm scrobbles, with the Spotify gaps filled in. Highlights the favorite artists and tracks you haven't heard for a long time — and the ones you've come back to — plus when each artist was last heard, how favorites were made, and listening by year, month and hour.</p>
-      <div class="meta"><span class="tag live">nightly</span> Last.fm API + Spotify export → <code>scrobbles.csv</code></div></a>
-      <a class="own" href="music-viewer/"><span>Try it with your own data</span> <small>Last.fm, Spotify or Apple Music</small></a>
-    </div>
-    <div class="card">
-      <a class="main" href="duolingo/"><span class="thumb"><img src="thumbs/duolingo.webp" alt="" loading="lazy"></span>
-      <div class="t"><i></i>Duolingo<span class="arrow">→</span></div>
-      <p>Time, XP and lessons by week, month or year, reconstructed from Duolingo's weekly progress-report emails and the account data export.</p>
-      <div class="meta"><span class="tag live">weekly</span> progress-report emails</div></a>
-    </div>
-  </div>
-
-  <h2 id="seasons">Seasons and events <small>· built for a moment, kept as a record</small></h2>
-  <div class="grid">
-    <div class="card">
-      <a class="main" href="hiff2026/"><span class="thumb"><img src="thumbs/hiff2026.webp" alt="" loading="lazy"></span>
-      <div class="t"><i style="background:#5b8fb9"></i>HIFF 2026 planner<span class="arrow">→</span></div>
-      <p>Helsinki International Film Festival: pick films, pick times, see clashes and tight transfers between venues on a timetable grid, share a plan with friends.</p>
-      <div class="meta"><span class="tag season">Sept 2026</span></div></a>
-    </div>
-    <div class="card">
-      <a class="main" href="tiff2026/"><span class="thumb"><img src="thumbs/tiff2026.webp" alt="" loading="lazy"></span>
-      <div class="t"><i style="background:#5b8fb9"></i>TIFF 2026 planner<span class="arrow">→</span></div>
-      <p>The same planner for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule.</p>
-      <div class="meta"><span class="tag season">Sept 2026</span></div></a>
-    </div>
-    <div class="card">
-      <a class="main" href="wc2026/"><span class="thumb"><img src="thumbs/wc2026.webp" alt="" loading="lazy"></span>
-      <div class="t"><i style="background:#5b8fb9"></i>World Cup 2026 — how the pool was won<span class="arrow">→</span></div>
-      <p>The story of a prediction pool: the nine parts of the game scored separately, the top five in each, and how the podium came together.</p>
-      <div class="meta"><span class="tag season">Summer 2026</span></div></a>
-    </div>
-    <div class="card">
-      <a class="main" href="prediction-markets/"><span class="thumb"><img src="thumbs/prediction-markets.webp" alt="" loading="lazy"></span>
-      <div class="t"><i style="background:#5b8fb9"></i>Prediction markets<span class="arrow">→</span></div>
-      <p>Open positions and settled markets on Polymarket and Kalshi in one view.</p>
-      <div class="meta"><span class="tag live">scheduled</span> Polymarket + Kalshi → <code>data.json</code></div></a>
-    </div>
-  </div>
-
-  <h2 id="tableau-public">Tableau Public <small>· earlier vizzes, 2018–2025 — the film and music dashboards started here</small><a class="more" href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">All vizzes on Tableau Public ↗</a></h2>
-  <div class="grid tableau" id="tableau"></div>
+  <div class="filters" id="filters"></div>
+  <div class="count" id="count"></div>
+  <div class="grid" id="grid"></div>
 
   <footer>
     The HTML dashboards were built with AI assistants — mostly Claude, at times ChatGPT and Perplexity — from Antti Kaukoranta's instructions and design decisions — plain HTML + Chart.js, hosted on GitHub Pages. The Tableau Public vizzes are hand-built. Each folder in the <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">repository</a> has its own README describing the data and how it is refreshed.
   </footer>
 </div>
 <script>
-// Tableau Public vizzes shown above — edit this list freely. Each entry: workbook and sheet from the viz URL
-// (public.tableau.com/app/profile/antti1275/viz/<workbook>/<sheet>), title, blurb, theme (`tag`), kind (`type`: dashboard,
-// tool, chart or data art), an optional #MakeoverMonday week (`mm`) and optionally a local thumbnail in thumbs/.
-// Without a thumbnail, Tableau's own static image is used (…/static/images/<2 letters>/<workbook>/<sheet>/4_3.png).
-const TABLEAU = [
-  // — personal data and interests —
-  { wb: "Musicdashboard-Last_fm-Forgottenfavorites", sheet: "Re-discoverfavorites", title: "Music — forgotten favorites", tag: "music", type: "dashboard",
-    blurb: "The Tableau original of the music dashboard: favorite artists by when they were last played, the big bubbles far from the right edge being the ones to rediscover." },
-  { wb: "Musicdashboard-Last_fm-Artistdiscovery", sheet: "WhenhaveIdiscoveredmusicians", title: "Music — artist discovery", tag: "music", type: "dashboard",
-    blurb: "When each artist was first heard, and how many new ones each year brought." },
-  { wb: "TheFilmsIveLovedandnot", sheet: "Filmsdashboard", title: "The films I've loved (and not)", tag: "film", type: "dashboard", thumb: "thumbs/tableau-films-loved.webp",
-    blurb: "Films by year watched and rating, and where they were seen — cinema, Netflix, Max and the rest — and how many of each were liked or loved. Once fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone." },
-  { wb: "Myfilmtracker2019", sheet: "Filmswatched20192", title: "Film and subscription tracker", tag: "film", type: "dashboard", thumb: "thumbs/tableau-film-tracker.webp",
-    blurb: "Films watched by month and by service, how many were liked or loved, and what each streaming subscription cost per film — the 2019–2020 original, the most viewed viz on the profile." },
-  { wb: "WesAndersonColorPalettes", sheet: "PaletteBubbles", title: "Wes Anderson color palettes", tag: "film", type: "data art",
-    blurb: "Made to get something colorful on the living-room wall, from one of my favorite directors: the principal colors extracted from selected scenes of his films, each bubble sized by how prominent the color is." },
-  { wb: "Eurovision2025", sheet: "ViewsLine", title: "Eurovision 2025 — views on YouTube", tag: "music", type: "dashboard", thumb: "thumbs/tableau-eurovision-2025.webp",
-    blurb: "Daily YouTube view counts for every Eurovision 2025 entry, with who gained the most since yesterday. Static data up to the last collection day." },
-  { wb: "CouchtoHalfMarathon", sheet: "CouchtoHalfMarathon", title: "Couch to half marathon", tag: "sports", type: "dashboard",
-    blurb: "A training log from the first run to race day." },
-  { wb: "Skitripplanning-drivingtimeandconditions", sheet: "Dashboard2", title: "Ski trip planning", tag: "travel", type: "tool",
-    blurb: "Driving time against snow conditions at ski resorts across the Alps — which trip is worth it this week." },
-  { wb: "HowuniqueareHelsinkimalls", sheet: "MallsofHelsinki", title: "How unique are the shopping malls?", tag: "retail", type: "dashboard", thumb: "thumbs/tableau-helsinki-malls.webp",
-    blurb: "The top 20 malls of a city by leasable area and the share of shops unique to each; click a mall for a \"floorplan\" of its shops on three floors — unique, more common and very common. Built on Helsinki, but the idea works for any city." },
-  { wb: "Oscarsimpactonboxoffice", sheet: "BestPicBoxOffice2", title: "Oscars' impact on box office", tag: "film", type: "chart",
-    blurb: "What a Best Picture nomination and win did to each film's box office." },
-  { wb: "Whichtimetochoose", sheet: "Simplebubbles", title: "Which time to choose?", tag: "society", type: "tool", thumb: "thumbs/tableau-which-time.webp",
-    blurb: "Permanent summer time, permanent winter time or the current switching: pick your place and your sleep schedule, and see which system suits your sleep–wake rhythm — the fewest dark bedtimes, the least sleeping through daylight." },
-  { wb: "CoronavirusNewsandGoogleTrends", sheet: "NewsandSearch", title: "Coronavirus — news and Google searches", tag: "media", type: "dashboard", thumb: "thumbs/tableau-coronavirus.webp",
-    blurb: "Daily number of articles in YLE and the NY Times, and daily Google Search Trends for coronavirus and COVID-19 by country. Static data, January–April 2020." },
-  { wb: "VizForSocialGood-JapanFoodBank", sheet: "Foodlossandpovertyviz", title: "Japan Food Bank — food loss and poverty", tag: "society", type: "chart", mm: "#VizForSocialGood",
-    blurb: "Food waste against poverty in Japan, for the Viz for Social Good project." },
-  // — #MakeoverMonday —
-  { wb: "BikeRevolution2020-MM2021", sheet: "MM2021wk1", title: "The great bicycle boom", tag: "society", type: "chart", mm: "#MakeoverMonday 2021 wk 1", thumb: "thumbs/tableau-bike-boom.webp",
-    blurb: "Week-by-week change in bikes counted by Rails to Trails' 31 US counters, 2019 to 2020: biking was already trending up, and the pandemic amplified it." },
-  { wb: "AmericasDebt-MM2020wk47", sheet: "PathtoDebtwhitebackground", title: "America's path to debt", tag: "economy", type: "chart", mm: "#MakeoverMonday 2020 wk 47",
-    blurb: "US federal debt over time, as one path." },
-  { wb: "XmasspendingMakeoverMonday2019wk52", sheet: "Dashboard1", title: "Christmas spending", tag: "economy", type: "dashboard", mm: "#MakeoverMonday 2019 wk 52",
-    blurb: "How much people planned to spend on Christmas, by country." },
-  { wb: "NBAdefensiveratingsvsNBAstandingsMakeoverMonday2019wk51", sheet: "Dashboard1", title: "NBA defensive ratings vs. standings", tag: "sports", type: "chart", mm: "#MakeoverMonday 2019 wk 51",
-    blurb: "Does defense win? Team defensive rating against league position." },
-  { wb: "MonthlysunshinehoursaroundtheworldMakeoverMonday2019wk44", sheet: "Sunshinehoursaroundtheworld", title: "Monthly sunshine hours around the world", tag: "weather", type: "chart", mm: "#MakeoverMonday 2019 wk 44",
-    blurb: "Hours of sunshine per month for cities around the world — the Nordic winter in context." },
-  { wb: "SeasonpreferencesintheUS-MakeoverMonday2019wk36", sheet: "Seasonpreference2", title: "Favorite season in the US", tag: "weather", type: "chart", mm: "#MakeoverMonday 2019 wk 36",
-    blurb: "Which season Americans prefer, by age group." },
-  { wb: "Gamesmarketrevenuetrend-MakeoverMonday2019wk35", sheet: "Gamerevenuesarea", title: "Games market revenue trend", tag: "economy", type: "chart", mm: "#MakeoverMonday 2019 wk 35", thumb: "thumbs/tableau-games-revenue.webp",
-    blurb: "PC, console and mobile game revenue 2012–2021, actuals and forecast, each segment against the whole market — mobile pulling away from the other two." },
-  { wb: "MM2019w33-Clinicaltrials", sheet: "MM2019xk33v1", title: "Trends in clinical trials", tag: "health", type: "chart", mm: "#MakeoverMonday 2019 wk 33",
-    blurb: "Registered clinical trials by year and type." },
-  { wb: "MM2019w26-Alcoholconsumptiontop25income", sheet: "Alcoholdashboardincome", title: "Alcohol consumption — top 25 countries by income", tag: "health", type: "dashboard", mm: "#MakeoverMonday 2019 wk 26",
-    blurb: "Litres of pure alcohol per person in the 25 heaviest-drinking countries, against income level." },
-  { wb: "CO2emissionsbycountry-MakeoverMonday2019wk22", sheet: "CO2dashboard", title: "CO₂ emissions by country", tag: "environment", type: "dashboard", mm: "#MakeoverMonday 2019 wk 22", thumb: "thumbs/tableau-co2.webp",
-    blurb: "Every country's emissions since 1960 as gray lines; pick one and it lights up blue or red for whether it fell or rose last year, with its reference group in black." },
-  { wb: "MakeoverMonday2019w03-USminimumwagepopulation", sheet: "Minimumwagedashboard", title: "US minimum wage by population", tag: "economy", type: "dashboard", mm: "#MakeoverMonday 2019 wk 3",
-    blurb: "State minimum wages weighted by how many people live under each." },
-  { wb: "MM2019w02-PressFreedomtrail", sheet: "Trail", title: "Press freedom and the economy — trails", tag: "media", type: "chart", mm: "#MakeoverMonday 2019 wk 2",
-    blurb: "Each country's press-freedom score against its economy, year by year, drawn as a trail — which way has it been drifting?" },
-  { wb: "NHLattendancechanges2001-2018MakeoverMonday2019wk01lines", sheet: "NHLattendancechange", title: "NHL attendance 2001–2018", tag: "sports", type: "chart", mm: "#MakeoverMonday 2019 wk 1",
-    blurb: "Home attendance per team across seventeen seasons, one line each." },
-  { wb: "MM2018w50-Landusepergramofprotein", sheet: "Foodlanddashboard", title: "Land use per gram of protein", tag: "food", type: "dashboard", mm: "#MakeoverMonday 2018 wk 50",
-    blurb: "How much land each food needs to produce a gram of protein — beef against beans." },
-  { wb: "DeathsFromConflicts2017-MakeoverMonday2018w34", sheet: "justtimeline", title: "Deaths from conflicts, 2017", tag: "conflict", type: "data art", mm: "#MakeoverMonday 2018 wk 34", thumb: "thumbs/tableau-conflict-deaths.webp",
-    blurb: "Yemen in 2017, one circle per day sized by the number of deaths. Data art more than analysis: not the most accurate way to read the numbers, but one that holds attention." },
-  { wb: "Riotandprotestviolence-MakeoverMonday2018w34", sheet: "Conflictsviz-MM2018w34", title: "Riot and protest violence", tag: "conflict", type: "chart", mm: "#MakeoverMonday 2018 wk 34", thumb: "thumbs/tableau-riot-violence.webp",
-    blurb: "Riots and protests that turned violent across Africa, the Middle East and Asia, on a dot-grid map — the redder the square, the more of them. From the same week's data as the Yemen timeline." },
+// Every card on the page. Edit freely — the chips and the grouping are derived from this list.
+//  made:    "html" (a page in this repository, url is the folder) or "tableau" (url is the Tableau Public viz)
+//  themes:  one or two; the first one decides where the card sits in the default, theme-grouped order (see THEMES)
+//  kind:    diary · tool · dashboard · chart · story · data art
+//  refresh: how an HTML page gets new data (automated / on export); when: the season a one-off page was built for
+//  source:  the small grey line (data source → file); mm: the #MakeoverMonday / #VizForSocialGood week for Tableau
+//  thumb:   image in thumbs/, or Tableau's own static image; own: the drop-in viewer for other people's exports
+const THEMES = ["film", "music", "books", "languages", "sports", "entertainment", "economy", "society", "media", "health", "environment", "conflict", "weather", "travel", "retail", "food"];
+const KINDS = ["diary", "tool", "dashboard", "chart", "story", "data art"];
+const CARDS = [
+ {
+  "id": "films-watched",
+  "title": "Films",
+  "url": "films-watched/",
+  "made": "html",
+  "themes": [
+   "film"
+  ],
+  "kind": "diary",
+  "blurb": "The Letterboxd diary since 2019: what I watched, when and where, ratings by year and decade, theater vs. home, festival runs, written reviews.",
+  "thumb": "thumbs/films-watched.webp",
+  "refresh": "automated",
+  "source": "Letterboxd RSS + diary pages → films.csv",
+  "own": {
+   "href": "letterboxd-viewer/",
+   "label": "Letterboxd export"
+  }
+ },
+ {
+  "id": "books-read",
+  "title": "Books",
+  "url": "books-read/",
+  "made": "html",
+  "themes": [
+   "books"
+  ],
+  "kind": "diary",
+  "blurb": "The StoryGraph library: books finished per year and month, ratings, moods, currently reading, recent reviews.",
+  "thumb": "thumbs/books-read.webp",
+  "refresh": "on export",
+  "source": "StoryGraph library export → books.csv",
+  "own": {
+   "href": "storygraph-viewer/",
+   "label": "StoryGraph or Goodreads export"
+  }
+ },
+ {
+  "id": "music",
+  "title": "Music",
+  "url": "music/",
+  "made": "html",
+  "themes": [
+   "music"
+  ],
+  "kind": "diary",
+  "blurb": "Twenty years of Last.fm scrobbles. Highlights the favorite artists and tracks you haven't heard for a long time — and the ones you've come back to — plus when each artist was last heard, how favorites were made, and listening by year, month and hour.",
+  "thumb": "thumbs/music.webp",
+  "refresh": "automated",
+  "source": "Last.fm API + Spotify export → scrobbles.csv",
+  "own": {
+   "href": "music-viewer/",
+   "label": "Last.fm, Spotify or Apple Music"
+  }
+ },
+ {
+  "id": "duolingo",
+  "title": "Duolingo",
+  "url": "duolingo/",
+  "made": "html",
+  "themes": [
+   "languages"
+  ],
+  "kind": "diary",
+  "blurb": "Time, XP and lessons by week, month or year, reconstructed from Duolingo's weekly progress-report emails and the account data export.",
+  "thumb": "thumbs/duolingo.webp",
+  "refresh": "automated",
+  "source": "progress-report emails"
+ },
+ {
+  "id": "hiff2026",
+  "title": "HIFF 2026 planner",
+  "url": "hiff2026/",
+  "made": "html",
+  "themes": [
+   "film",
+   "entertainment"
+  ],
+  "kind": "tool",
+  "blurb": "Helsinki International Film Festival: pick films, pick times, see clashes and tight transfers between venues on a timetable grid, share a plan with friends, add screenings to calendar.",
+  "thumb": "thumbs/hiff2026.webp",
+  "when": "Sept 2026"
+ },
+ {
+  "id": "tiff2026",
+  "title": "TIFF 2026 planner",
+  "url": "tiff2026/",
+  "made": "html",
+  "themes": [
+   "film",
+   "entertainment"
+  ],
+  "kind": "tool",
+  "blurb": "The same planner for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule, add screenings to calendar.",
+  "thumb": "thumbs/tiff2026.webp",
+  "when": "Sept 2026"
+ },
+ {
+  "id": "wc2026",
+  "title": "World Cup 2026 — how the pool was won",
+  "url": "wc2026/",
+  "made": "html",
+  "themes": [
+   "sports"
+  ],
+  "kind": "story",
+  "blurb": "The story of a prediction pool: the nine parts of the game scored separately, the top five in each, and a round-by-round recap of how the podium came together.",
+  "thumb": "thumbs/wc2026.webp",
+  "when": "Summer 2026"
+ },
+ {
+  "id": "prediction-markets",
+  "title": "Prediction markets",
+  "url": "prediction-markets/",
+  "made": "html",
+  "themes": [
+   "entertainment"
+  ],
+  "kind": "dashboard",
+  "blurb": "Open positions and settled markets on Polymarket and Kalshi in one view.",
+  "thumb": "thumbs/prediction-markets.webp",
+  "refresh": "automated",
+  "source": "Polymarket + Kalshi → data.json"
+ },
+ {
+  "id": "violent-protected",
+  "title": "Two worlds — no basemap",
+  "url": "violent-protected/",
+  "made": "html",
+  "themes": [
+   "conflict",
+   "environment"
+  ],
+  "kind": "data art",
+  "blurb": "Two world maps drawn only from data, no basemap underneath: every square on one is a place where someone was killed in organized violence between 1989 and 2025; the other shows the protected areas of 2026. Toggle between the violent and the protected world.",
+  "source": "UCDP GED v26.1 · Protected Planet / WDPA, Sept 2026",
+  "thumb": "thumbs/two-worlds.webp"
+ },
+ {
+  "id": "Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites",
+  "title": "Music — forgotten favorites",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites",
+  "made": "tableau",
+  "themes": [
+   "music"
+  ],
+  "kind": "dashboard",
+  "blurb": "The Tableau original of my music dashboard: favorite artists by when they were last played, the big bubbles far from the right edge being the ones to rediscover.",
+  "thumb": "https://public.tableau.com/static/images/Mu/Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites/4_3.png"
+ },
+ {
+  "id": "Musicdashboard-Last_fm-Artistdiscovery/WhenhaveIdiscoveredmusicians",
+  "title": "Music — artist discovery",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/Musicdashboard-Last_fm-Artistdiscovery/WhenhaveIdiscoveredmusicians",
+  "made": "tableau",
+  "themes": [
+   "music"
+  ],
+  "kind": "dashboard",
+  "blurb": "When each artist was first heard, and how many new ones each year brought.",
+  "thumb": "https://public.tableau.com/static/images/Mu/Musicdashboard-Last_fm-Artistdiscovery/WhenhaveIdiscoveredmusicians/4_3.png"
+ },
+ {
+  "id": "TheFilmsIveLovedandnot/Filmsdashboard",
+  "title": "The films I've loved (and not)",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/TheFilmsIveLovedandnot/Filmsdashboard",
+  "made": "tableau",
+  "themes": [
+   "film"
+  ],
+  "kind": "dashboard",
+  "blurb": "Films by year watched and rating, and where they were seen, and how many of each were liked or loved. Once fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone.",
+  "thumb": "thumbs/tableau-films-loved.webp"
+ },
+ {
+  "id": "Myfilmtracker2019/Filmswatched20192",
+  "title": "Film and subscription tracker",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/Myfilmtracker2019/Filmswatched20192",
+  "made": "tableau",
+  "themes": [
+   "film"
+  ],
+  "kind": "dashboard",
+  "blurb": "Films watched by month and by service, how many were liked or loved, and what each streaming subscription cost per film. The 2019–2020 original, the most viewed viz on my Tableau profile.",
+  "thumb": "thumbs/tableau-film-tracker.webp"
+ },
+ {
+  "id": "WesAndersonColorPalettes/PaletteBubbles",
+  "title": "Wes Anderson color palettes",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/WesAndersonColorPalettes/PaletteBubbles",
+  "made": "tableau",
+  "themes": [
+   "film"
+  ],
+  "kind": "data art",
+  "blurb": "Made to get something colorful on the living-room wall, from one of my favorite directors: the principal colors extracted from selected scenes of his films, each bubble sized by how prominent the color is.",
+  "thumb": "https://public.tableau.com/static/images/We/WesAndersonColorPalettes/PaletteBubbles/4_3.png"
+ },
+ {
+  "id": "Eurovision2025/ViewsLine",
+  "title": "Eurovision 2025 — views on YouTube",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/Eurovision2025/ViewsLine",
+  "made": "tableau",
+  "themes": [
+   "music"
+  ],
+  "kind": "dashboard",
+  "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, with who gained the most since yesterday. Static data up to the last collection day. This helped me bet on the winner.",
+  "thumb": "thumbs/tableau-eurovision-2025.webp"
+ },
+ {
+  "id": "CouchtoHalfMarathon/CouchtoHalfMarathon",
+  "title": "Couch to half marathon",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/CouchtoHalfMarathon/CouchtoHalfMarathon",
+  "made": "tableau",
+  "themes": [
+   "sports"
+  ],
+  "kind": "dashboard",
+  "blurb": "A training log from the first run to race day.",
+  "thumb": "https://public.tableau.com/static/images/Co/CouchtoHalfMarathon/CouchtoHalfMarathon/4_3.png"
+ },
+ {
+  "id": "Skitripplanning-drivingtimeandconditions/Dashboard2",
+  "title": "Ski trip planning",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/Skitripplanning-drivingtimeandconditions/Dashboard2",
+  "made": "tableau",
+  "themes": [
+   "travel"
+  ],
+  "kind": "tool",
+  "blurb": "Driving time against snow conditions and resort size across the Alps. Made for planning a skiing weekend back in the day.",
+  "thumb": "https://public.tableau.com/static/images/Sk/Skitripplanning-drivingtimeandconditions/Dashboard2/4_3.png"
+ },
+ {
+  "id": "HowuniqueareHelsinkimalls/MallsofHelsinki",
+  "title": "How unique are the shopping malls?",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/HowuniqueareHelsinkimalls/MallsofHelsinki",
+  "made": "tableau",
+  "themes": [
+   "retail"
+  ],
+  "kind": "dashboard",
+  "blurb": "The top 20 malls of a city by leasable area and the share of shops unique to each; click a mall for a \"floorplan\" of its shops on three floors: unique, more common and very common. Built on Helsinki, but the idea works for any city.",
+  "thumb": "thumbs/tableau-helsinki-malls.webp"
+ },
+ {
+  "id": "Oscarsimpactonboxoffice/BestPicBoxOffice2",
+  "title": "Oscars' impact on box office",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/Oscarsimpactonboxoffice/BestPicBoxOffice2",
+  "made": "tableau",
+  "themes": [
+   "film"
+  ],
+  "kind": "chart",
+  "blurb": "What a Best Picture nomination and win did to each film's box office.",
+  "thumb": "https://public.tableau.com/static/images/Os/Oscarsimpactonboxoffice/BestPicBoxOffice2/4_3.png"
+ },
+ {
+  "id": "Whichtimetochoose/Simplebubbles",
+  "title": "Which time to choose?",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/Whichtimetochoose/Simplebubbles",
+  "made": "tableau",
+  "themes": [
+   "society"
+  ],
+  "kind": "tool",
+  "blurb": "Permanent summer time, permanent winter time or the current switching: pick your place and your sleep schedule, and see which system suits your sleep–wake rhythm (the fewest dark bedtimes, the least sleeping through daylight).",
+  "thumb": "thumbs/tableau-which-time.webp"
+ },
+ {
+  "id": "CoronavirusNewsandGoogleTrends/NewsandSearch",
+  "title": "Coronavirus — news and Google searches",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/CoronavirusNewsandGoogleTrends/NewsandSearch",
+  "made": "tableau",
+  "themes": [
+   "media"
+  ],
+  "kind": "dashboard",
+  "blurb": "Early days of Covid news. Daily number of articles in YLE and the NY Times, and daily Google Search Trends for coronavirus and COVID-19 by country. Static data, January–April 2020.",
+  "thumb": "thumbs/tableau-coronavirus.webp"
+ },
+ {
+  "id": "VizForSocialGood-JapanFoodBank/Foodlossandpovertyviz",
+  "title": "Japan Food Bank — food loss and poverty",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/VizForSocialGood-JapanFoodBank/Foodlossandpovertyviz",
+  "made": "tableau",
+  "themes": [
+   "society"
+  ],
+  "kind": "chart",
+  "blurb": "Food waste against poverty in Japan, for the Viz for Social Good project.",
+  "mm": "#VizForSocialGood",
+  "thumb": "https://public.tableau.com/static/images/Vi/VizForSocialGood-JapanFoodBank/Foodlossandpovertyviz/4_3.png"
+ },
+ {
+  "id": "BikeRevolution2020-MM2021/MM2021wk1",
+  "title": "The great bicycle boom",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/BikeRevolution2020-MM2021/MM2021wk1",
+  "made": "tableau",
+  "themes": [
+   "society"
+  ],
+  "kind": "chart",
+  "blurb": "Week-by-week change in bikes counted by Rails to Trails' 31 US counters, 2019 to 2020: biking was already trending up, and the pandemic boosted it.",
+  "mm": "#MakeoverMonday 2021 wk 1",
+  "thumb": "thumbs/tableau-bike-boom.webp"
+ },
+ {
+  "id": "AmericasDebt-MM2020wk47/PathtoDebtwhitebackground",
+  "title": "America's path to debt",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/AmericasDebt-MM2020wk47/PathtoDebtwhitebackground",
+  "made": "tableau",
+  "themes": [
+   "economy"
+  ],
+  "kind": "chart",
+  "blurb": "US federal debt's path over time.",
+  "mm": "#MakeoverMonday 2020 wk 47",
+  "thumb": "https://public.tableau.com/static/images/Am/AmericasDebt-MM2020wk47/PathtoDebtwhitebackground/4_3.png"
+ },
+ {
+  "id": "XmasspendingMakeoverMonday2019wk52/Dashboard1",
+  "title": "Christmas spending",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/XmasspendingMakeoverMonday2019wk52/Dashboard1",
+  "made": "tableau",
+  "themes": [
+   "economy"
+  ],
+  "kind": "dashboard",
+  "blurb": "How much people planned to spend on Christmas, by country.",
+  "mm": "#MakeoverMonday 2019 wk 52",
+  "thumb": "https://public.tableau.com/static/images/Xm/XmasspendingMakeoverMonday2019wk52/Dashboard1/4_3.png"
+ },
+ {
+  "id": "NBAdefensiveratingsvsNBAstandingsMakeoverMonday2019wk51/Dashboard1",
+  "title": "NBA defensive ratings vs. standings",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/NBAdefensiveratingsvsNBAstandingsMakeoverMonday2019wk51/Dashboard1",
+  "made": "tableau",
+  "themes": [
+   "sports"
+  ],
+  "kind": "chart",
+  "blurb": "Does defense win? Team defensive rating against league position.",
+  "mm": "#MakeoverMonday 2019 wk 51",
+  "thumb": "https://public.tableau.com/static/images/NB/NBAdefensiveratingsvsNBAstandingsMakeoverMonday2019wk51/Dashboard1/4_3.png"
+ },
+ {
+  "id": "MonthlysunshinehoursaroundtheworldMakeoverMonday2019wk44/Sunshinehoursaroundtheworld",
+  "title": "Monthly sunshine hours around the world",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/MonthlysunshinehoursaroundtheworldMakeoverMonday2019wk44/Sunshinehoursaroundtheworld",
+  "made": "tableau",
+  "themes": [
+   "weather"
+  ],
+  "kind": "chart",
+  "blurb": "Hours of sunshine per month for cities around the world.",
+  "mm": "#MakeoverMonday 2019 wk 44",
+  "thumb": "https://public.tableau.com/static/images/Mo/MonthlysunshinehoursaroundtheworldMakeoverMonday2019wk44/Sunshinehoursaroundtheworld/4_3.png"
+ },
+ {
+  "id": "SeasonpreferencesintheUS-MakeoverMonday2019wk36/Seasonpreference2",
+  "title": "Favorite season in the US",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/SeasonpreferencesintheUS-MakeoverMonday2019wk36/Seasonpreference2",
+  "made": "tableau",
+  "themes": [
+   "weather"
+  ],
+  "kind": "chart",
+  "blurb": "Which season Americans prefer, by age group.",
+  "mm": "#MakeoverMonday 2019 wk 36",
+  "thumb": "https://public.tableau.com/static/images/Se/SeasonpreferencesintheUS-MakeoverMonday2019wk36/Seasonpreference2/4_3.png"
+ },
+ {
+  "id": "Gamesmarketrevenuetrend-MakeoverMonday2019wk35/Gamerevenuesarea",
+  "title": "Games market revenue trend",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/Gamesmarketrevenuetrend-MakeoverMonday2019wk35/Gamerevenuesarea",
+  "made": "tableau",
+  "themes": [
+   "economy"
+  ],
+  "kind": "chart",
+  "blurb": "PC, console and mobile game revenue 2012–2021, actuals and forecast, each segment against the whole market. The rise of mobile gaming.",
+  "mm": "#MakeoverMonday 2019 wk 35",
+  "thumb": "thumbs/tableau-games-revenue.webp"
+ },
+ {
+  "id": "MM2019w33-Clinicaltrials/MM2019xk33v1",
+  "title": "Trends in clinical trials",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/MM2019w33-Clinicaltrials/MM2019xk33v1",
+  "made": "tableau",
+  "themes": [
+   "health"
+  ],
+  "kind": "chart",
+  "blurb": "Registered clinical trials by year and type.",
+  "mm": "#MakeoverMonday 2019 wk 33",
+  "thumb": "https://public.tableau.com/static/images/MM/MM2019w33-Clinicaltrials/MM2019xk33v1/4_3.png"
+ },
+ {
+  "id": "MM2019w26-Alcoholconsumptiontop25income/Alcoholdashboardincome",
+  "title": "Alcohol consumption — top 25 countries by income",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/MM2019w26-Alcoholconsumptiontop25income/Alcoholdashboardincome",
+  "made": "tableau",
+  "themes": [
+   "health"
+  ],
+  "kind": "dashboard",
+  "blurb": "Litres of pure alcohol per person in the 25 heaviest-drinking countries, against income level.",
+  "mm": "#MakeoverMonday 2019 wk 26",
+  "thumb": "https://public.tableau.com/static/images/MM/MM2019w26-Alcoholconsumptiontop25income/Alcoholdashboardincome/4_3.png"
+ },
+ {
+  "id": "CO2emissionsbycountry-MakeoverMonday2019wk22/CO2dashboard",
+  "title": "CO₂ emissions by country",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/CO2emissionsbycountry-MakeoverMonday2019wk22/CO2dashboard",
+  "made": "tableau",
+  "themes": [
+   "environment"
+  ],
+  "kind": "dashboard",
+  "blurb": "Every country's emissions since 1960 as gray lines; pick one and it lights up blue or red for whether it fell or rose last year, with its reference group in black.",
+  "mm": "#MakeoverMonday 2019 wk 22",
+  "thumb": "thumbs/tableau-co2.webp"
+ },
+ {
+  "id": "MakeoverMonday2019w03-USminimumwagepopulation/Minimumwagedashboard",
+  "title": "US minimum wage by population",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/MakeoverMonday2019w03-USminimumwagepopulation/Minimumwagedashboard",
+  "made": "tableau",
+  "themes": [
+   "economy"
+  ],
+  "kind": "dashboard",
+  "blurb": "State minimum wages weighted by how many people live under each.",
+  "mm": "#MakeoverMonday 2019 wk 3",
+  "thumb": "https://public.tableau.com/static/images/Ma/MakeoverMonday2019w03-USminimumwagepopulation/Minimumwagedashboard/4_3.png"
+ },
+ {
+  "id": "MM2019w02-PressFreedomtrail/Trail",
+  "title": "Press freedom and the economy — trails",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/MM2019w02-PressFreedomtrail/Trail",
+  "made": "tableau",
+  "themes": [
+   "media"
+  ],
+  "kind": "chart",
+  "blurb": "Each country's press-freedom score against its economy, year by year, drawn as a trail.",
+  "mm": "#MakeoverMonday 2019 wk 2",
+  "thumb": "https://public.tableau.com/static/images/MM/MM2019w02-PressFreedomtrail/Trail/4_3.png"
+ },
+ {
+  "id": "NHLattendancechanges2001-2018MakeoverMonday2019wk01lines/NHLattendancechange",
+  "title": "NHL attendance 2001–2018",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/NHLattendancechanges2001-2018MakeoverMonday2019wk01lines/NHLattendancechange",
+  "made": "tableau",
+  "themes": [
+   "sports"
+  ],
+  "kind": "chart",
+  "blurb": "Home attendance per team across seventeen seasons, one line each.",
+  "mm": "#MakeoverMonday 2019 wk 1",
+  "thumb": "https://public.tableau.com/static/images/NH/NHLattendancechanges2001-2018MakeoverMonday2019wk01lines/NHLattendancechange/4_3.png"
+ },
+ {
+  "id": "MM2018w50-Landusepergramofprotein/Foodlanddashboard",
+  "title": "Land use per gram of protein",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/MM2018w50-Landusepergramofprotein/Foodlanddashboard",
+  "made": "tableau",
+  "themes": [
+   "food"
+  ],
+  "kind": "dashboard",
+  "blurb": "How much land each food needs to produce a gram of protein.",
+  "mm": "#MakeoverMonday 2018 wk 50",
+  "thumb": "https://public.tableau.com/static/images/MM/MM2018w50-Landusepergramofprotein/Foodlanddashboard/4_3.png"
+ },
+ {
+  "id": "DeathsFromConflicts2017-MakeoverMonday2018w34/justtimeline",
+  "title": "Deaths from conflicts, 2017",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/DeathsFromConflicts2017-MakeoverMonday2018w34/justtimeline",
+  "made": "tableau",
+  "themes": [
+   "conflict"
+  ],
+  "kind": "data art",
+  "blurb": "Yemen in 2017, one circle per day sized by the number of deaths. Data art more than analysis: not the most accurate way to read the numbers, but one that grabs attention.",
+  "mm": "#MakeoverMonday 2018 wk 34",
+  "thumb": "thumbs/tableau-conflict-deaths.webp"
+ },
+ {
+  "id": "Riotandprotestviolence-MakeoverMonday2018w34/Conflictsviz-MM2018w34",
+  "title": "Riot and protest violence",
+  "url": "https://public.tableau.com/app/profile/antti1275/viz/Riotandprotestviolence-MakeoverMonday2018w34/Conflictsviz-MM2018w34",
+  "made": "tableau",
+  "themes": [
+   "conflict"
+  ],
+  "kind": "chart",
+  "blurb": "Riots and protests that turned violent across Africa, the Middle East and Asia, on a dot-grid map. From the same week's MakeoverMonday data as the Yemen timeline.",
+  "mm": "#MakeoverMonday 2018 wk 34",
+  "thumb": "thumbs/tableau-riot-violence.webp"
+ }
 ];
-document.getElementById("tableau").innerHTML = TABLEAU.map((v) => {
-  const url = `https://public.tableau.com/app/profile/antti1275/viz/${v.wb}/${v.sheet}`, img = v.thumb || `https://public.tableau.com/static/images/${v.wb.slice(0, 2)}/${v.wb}/${v.sheet}/4_3.png`;
-  const type = v.type || "chart", cls = type === "data art" ? "art" : type;
-  return `<div class="card"><a class="main" href="${url}" target="_blank" rel="noopener"><span class="thumb"><img src="${img}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
-    <div class="t"><i></i>${v.title}<span class="arrow">↗</span></div><p>${v.blurb}</p><div class="meta"><span class="tag">${v.tag}</span><span class="tag type ${cls}">${type}</span> ${v.mm || "Tableau Public"}</div></a></div>`;
-}).join("");
+</script>
+<script>
+const $ = (s) => document.querySelector(s);
+const F = { theme: null, kind: null, made: null };
+const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
+
+// filters live in the URL hash, so a filtered view can be linked: #theme=film&made=tableau
+function readHash() {
+  const p = new URLSearchParams(location.hash.slice(1));
+  F.theme = THEMES.includes(p.get("theme")) ? p.get("theme") : null;
+  F.kind = KINDS.includes(p.get("kind")) ? p.get("kind") : null;
+  F.made = ["html", "tableau"].includes(p.get("made")) ? p.get("made") : null;
+}
+function writeHash() {
+  const p = new URLSearchParams(); for (const k of Object.keys(F)) if (F[k]) p.set(k, F[k]);
+  const h = p.toString(); history.replaceState(null, "", h ? "#" + h : location.pathname + location.search);
+}
+const matches = (c, skip) => (skip === "theme" || !F.theme || c.themes.includes(F.theme)) && (skip === "kind" || !F.kind || c.kind === F.kind) && (skip === "made" || !F.made || c.made === F.made);
+
+function chip(facet, value, label, n) {
+  const active = F[facet] === value || (value === null && !F[facet]);
+  return `<button type="button" class="chip${active ? " active" : ""}" data-f="${facet}" data-v="${value ?? ""}"${n === 0 ? " disabled style=\"opacity:.35\"" : ""}>${esc(label)}${n != null && value !== null ? `<small>${n}</small>` : ""}</button>`;
+}
+function renderFilters() {
+  const count = (facet, value) => CARDS.filter((c) => matches(c, facet) && (facet === "theme" ? c.themes.includes(value) : facet === "kind" ? c.kind === value : c.made === value)).length;
+  $("#filters").innerHTML = `
+    <div class="frow"><span class="lbl">Theme</span>${chip("theme", null, "All")}${THEMES.filter((t) => CARDS.some((c) => c.themes.includes(t))).map((t) => chip("theme", t, t, count("theme", t))).join("")}</div>
+    <div class="frow"><span class="lbl">Kind</span>${chip("kind", null, "All")}${KINDS.filter((k) => CARDS.some((c) => c.kind === k)).map((k) => chip("kind", k, k, count("kind", k))).join("")}</div>
+    <div class="frow"><span class="lbl">Made with</span>${chip("made", null, "All")}${chip("made", "html", "HTML pages here", count("made", "html"))}${chip("made", "tableau", "Tableau Public", count("made", "tableau"))}<a class="ext" href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">All vizzes on Tableau Public ↗</a></div>`;
+  document.querySelectorAll("#filters .chip").forEach((b) => b.addEventListener("click", () => { F[b.dataset.f] = b.dataset.v || null; writeHash(); render(); }));
+}
+
+function card(c) {
+  const tableau = c.made === "tableau", ext = tableau;
+  const kindCls = c.kind === "data art" ? "art" : c.kind;
+  const meta = tableau
+    ? `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span> Tableau Public${c.mm ? " · " + esc(c.mm) : ""}`
+    : `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${c.when ? `<span class="tag season">${esc(c.when)}</span>` : ""}${c.refresh ? `<span class="tag ${c.refresh === "automated" ? "live" : "manual"}">${esc(c.refresh)}</span>` : ""}${c.source ? `<span class="src">${esc(c.source)}</span>` : ""}`;
+  return `<div class="card${tableau ? " tableau" : ""}" data-id="${esc(c.id)}">
+    <a class="main" href="${esc(c.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="thumb"><img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
+    <div class="t"><i></i>${esc(c.title)}<span class="arrow">${ext ? "↗" : "→"}</span></div><p>${esc(c.blurb)}</p><div class="meta">${meta}</div></a>
+    ${c.own ? `<a class="own" href="${esc(c.own.href)}"><span>Try it with your own data</span> <small>${esc(c.own.label)}</small></a>` : ""}</div>`;
+}
+
+function render() {
+  renderFilters();
+  const shown = CARDS.filter((c) => matches(c));
+  // default order: grouped by the first theme, in THEMES order; inside a group the list order (HTML work first, then Tableau)
+  const groups = THEMES.map((t) => [t, shown.filter((c) => (F.theme ? c.themes.includes(F.theme) && t === F.theme : c.themes[0] === t))]).filter(([, cs]) => cs.length);
+  // theme dividers only when groups have some size to them; a handful of single cards (e.g. the four diaries) flows as one row
+  const dividers = groups.length > 1 && shown.length / groups.length >= 2;
+  $("#grid").innerHTML = shown.length
+    ? groups.map(([t, cs]) => (dividers ? `<div class="divider">${esc(t)}<small>${cs.length}</small></div>` : "") + cs.map(card).join("")).join("")
+    : `<div class="empty">Nothing matches that combination — clear a chip.</div>`;
+  $("#count").textContent = `${shown.length} of ${CARDS.length}` + (F.theme || F.kind || F.made ? ` · ${[F.theme, F.kind, F.made === "html" ? "HTML" : F.made === "tableau" ? "Tableau" : null].filter(Boolean).join(" · ")}` : "");
+}
+readHash(); render();
+window.addEventListener("hashchange", () => { readHash(); render(); });
+
 // theme button: flips the current look and remembers it; the system setting applies when nothing is remembered
 document.getElementById("themeBtn").addEventListener("click", () => {
   const root = document.documentElement, systemLight = matchMedia("(prefers-color-scheme: light)").matches;
