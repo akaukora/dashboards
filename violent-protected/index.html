@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
-<title>Two worlds — no basemap</title>
+<title>Violent and protected world</title>
 <meta name="description" content="Two world maps drawn only from data: lethal organized violence 1989–2025, and protected areas as of 2026. No basemap underneath.">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -330,7 +330,6 @@ function show(which) {
   note.textContent = t.keyNote;
   key.append(note);
   read.dataset.on = 'false'; hint.dataset.off = 'false';   // old country, other dataset
-  document.title = t.title + ' — no basemap';
   if (typeof repaint === 'function') requestAnimationFrame(repaint);
 }
 
