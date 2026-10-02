@@ -9,8 +9,9 @@ top and an AI assistant that keeps it up to date with you.
 - **Plain-language instructions** (skills) tell your assistant how the list works:
   date rules, recurring tasks, a weekly review and what it may change without asking.
 
-**[▶ Try the live demo](https://akaukora.github.io/task-timeline/)** — fictional example
-tasks dated around today, in any browser. Nothing is saved.
+**[▶ Try the live demo](https://akaukora.github.io/dashboards/task-timeline/)** — fictional example
+tasks dated around today, in any browser. Nothing is saved. More examples in the
+[dashboards gallery](https://akaukora.github.io/dashboards/).
 
 ![Timeline view, dark theme](docs/timeline-dark.png)
 
@@ -114,6 +115,6 @@ Built on the **productivity** plugin from Anthropic's
 the recurring-task and source-link features, the weekly-update routine and the theme
 were added here. See [NOTICE](NOTICE) for the details.
 
-Colour palette from [akaukora/dashboards](https://github.com/akaukora/dashboards).
+Colour palette from [akaukora/dashboards](https://github.com/akaukora/dashboards) (gallery: [akaukora.github.io/dashboards](https://akaukora.github.io/dashboards/)).
 
 Licensed under the Apache License 2.0 — see [LICENSE](LICENSE).

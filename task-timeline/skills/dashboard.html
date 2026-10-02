@@ -3397,9 +3397,12 @@
         addTaskToCategory: 'Add task to {cat}',
         manageCategories: 'Manage categories',
         categoryManagerTitle: 'Categories',
-        catColTag: 'Tag',
-        catColLabel: 'Label',
-        catColType: 'Type',
+        catColTag: 'Tag (in TASKS.md)',
+        catColLabel: 'Display name',
+        catColType: 'Timeline style',
+        catTypeBag: 'Independent tasks',
+        catTypeProcess: 'Process (with progress)',
+        catHelp: 'Tag = the name stored in TASKS.md (renaming it updates all tasks). Display name = how the category is shown on the timeline. Timeline style: "Independent tasks" = tasks are unrelated, shown as a collapsed group header. "Process" = tasks form one sequence, shown as an expanded group with a bar from first start to last end and a % done.',
         catColUsage: 'Used',
         catColActions: 'Actions',
         catAddNew: '+ Add category',
@@ -3460,9 +3463,12 @@
         addTaskToCategory: 'Ajouter une tâche à {cat}',
         manageCategories: 'Gérer les catégories',
         categoryManagerTitle: 'Catégories',
-        catColTag: 'Tag',
-        catColLabel: 'Libellé',
-        catColType: 'Type',
+        catColTag: 'Tag (dans TASKS.md)',
+        catColLabel: "Nom affiché",
+        catColType: 'Style de chronologie',
+        catTypeBag: 'Tâches indépendantes',
+        catTypeProcess: 'Processus (avec progression)',
+        catHelp: 'Tag = le nom stocké dans TASKS.md (le renommer met à jour toutes les tâches). Nom affiché = comment la catégorie apparaît sur la chronologie. Style : « Tâches indépendantes » = tâches sans lien, groupe replié ; « Processus » = tâches en séquence, groupe déplié avec barre globale et % d\'avancement.',
         catColUsage: 'Utilisé',
         catColActions: 'Actions',
         catAddNew: '+ Ajouter une catégorie',
@@ -3783,7 +3789,7 @@
       toolbar.innerHTML = `
         <button class="tb-btn primary" id="tbNewTask">${T('newTask')}</button>
         ${overdueBtnHtml}
-        <button class="tb-btn" id="tbManageCategories" title="${escHtml(T('manageCategories'))}">⚙</button>
+        <button class="tb-btn" id="tbManageCategories" title="${escHtml(T('manageCategories'))}">🏷</button>
         <button class="tb-btn" id="tbManageVacations" title="${escHtml(T('manageVacations'))}">🌴</button>
         <span style="font-size:11px; color: var(--text-muted); margin-left:8px; margin-right:4px;">${T('statusFilter')}</span>
         <div class="tb-group">${filterChips}</div>
@@ -4520,6 +4526,7 @@
 
       document.getElementById('modalTitle').textContent = T('categoryManagerTitle');
       document.getElementById('modalBody').innerHTML = `
+        <p class="cat-mgr-help" style="font-size:12px;color:var(--text-muted);margin:0 0 10px;line-height:1.45">${escHtml(T('catHelp'))}</p>
         <table class="cat-mgr-table">
           <thead>
             <tr>
@@ -4537,8 +4544,8 @@
                 <td><input type="text" class="cat-mgr-label" value="${escHtml(r.label)}"></td>
                 <td>
                   <select class="cat-mgr-type">
-                    <option value="bag" ${r.type === 'bag' ? 'selected' : ''}>bag</option>
-                    <option value="process" ${r.type === 'process' ? 'selected' : ''}>process</option>
+                    <option value="bag" ${r.type === 'bag' ? 'selected' : ''}>${escHtml(T('catTypeBag'))}</option>
+                    <option value="process" ${r.type === 'process' ? 'selected' : ''}>${escHtml(T('catTypeProcess'))}</option>
                   </select>
                 </td>
                 <td class="usage">${r.usage}</td>
@@ -4570,8 +4577,8 @@
           <td><input type="text" class="cat-mgr-label" value=""></td>
           <td>
             <select class="cat-mgr-type">
-              <option value="bag" selected>bag</option>
-              <option value="process">process</option>
+              <option value="bag" selected>${escHtml(T('catTypeBag'))}</option>
+              <option value="process">${escHtml(T('catTypeProcess'))}</option>
             </select>
           </td>
           <td class="usage">0</td>
@@ -6594,7 +6601,7 @@
       const m = location.hostname.match(/^([^.]+)\.github\.io$/i);
       const repo = location.pathname.split('/').filter(Boolean)[0];
       if (m && repo) return `https://github.com/${m[1]}/${repo}`;
-      return 'https://github.com/akaukora/task-timeline';
+      return 'https://github.com/akaukora/dashboards';
     })();
 
     const DEMO_CATEGORIES = `\`\`\`yaml
@@ -6738,6 +6745,7 @@ Winter break | ${iso(d(140))} | ${iso(d(144))}
           <span class="demo-tag">Demo</span>
           <span>Fictional example tasks, dated around today. Try dragging bars, ticking tasks or switching views — edits stay in this tab and aren't saved.</span>
           <span class="spacer"></span>
+          <a href="https://akaukora.github.io/dashboards/" target="_top" rel="noopener">More dashboards</a>
           <a href="${DEMO_REPO_URL}" target="_top" rel="noopener">Download from GitHub →</a>
         </div>`);
       loadCategoryConfig(DEMO_CATEGORIES);
