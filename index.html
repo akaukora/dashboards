@@ -46,17 +46,23 @@
   .frow .ext { margin-left: auto; font-size: 12px; color: var(--green); border: 1px solid var(--green-mark); border-radius: 999px; padding: 3px 11px; } .frow .ext:hover { background: var(--green-mark); color: #fff; }
   .count { color: var(--text-3); font-size: 12px; margin: -8px 0 10px; }
   /* pinned strip: the live diaries and the newest piece, compact; the same cards also sit in their theme groups below */
-  .strip { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin: 0 0 22px; }
-  .strip[hidden] { display: none; }
+  .strip-wrap { position: relative; margin: 0 0 22px; } .strip-wrap[hidden] { display: none; }
+  .strip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; padding-bottom: 2px; }
+  .strip::-webkit-scrollbar { display: none; }
+  .strip .mini { flex: 0 0 calc((100% - 4 * 12px) / 5); scroll-snap-align: start; }
+  .arr { all: unset; cursor: pointer; position: absolute; top: 56px; z-index: 2; width: 30px; height: 30px; border-radius: 50%; background: var(--card); border: 1px solid var(--line-2); color: var(--text-2); display: none; align-items: center; justify-content: center; font-size: 20px; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  .arr.prev { left: -15px; } .arr.next { right: -15px; } .arr:hover { color: var(--green); border-color: var(--green-mark); }
+  .strip-wrap.overflow .arr { display: inline-flex; } .arr[disabled] { opacity: .3; cursor: default; }
+  @media (max-width: 860px) { .strip .mini { flex-basis: calc((100% - 2 * 12px) / 3); } }
   .mini { display: flex; flex-direction: column; gap: 5px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; color: inherit; transition: border-color .12s, transform .12s; }
   .mini:hover { border-color: var(--line-2); transform: translateY(-1px); }
   .mini .thumb { aspect-ratio: 16 / 10; background: var(--card-2); border-bottom: 1px solid var(--line); overflow: hidden; }
   .mini .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; }
   .mini .over { font-size: 10px; text-transform: uppercase; letter-spacing: .08em; font-weight: 700; color: var(--green); padding: 8px 12px 0; }
-  .mini .over.new { color: #5b8fb9; }
+  .mini .over.new { color: #5b8fb9; } .mini .over.upd { color: var(--text-2); }
   .mini .t { font-size: 14px; font-weight: 600; padding: 0 12px; line-height: 1.3; }
   .mini .s { font-size: 12px; color: var(--text-3); padding: 0 12px 10px; }
-  @media (max-width: 600px) { .strip { grid-template-columns: repeat(2, minmax(0, 1fr)); } }
+  @media (max-width: 600px) { .strip .mini { flex-basis: calc((100% - 12px) / 2); } .arr.prev { left: -6px; } .arr.next { right: -6px; } }
   .divider { grid-column: 1 / -1; font-size: 12px; text-transform: uppercase; letter-spacing: .08em; color: var(--green); font-weight: 700; margin: 14px 0 -4px; display: flex; align-items: baseline; gap: 8px; }
   .divider:first-child { margin-top: 0; }
   .divider small { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text-3); }
@@ -104,6 +110,7 @@
       <div class="sub">Antti Kaukoranta · Helsinki</div>
     </div>
     <div class="hdr-right">
+      <a class="gh" href="https://www.linkedin.com/in/REPLACE-WITH-YOUR-PROFILE/" target="_blank" rel="noopener">LinkedIn ↗</a>
       <a class="gh" href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener" title="The repository: every page, its data file and a README on how it is refreshed">Get the files on GitHub ↗</a>
       <button type="button" class="themebtn" id="themeBtn" title="Switch to the other look" aria-label="Switch between light and dark"><span class="moon">☾</span><span class="sun">☀</span></button>
     </div>
@@ -116,7 +123,7 @@
     <p>Everything is in the open: each folder has the page, its data file and a README on how the data is refreshed — take any of them and have your own tools (or your AI agent) rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>. Older work lives on <a href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">Tableau Public</a>; the chips below filter by theme, by kind, and by where a piece was made.</p>
     </div>
   </div>
-  <div class="strip" id="strip"></div>
+  <div class="strip-wrap" id="stripWrap"><button type="button" class="arr prev" id="stripPrev" aria-label="Scroll back">‹</button><div class="strip" id="strip"></div><button type="button" class="arr next" id="stripNext" aria-label="Scroll forward">›</button></div>
   <div class="filters" id="filters"></div>
   <div class="count" id="count"></div>
   <div class="grid" id="grid"></div>
@@ -129,13 +136,15 @@
 // Every card on the page. Edit freely — the chips and the grouping are derived from this list.
 //  made:    "html" (a page in this repository, url is the folder) or "tableau" (url is the Tableau Public viz)
 //  themes:  one or two of THEMES; the first one decides where the card sits in the default, theme-grouped order.
-//           culture = film, books, music, languages · sports & games · economy · society = everyday life, news, health, weather, places · world = conflict, environment
+//           culture = film, books, music, languages · sports & games · economy · society = everyday life, news, health, weather, places · world = conflict, environment · productivity = tools for getting work done
 //  kind:    diary · tool · dashboard · chart · story · data art
 //  refresh: how an HTML page gets new data (automated / on export)
 //  source:  the small grey line (data source → file); mm: the #MakeoverMonday / #VizForSocialGood week for Tableau
 //  thumb:   image in thumbs/, or Tableau's own static image; own: the drop-in viewer for other people's exports
-//  latest:  a month label ("Oct 2026") on the newest piece — it gets the "New" slot in the pinned strip at the top, next to the diaries
-const THEMES = ["culture", "sports & games", "economy", "society", "world"];
+//  added:   date the page went up (YYYY-MM-DD). Within NEW_DAYS of today it shows in the pinned strip as "New"
+//  updated: date of a significant update (YYYY-MM-DD). Within NEW_DAYS of today it shows in the strip as "Updated" — set it by hand when a change deserves the spot
+const NEW_DAYS = 30;
+const THEMES = ["culture", "sports & games", "economy", "society", "world", "productivity"];
 const KINDS = ["diary", "tool", "dashboard", "chart", "story", "data art"];
 const CARDS = [
  {
@@ -154,7 +163,8 @@ const CARDS = [
   "own": {
    "href": "letterboxd-viewer/",
    "label": "Letterboxd export"
-  }
+  },
+  "added": "2026-09-02"
  },
  {
   "id": "books-read",
@@ -172,7 +182,8 @@ const CARDS = [
   "own": {
    "href": "storygraph-viewer/",
    "label": "StoryGraph or Goodreads export"
-  }
+  },
+  "added": "2026-09-05"
  },
  {
   "id": "music",
@@ -190,7 +201,8 @@ const CARDS = [
   "own": {
    "href": "music-viewer/",
    "label": "Last.fm, Spotify or Apple Music"
-  }
+  },
+  "added": "2026-09-06"
  },
  {
   "id": "duolingo",
@@ -204,7 +216,8 @@ const CARDS = [
   "blurb": "Time, XP and lessons by week, month or year, reconstructed from Duolingo's weekly progress-report emails and the account data export.",
   "thumb": "thumbs/duolingo.webp",
   "refresh": "automated",
-  "source": "progress-report emails"
+  "source": "progress-report emails",
+  "added": "2026-09-07"
  },
  {
   "id": "hiff2026",
@@ -216,7 +229,8 @@ const CARDS = [
   ],
   "kind": "tool",
   "blurb": "Helsinki International Film Festival: pick films, pick times, see clashes and tight transfers between venues on a timetable grid, share a plan with friends, add screenings to calendar.",
-  "thumb": "thumbs/hiff2026.webp"
+  "thumb": "thumbs/hiff2026.webp",
+  "added": "2026-09-08"
  },
  {
   "id": "tiff2026",
@@ -228,7 +242,8 @@ const CARDS = [
   ],
   "kind": "tool",
   "blurb": "The same planner for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule, add screenings to calendar.",
-  "thumb": "thumbs/tiff2026.webp"
+  "thumb": "thumbs/tiff2026.webp",
+  "added": "2026-09-10"
  },
  {
   "id": "wc2026",
@@ -240,7 +255,8 @@ const CARDS = [
   ],
   "kind": "story",
   "blurb": "The story of a prediction pool: the nine parts of the game scored separately, the top five in each, and a round-by-round recap of how the podium came together.",
-  "thumb": "thumbs/wc2026.webp"
+  "thumb": "thumbs/wc2026.webp",
+  "added": "2026-07-28"
  },
  {
   "id": "prediction-markets",
@@ -254,11 +270,11 @@ const CARDS = [
   "blurb": "Open positions and settled markets on Polymarket and Kalshi in one view.",
   "thumb": "thumbs/prediction-markets.webp",
   "refresh": "automated",
-  "source": "Polymarket + Kalshi → data.json"
+  "source": "Polymarket + Kalshi → data.json",
+  "added": "2026-09-18"
  },
  {
   "id": "violent-protected",
-  "latest": "Oct 2026",
   "title": "Violent and protected world",
   "url": "violent-protected/",
   "made": "html",
@@ -268,7 +284,27 @@ const CARDS = [
   "kind": "data art",
   "blurb": "Two world maps drawn only from data, no basemap underneath: every square on one is a place where someone was killed in organized violence between 1989 and 2025; the other shows the protected areas of 2026. Toggle between the two. The next generation of my 2018 Tableau viz on riot and protest violence.",
   "source": "UCDP GED v26.1 · Protected Planet / WDPA, Sept 2026",
-  "thumb": "thumbs/two-worlds.webp"
+  "thumb": "thumbs/two-worlds.webp",
+  "added": "2026-10-01"
+ },
+ {
+  "id": "task-timeline",
+  "title": "Task timeline",
+  "url": "task-timeline/",
+  "made": "html",
+  "themes": [
+   "productivity"
+  ],
+  "kind": "tool",
+  "blurb": "A task tracker that lives in one markdown file, with a board, a list and a timeline on top and an AI assistant that keeps it up to date with you. Swimlanes by category with roll-up bars, drag to reschedule, recurring tasks, overdue highlighting, holidays and vacations shaded. A demo copy of the tracker I use every day, with fictional tasks dated around today — nothing is saved.",
+  "source": "TASKS.md → board · list · timeline",
+  "thumb": "thumbs/task-timeline.webp",
+  "own": {
+   "href": "https://github.com/akaukora/dashboards/tree/main/task-timeline",
+   "text": "Use it with your own tasks",
+   "label": "TASKS.md + skills on GitHub"
+  },
+  "added": "2026-10-02"
  },
  {
   "id": "Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites",
@@ -679,14 +715,28 @@ function card(c) {
   return `<div class="card${tableau ? " tableau" : ""}" data-id="${esc(c.id)}">
     <a class="main" href="${esc(c.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="thumb"><img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
     <div class="t"><i></i>${esc(c.title)}<span class="arrow">${ext ? "↗" : "→"}</span></div><p>${esc(c.blurb)}</p><div class="meta">${meta}</div></a>
-    ${c.own ? `<a class="own" href="${esc(c.own.href)}"><span>Try it with your own data</span> <small>${esc(c.own.label)}</small></a>` : ""}</div>`;
+    ${c.own ? `<a class="own" href="${esc(c.own.href)}"${c.own.href.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}><span>${esc(c.own.text || "Try it with your own data")}</span> <small>${esc(c.own.label)}</small></a>` : ""}</div>`;
 }
 
+const fmtDay = (iso) => { const d = new Date(iso + "T00:00:00"); return `${d.getDate()} ${["Jan","Feb","Mar","Apr","May","Jun","Jul","Aug","Sep","Oct","Nov","Dec"][d.getMonth()]}`; };
+const daysAgo = (iso) => (Date.now() - new Date(iso + "T00:00:00").getTime()) / 864e5;
 function renderStrip() {
-  const pinned = [...CARDS.filter((c) => c.kind === "diary"), ...CARDS.filter((c) => c.latest)];
-  const strip = $("#strip");
-  strip.hidden = !!(F.theme || F.kind || F.made);
-  strip.innerHTML = pinned.map((c) => `<a class="mini" href="${esc(c.url)}"${c.made === "tableau" ? ' target="_blank" rel="noopener"' : ""}><span class="thumb"><img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.remove()"></span><span class="over${c.latest ? " new" : ""}">${c.latest ? "New · " + esc(c.latest) : "Diary · " + esc(c.refresh || "")}</span><span class="t">${esc(c.title)}</span><span class="s">${esc(c.themes.join(", "))}${c.kind !== "diary" ? " · " + esc(c.kind) : ""}</span></a>`).join("");
+  const recent = (iso) => iso && daysAgo(iso) >= 0 && daysAgo(iso) <= NEW_DAYS;
+  const diaries = CARDS.filter((c) => c.kind === "diary");
+  const fresh = CARDS.filter((c) => c.kind !== "diary" && (recent(c.added) || recent(c.updated)))
+    .map((c) => ({ c, when: recent(c.updated) && (!recent(c.added) || c.updated > c.added) ? c.updated : c.added, kind: recent(c.updated) && (!recent(c.added) || c.updated > c.added) ? "upd" : "new" }))
+    .sort((x, y) => y.when.localeCompare(x.when));
+  const items = [...diaries.map((c) => ({ c, kind: "diary" })), ...fresh];
+  const wrap = $("#stripWrap"), strip = $("#strip");
+  wrap.hidden = !!(F.theme || F.kind || F.made);
+  strip.innerHTML = items.map(({ c, kind, when }) => {
+    const over = kind === "diary" ? "Diary · " + esc(c.refresh || "") : kind === "new" ? "New · " + fmtDay(when) : "Updated · " + fmtDay(when);
+    return `<a class="mini" href="${esc(c.url)}"${c.made === "tableau" ? ' target="_blank" rel="noopener"' : ""}><span class="thumb"><img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.remove()"></span><span class="over ${kind}">${over}</span><span class="t">${esc(c.title)}</span><span class="s">${esc(c.themes.join(", "))}${c.kind !== "diary" ? " · " + esc(c.kind) : ""}</span></a>`;
+  }).join("");
+  const sync = () => { wrap.classList.toggle("overflow", strip.scrollWidth > strip.clientWidth + 2); $("#stripPrev").disabled = strip.scrollLeft <= 2; $("#stripNext").disabled = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 2; };
+  sync(); strip.onscroll = sync; window.addEventListener("resize", sync);
+  $("#stripPrev").onclick = () => strip.scrollBy({ left: -strip.clientWidth, behavior: "smooth" });
+  $("#stripNext").onclick = () => strip.scrollBy({ left: strip.clientWidth, behavior: "smooth" });
 }
 function render() {
   renderStrip();
