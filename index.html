@@ -46,7 +46,7 @@
   .frow .ext { margin-left: auto; font-size: 12px; color: var(--green); border: 1px solid var(--green-mark); border-radius: 999px; padding: 3px 11px; } .frow .ext:hover { background: var(--green-mark); color: #fff; }
   .count { color: var(--text-3); font-size: 12px; margin: -8px 0 10px; }
   /* pinned strip: the live diaries and the newest piece, compact; the same cards also sit in their theme groups below */
-  .strip-wrap { position: relative; margin: 0 0 22px; } .strip-wrap[hidden] { display: none; }
+  .strip-wrap { position: relative; margin: 0 0 20px; padding-bottom: 20px; border-bottom: 1px solid var(--line); } .strip-wrap[hidden] { display: none; }
   .strip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; padding-bottom: 2px; }
   .strip::-webkit-scrollbar { display: none; }
   .strip .mini { flex: 0 0 calc((100% - 4 * 12px) / 5); scroll-snap-align: start; }
@@ -110,7 +110,7 @@
       <div class="sub">Antti Kaukoranta · Helsinki</div>
     </div>
     <div class="hdr-right">
-      <a class="gh" href="https://www.linkedin.com/in/REPLACE-WITH-YOUR-PROFILE/" target="_blank" rel="noopener">LinkedIn ↗</a>
+      <a class="gh" href="https://www.linkedin.com/in/anttikaukoranta/" target="_blank" rel="noopener">LinkedIn ↗</a>
       <a class="gh" href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener" title="The repository: every page, its data file and a README on how it is refreshed">Get the files on GitHub ↗</a>
       <button type="button" class="themebtn" id="themeBtn" title="Switch to the other look" aria-label="Switch between light and dark"><span class="moon">☾</span><span class="sun">☀</span></button>
     </div>
