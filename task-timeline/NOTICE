@@ -1,0 +1,24 @@
+Task timeline
+Copyright 2026 akaukora
+
+This project is a modified version of the "productivity" plugin from
+Anthropic's knowledge-work-plugins repository
+(https://github.com/anthropics/knowledge-work-plugins), which is licensed under
+the Apache License, Version 2.0. The original work is copyright Anthropic.
+
+Changes from the original:
+- skills/dashboard.html: added [start → end] date ranges on tasks, deadline /
+  manual sorting, the timeline view (category swimlanes, process
+  roll-up bars with completion %, drag-to-move and resize bars, milestone
+  diamonds from dated sub-items, public holidays and vacation bands, deadline
+  column, row hover across columns, status filters, overdue counter, day /
+  week / month zoom), recurring-task markers ([↻ cadence]) that create the next
+  instance on completion, source links on tasks, an English/French interface,
+  a token-based dark/light theme, an unsupported-browser message, and a
+  demo mode (?demo) with generated example tasks.
+- skills/*/SKILL.md: rewritten around date-ranged tasks, a weekly update
+  routine (snapshot diff, 90-day archive, recurring top-up, review-first
+  suggestions, dismissed-suggestion list) and connector-agnostic sources.
+- index.html, template/ and prompts/: new.
+
+Licensed under the Apache License, Version 2.0 (see LICENSE).
