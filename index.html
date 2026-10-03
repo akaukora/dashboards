@@ -34,6 +34,7 @@
   .themebtn .moon { display: none; } :root[data-theme="light"] .themebtn .moon { display: inline; } :root[data-theme="light"] .themebtn .sun { display: none; }
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .themebtn .moon { display: inline; } :root:not([data-theme="dark"]) .themebtn .sun { display: none; } }
   .intro p { margin: 0 0 8px; } .intro > p:first-child { color: var(--text-2); font-size: 14px; }
+  .intro .statement { border-left: 3px solid var(--green-mark); padding: 2px 0 2px 14px; margin: 10px 0 12px; color: var(--text-2); font-size: 13.5px; line-height: 1.6; }
   .intro .toggle { color: var(--green); text-decoration: none; font-size: 13px; font-weight: 600; white-space: nowrap; margin-left: 4px; } .intro .toggle:hover { text-decoration: underline; }
   /* filter chips: one row per facet, single choice per row, rows combine */
   .filters { display: flex; flex-direction: column; gap: 6px; margin: 4px 0 18px; }
@@ -69,9 +70,10 @@
   .empty { grid-column: 1 / -1; color: var(--text-3); padding: 30px 0; text-align: center; }
   .intro .toggle::after { content: " ▾"; font-size: 11px; } .intro .toggle[aria-expanded="true"]::after { content: " ▴"; }
   .card.tableau .thumb { background: #fff; } .card.tableau .thumb img { object-position: center top; filter: none; } .card.tableau .t i { background: #2a9dd1; }
-  .tag.theme { background: #1f5f8b; }
-  .tag.kind { background: transparent; border: 1px solid var(--line-2); color: var(--text-2); line-height: 16px; }
-  .tag.kind.art { border-color: var(--art-line); color: var(--art); } .tag.kind.tool { border-color: var(--green-mark); color: var(--green); } .tag.kind.diary { border-color: var(--green-mark); color: var(--green); }
+  .tag.theme { background: var(--card-2); color: var(--text-2); }
+  .tag.kind { background: transparent; border: 1px solid var(--line-2); color: var(--text-3); line-height: 16px; }
+  .tag.livedata { background: transparent; border: 1px solid var(--line-2); color: var(--text-2); line-height: 16px; }
+  .tag.livedata::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green-mark); margin: 0 5px 1px 0; }
   .card .meta .src { display: block; }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
   .card { display: flex; flex-direction: column; gap: 8px; background: var(--card); border-radius: var(--radius); padding: 16px 18px 14px; min-width: 0; border: 1px solid var(--line); transition: border-color .12s, transform .12s; position: relative; overflow: hidden; }
@@ -80,13 +82,10 @@
   .card:hover { border-color: var(--line-2); transform: translateY(-1px); }
   .card .t { font-size: 16px; font-weight: 600; display: flex; align-items: flex-start; gap: 8px; line-height: 1.3; }
   .card .t i { width: 10px; height: 10px; border-radius: 3px; background: var(--green-mark); flex: none; margin-top: 5px; }
-  .card .t .arrow { margin-left: auto; color: var(--text-3); font-weight: 400; transition: color .12s, transform .12s; }
-  .card:hover .t .arrow { color: var(--green); transform: translateX(2px); }
   .card p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.5; }
   .card .meta { margin-top: auto; padding-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.7; } .card .meta .tag { vertical-align: 1px; margin-right: 4px; }
   .card .meta .dot { opacity: .6; }
-  .tag { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 11px; line-height: 18px; color: var(--tag-fg); background: var(--tag-bg); }
-  .tag.live { background: var(--green-mark); } .tag.manual { background: #5b6e80; } .tag.season { background: #5b8fb9; }
+  .tag { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 11px; line-height: 18px; color: var(--text-2); background: var(--card-2); }
   .card .thumb { display: block; margin: -16px -18px 6px; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; aspect-ratio: 16 / 10; background: var(--card-2); border-bottom: 1px solid var(--line); }
   .card .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; filter: saturate(.95); transition: transform .25s; }
   :root[data-theme="light"] .card .thumb { border-bottom-color: var(--line-2); } @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .card .thumb { border-bottom-color: var(--line-2); } }
@@ -117,11 +116,12 @@
     </div>
   </header>
   <div class="intro">
-    <p>I've created tools and dashboards for various interests of mine. These can be downloaded, copied and adapted to your use. <a class="toggle" href="#" id="introMore" aria-expanded="false" aria-controls="introRest">Show more</a></p>
+    <p>I've created tools and dashboards for various interests of mine. These can be downloaded, copied and adapted to your use.</p>
+    <div class="statement">The dashboards are made in HTML with AI coding, or by hand in Tableau. AI coding has revolutionized my data viz workflow. At work, I find myself extracting data from our BI system and doing especially ad hoc, but also repeating analyses using AI coded dashboards. HTML based dashboards are so much more flexible than BI programs are, and the path from idea to prototype to functional dashboard is infinitely faster. For my hobby projects, the same is true. <a class="toggle" href="#" id="introMore" aria-expanded="false" aria-controls="introRest">Show more</a></div>
     <div id="introRest" hidden>
-    <p>Every dashboard here is a single HTML file that reads a CSV or JSON next to it and draws everything in the browser — no backend or tracking.</p>
-    <p>The diaries refresh themselves from the services' data through scheduled GitHub Actions; the rest are built or updated by hand. The three diaries also come as <em>drop-in viewers</em>: open one, drop your own export (e.g. Spotify) on it, and you get the same dashboard for your data without uploading anything.</p>
-    <p>Everything is in the open: each folder has the page, its data file and a README on how the data is refreshed — take any of them and have your own tools (or your AI agent) rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>. Older work lives on <a href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">Tableau Public</a>; the chips below filter by theme, by kind, and by where a piece was made.</p>
+    <p>The dashboards and tools that I have shared here consist of a HTML file that reads a CSV or JSON stored in GitHub, and the data is drawn in the browser. Where you can input your own data (like the music/Spotify dashboard), the data is stored in your own browser.</p>
+    <p>The diaries refresh themselves from the services' data through scheduled GitHub Actions; the rest are built or updated by hand. The three diaries also come as <em>drop-in viewers</em>: open one, drop your own export (e.g. Spotify) on it, and you get the same dashboard for your data.</p>
+    <p>There's a folder for each viz in <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">GitHub</a>, with a README on how the data is refreshed. You can take any of them and you (or your AI agent) can rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>; the chips below filter by theme, by kind, and by where a piece was made.</p>
     </div>
   </div>
   <div class="strip-wrap" id="stripWrap"><button type="button" class="arr prev" id="stripPrev" aria-label="Scroll back">‹</button><div class="strip" id="strip"></div><button type="button" class="arr next" id="stripNext" aria-label="Scroll forward">›</button></div>
@@ -139,7 +139,8 @@
 //  themes:  one or two of THEMES; the first one decides where the card sits in the default, theme-grouped order.
 //           culture = film, books, music, languages · sports & games · economy · society = everyday life, news, health, weather, places · world = conflict, environment · productivity = tools for getting work done
 //  kind:    diary · tool · dashboard · chart · story · data art
-//  refresh: how an HTML page gets new data (automated / on export)
+//  refresh: set when a page keeps getting new data — "automated" (scraper, API, scheduled action) or "manual" (export → upload).
+//           Shows as the "live data" pill; one-and-done pages leave it empty
 //  source:  the small grey line (data source → file); mm: the #MakeoverMonday / #VizForSocialGood week for Tableau
 //  thumb:   image in thumbs/, or Tableau's own static image; own: the drop-in viewer for other people's exports
 //  added:   date the page went up (YYYY-MM-DD). Within NEW_DAYS of today it shows in the pinned strip as "New"
@@ -178,7 +179,7 @@ const CARDS = [
   "kind": "diary",
   "blurb": "The StoryGraph library: books finished per year and month, ratings, moods, currently reading, recent reviews.",
   "thumb": "thumbs/books-read.webp",
-  "refresh": "on export",
+  "refresh": "manual",
   "source": "StoryGraph library export → books.csv",
   "own": {
    "href": "storygraph-viewer/",
@@ -703,7 +704,7 @@ function renderFilters() {
   $("#filters").innerHTML = `
     <div class="frow"><span class="lbl">Theme</span>${chip("theme", null, "All")}${THEMES.filter((t) => CARDS.some((c) => c.themes.includes(t))).map((t) => chip("theme", t, t, count("theme", t))).join("")}</div>
     <div class="frow"><span class="lbl">Kind</span>${chip("kind", null, "All")}${KINDS.filter((k) => CARDS.some((c) => c.kind === k)).map((k) => chip("kind", k, k, count("kind", k))).join("")}</div>
-    <div class="frow"><span class="lbl">Made with</span>${chip("made", null, "All")}${chip("made", "html", "HTML pages here", count("made", "html"))}${chip("made", "tableau", "Tableau Public", count("made", "tableau"))}<a class="ext" href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">All vizzes on Tableau Public ↗</a></div>`;
+    <div class="frow"><span class="lbl">Made with</span>${chip("made", null, "All")}${chip("made", "html", "HTML pages", count("made", "html"))}${chip("made", "tableau", "Tableau Public", count("made", "tableau"))}<a class="ext" href="https://public.tableau.com/app/profile/antti1275/vizzes" target="_blank" rel="noopener">My Tableau Public profile ↗</a></div>`;
   document.querySelectorAll("#filters .chip").forEach((b) => b.addEventListener("click", () => { F[b.dataset.f] = b.dataset.v || null; writeHash(); render(); }));
 }
 
@@ -712,10 +713,10 @@ function card(c) {
   const kindCls = c.kind === "data art" ? "art" : c.kind;
   const meta = tableau
     ? `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span> Tableau Public${c.mm ? " · " + esc(c.mm) : ""}`
-    : `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${c.refresh ? `<span class="tag ${c.refresh === "automated" ? "live" : "manual"}">${esc(c.refresh)}</span>` : ""}${c.source ? `<span class="src">${esc(c.source)}</span>` : ""}`;
+    : `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${c.refresh ? `<span class="tag livedata">live data</span>` : ""}${c.source || c.refresh ? `<span class="src">${c.refresh ? (c.refresh === "automated" ? "automated · " : "manual export · ") : ""}${esc(c.source || "")}</span>` : ""}`;
   return `<div class="card${tableau ? " tableau" : ""}" data-id="${esc(c.id)}">
     <a class="main" href="${esc(c.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="thumb"><img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
-    <div class="t"><i></i>${esc(c.title)}<span class="arrow">${ext ? "↗" : "→"}</span></div><p>${esc(c.blurb)}</p><div class="meta">${meta}</div></a>
+    <div class="t"><i></i>${esc(c.title)}</div><p>${esc(c.blurb)}</p><div class="meta">${meta}</div></a>
     ${c.own ? `<a class="own" href="${esc(c.own.href)}"${c.own.href.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}><span>${esc(c.own.text || "Try it with your own data")}</span> <small>${esc(c.own.label)}</small></a>` : ""}</div>`;
 }
 
@@ -731,7 +732,7 @@ function renderStrip() {
   const wrap = $("#stripWrap"), strip = $("#strip");
   wrap.hidden = !!(F.theme || F.kind || F.made);
   strip.innerHTML = items.map(({ c, kind, when }) => {
-    const over = kind === "diary" ? "Diary · " + esc(c.refresh || "") : kind === "new" ? "New · " + fmtDay(when) : "Updated · " + fmtDay(when);
+    const over = kind === "diary" ? "Diary · " + (c.refresh === "manual" ? "manual export" : esc(c.refresh || "")) : kind === "new" ? "New · " + fmtDay(when) : "Updated · " + fmtDay(when);
     return `<a class="mini" href="${esc(c.url)}"${c.made === "tableau" ? ' target="_blank" rel="noopener"' : ""}><span class="thumb"><img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.remove()"></span><span class="over ${kind}">${over}</span><span class="t">${esc(c.title)}</span><span class="s">${esc(c.themes.join(", "))}${c.kind !== "diary" ? " · " + esc(c.kind) : ""}</span></a>`;
   }).join("");
   const sync = () => { wrap.classList.toggle("overflow", strip.scrollWidth > strip.clientWidth + 2); $("#stripPrev").disabled = strip.scrollLeft <= 2; $("#stripNext").disabled = strip.scrollLeft + strip.clientWidth >= strip.scrollWidth - 2; };
