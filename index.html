@@ -69,7 +69,7 @@
   .divider small { text-transform: none; letter-spacing: 0; font-weight: 400; color: var(--text-3); }
   .empty { grid-column: 1 / -1; color: var(--text-3); padding: 30px 0; text-align: center; }
   .intro .toggle::after { content: " ▾"; font-size: 11px; } .intro .toggle[aria-expanded="true"]::after { content: " ▴"; }
-  .card.tableau .thumb { background: #fff; } .card.tableau .thumb img { object-position: center top; filter: none; } .card.tableau .t i { background: #2a9dd1; }
+  .card.tableau .thumb { background: #fff; } .card.tableau .thumb img { object-position: center top; filter: none; }
   .tag.theme { background: var(--card-2); color: var(--text-2); }
   .tag.kind { background: transparent; border: 1px solid var(--line-2); color: var(--text-3); line-height: 16px; }
   .tag.livedata { background: transparent; border: 1px solid var(--line-2); color: var(--text-2); line-height: 16px; }
@@ -81,7 +81,9 @@
   .card a.main { color: inherit; display: contents; }
   .card:hover { border-color: var(--line-2); transform: translateY(-1px); }
   .card .t { font-size: 16px; font-weight: 600; display: flex; align-items: flex-start; gap: 8px; line-height: 1.3; }
-  .card .t i { width: 10px; height: 10px; border-radius: 3px; background: var(--green-mark); flex: none; margin-top: 5px; }
+  .notes summary { cursor: pointer; list-style: none; font-size: 12px; color: var(--text-3); display: inline-flex; align-items: center; gap: 5px; } .notes summary::-webkit-details-marker { display: none; }
+  .notes summary::before { content: "▸"; font-size: 10px; } .notes[open] summary::before { content: "▾"; } .notes summary:hover { color: var(--green); }
+  .notes p { margin: 6px 0 0; padding-left: 10px; border-left: 2px solid var(--line-2); color: var(--text-2); font-style: italic; }
   .card p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.5; }
   .card .meta { margin-top: auto; padding-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.7; } .card .meta .tag { vertical-align: 1px; margin-right: 4px; }
   .card .meta .dot { opacity: .6; }
@@ -143,6 +145,7 @@
 //           Shows as the "live data" pill; one-and-done pages leave it empty
 //  source:  the small grey line (data source → file); mm: the #MakeoverMonday / #VizForSocialGood week for Tableau
 //  thumb:   image in thumbs/, or Tableau's own static image; own: the drop-in viewer for other people's exports
+//  note:    optional, in the first person — why it was made, what it was for, where it came from. Shown behind a "Notes" link under the description
 //  added:   date the page went up (YYYY-MM-DD). Within NEW_DAYS of today it shows in the pinned strip as "New"
 //  updated: date of a significant update (YYYY-MM-DD). Within NEW_DAYS of today it shows in the strip as "Updated" — set it by hand when a change deserves the spot
 const NEW_DAYS = 30;
@@ -284,10 +287,11 @@ const CARDS = [
    "world"
   ],
   "kind": "data art",
-  "blurb": "Two world maps drawn only from data, no basemap underneath: every square on one is a place where someone was killed in organized violence between 1989 and 2025; the other shows the protected areas of 2026. Toggle between the two. The next generation of my 2018 Tableau viz on riot and protest violence.",
+  "blurb": "Two world maps drawn only from data, no basemap underneath: every square on one is a place where someone was killed in organized violence between 1989 and 2025; the other shows the protected areas of 2026. Toggle between the two.",
   "source": "UCDP GED v26.1 · Protected Planet / WDPA, Sept 2026",
   "thumb": "thumbs/two-worlds.webp",
-  "added": "2026-10-01"
+  "added": "2026-10-01",
+  "note": "The next generation of my 2018 Tableau viz on riot and protest violence."
  },
  {
   "id": "task-timeline",
@@ -298,7 +302,7 @@ const CARDS = [
    "productivity"
   ],
   "kind": "tool",
-  "blurb": "A task tracker that lives in one markdown file, with a board, a list and a timeline on top and an AI assistant that keeps it up to date with you. Swimlanes by category with roll-up bars, drag to reschedule, recurring tasks, overdue highlighting, holidays and vacations shaded. A demo copy of the tracker I use every day, with fictional tasks dated around today — nothing is saved.",
+  "blurb": "A task tracker that lives in one markdown file, with a board, a list and a timeline on top and an AI assistant that keeps it up to date with you. Swimlanes by category with roll-up bars, drag to reschedule, recurring tasks, overdue highlighting, holidays and vacations shaded.",
   "source": "TASKS.md → board · list · timeline",
   "thumb": "thumbs/task-timeline.webp",
   "own": {
@@ -306,7 +310,8 @@ const CARDS = [
    "text": "Use it with your own tasks",
    "label": "TASKS.md + skills on GitHub"
   },
-  "added": "2026-10-02"
+  "added": "2026-10-02",
+  "note": "A demo copy of the tracker I use every day, with fictional tasks dated around today — nothing is saved."
  },
  {
   "id": "Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites",
@@ -317,8 +322,9 @@ const CARDS = [
    "culture"
   ],
   "kind": "dashboard",
-  "blurb": "The Tableau original of my music dashboard: favorite artists by when they were last played, the big bubbles far from the right edge being the ones to rediscover.",
-  "thumb": "https://public.tableau.com/static/images/Mu/Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites/4_3.png"
+  "blurb": "Favorite artists by when they were last played, the big bubbles far from the right edge being the ones to rediscover.",
+  "thumb": "https://public.tableau.com/static/images/Mu/Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites/4_3.png",
+  "note": "The Tableau original of my music dashboard."
  },
  {
   "id": "Musicdashboard-Last_fm-Artistdiscovery/WhenhaveIdiscoveredmusicians",
@@ -341,8 +347,9 @@ const CARDS = [
    "culture"
   ],
   "kind": "dashboard",
-  "blurb": "Films by year watched and rating, and where they were seen, and how many of each were liked or loved. Once fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone.",
-  "thumb": "thumbs/tableau-films-loved.webp"
+  "blurb": "Films by year watched and rating, and where they were seen, and how many of each were liked or loved.",
+  "thumb": "thumbs/tableau-films-loved.webp",
+  "note": "Once fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone."
  },
  {
   "id": "Myfilmtracker2019/Filmswatched20192",
@@ -353,8 +360,9 @@ const CARDS = [
    "culture"
   ],
   "kind": "dashboard",
-  "blurb": "Films watched by month and by service, how many were liked or loved, and what each streaming subscription cost per film. The 2019–2020 original, the most viewed viz on my Tableau profile.",
-  "thumb": "thumbs/tableau-film-tracker.webp"
+  "blurb": "Films watched by month and by service, how many were liked or loved, and what each streaming subscription cost per film.",
+  "thumb": "thumbs/tableau-film-tracker.webp",
+  "note": "The 2019–2020 original, the most viewed viz on my Tableau profile."
  },
  {
   "id": "WesAndersonColorPalettes/PaletteBubbles",
@@ -365,8 +373,9 @@ const CARDS = [
    "culture"
   ],
   "kind": "data art",
-  "blurb": "Made to get something colorful on the living-room wall, from one of my favorite directors: the principal colors extracted from selected scenes of his films, each bubble sized by how prominent the color is.",
-  "thumb": "https://public.tableau.com/static/images/We/WesAndersonColorPalettes/PaletteBubbles/4_3.png"
+  "blurb": "The principal colors extracted from selected scenes of his films, each bubble sized by how prominent the color is.",
+  "thumb": "https://public.tableau.com/static/images/We/WesAndersonColorPalettes/PaletteBubbles/4_3.png",
+  "note": "Made to get something colorful on the living-room wall, from one of my favorite directors."
  },
  {
   "id": "Eurovision2025/ViewsLine",
@@ -377,8 +386,9 @@ const CARDS = [
    "culture"
   ],
   "kind": "dashboard",
-  "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, with who gained the most since yesterday. Static data up to the last collection day. This helped me bet on the winner.",
-  "thumb": "thumbs/tableau-eurovision-2025.webp"
+  "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, with who gained the most since yesterday. Static data up to the last collection day.",
+  "thumb": "thumbs/tableau-eurovision-2025.webp",
+  "note": "This helped me bet on the winner."
  },
  {
   "id": "CouchtoHalfMarathon/CouchtoHalfMarathon",
@@ -401,8 +411,9 @@ const CARDS = [
    "society"
   ],
   "kind": "tool",
-  "blurb": "Driving time against snow conditions and resort size across the Alps. Made for planning a skiing weekend back in the day.",
-  "thumb": "https://public.tableau.com/static/images/Sk/Skitripplanning-drivingtimeandconditions/Dashboard2/4_3.png"
+  "blurb": "Driving time against snow conditions and resort size across the Alps.",
+  "thumb": "https://public.tableau.com/static/images/Sk/Skitripplanning-drivingtimeandconditions/Dashboard2/4_3.png",
+  "note": "Made for planning a skiing weekend back in the day."
  },
  {
   "id": "HowuniqueareHelsinkimalls/MallsofHelsinki",
@@ -413,8 +424,9 @@ const CARDS = [
    "society"
   ],
   "kind": "dashboard",
-  "blurb": "The top 20 malls of a city by leasable area and the share of shops unique to each; click a mall for a \"floorplan\" of its shops on three floors: unique, more common and very common. Built on Helsinki, but the idea works for any city.",
-  "thumb": "thumbs/tableau-helsinki-malls.webp"
+  "blurb": "The top 20 malls of a city by leasable area and the share of shops unique to each; click a mall for a \"floorplan\" of its shops on three floors: unique, more common and very common.",
+  "thumb": "thumbs/tableau-helsinki-malls.webp",
+  "note": "Built on Helsinki, but the idea works for any city."
  },
  {
   "id": "Oscarsimpactonboxoffice/BestPicBoxOffice2",
@@ -449,8 +461,9 @@ const CARDS = [
    "society"
   ],
   "kind": "dashboard",
-  "blurb": "Early days of Covid news. Daily number of articles in YLE and the NY Times, and daily Google Search Trends for coronavirus and COVID-19 by country. Static data, January–April 2020.",
-  "thumb": "thumbs/tableau-coronavirus.webp"
+  "blurb": "Daily number of articles in YLE and the NY Times, and daily Google Search Trends for coronavirus and COVID-19 by country. Static data, January–April 2020.",
+  "thumb": "thumbs/tableau-coronavirus.webp",
+  "note": "Early days of Covid news."
  },
  {
   "id": "VizForSocialGood-JapanFoodBank/Foodlossandpovertyviz",
@@ -658,9 +671,10 @@ const CARDS = [
    "world"
   ],
   "kind": "data art",
-  "blurb": "Yemen in 2017, one circle per day sized by the number of deaths. Data art more than analysis: not the most accurate way to read the numbers, but one that grabs attention.",
+  "blurb": "Yemen in 2017, one circle per day sized by the number of deaths.",
   "mm": "#MakeoverMonday 2018 wk 34",
-  "thumb": "thumbs/tableau-conflict-deaths.webp"
+  "thumb": "thumbs/tableau-conflict-deaths.webp",
+  "note": "Data art more than analysis: not the most accurate way to read the numbers, but one that grabs attention."
  },
  {
   "id": "Riotandprotestviolence-MakeoverMonday2018w34/Conflictsviz-MM2018w34",
@@ -671,9 +685,10 @@ const CARDS = [
    "world"
   ],
   "kind": "chart",
-  "blurb": "Riots and protests that turned violent across Africa, the Middle East and Asia, on a dot-grid map. From the same week's MakeoverMonday data as the Yemen timeline.",
+  "blurb": "Riots and protests that turned violent across Africa, the Middle East and Asia, on a dot-grid map.",
   "mm": "#MakeoverMonday 2018 wk 34",
-  "thumb": "thumbs/tableau-riot-violence.webp"
+  "thumb": "thumbs/tableau-riot-violence.webp",
+  "note": "From the same week's MakeoverMonday data as the Yemen timeline."
  }
 ];
 </script>
@@ -716,7 +731,8 @@ function card(c) {
     : `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${c.refresh ? `<span class="tag livedata">live data</span>` : ""}${c.source || c.refresh ? `<span class="src">${c.refresh ? (c.refresh === "automated" ? "automated · " : "manual export · ") : ""}${esc(c.source || "")}</span>` : ""}`;
   return `<div class="card${tableau ? " tableau" : ""}" data-id="${esc(c.id)}">
     <a class="main" href="${esc(c.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="thumb"><img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
-    <div class="t"><i></i>${esc(c.title)}</div><p>${esc(c.blurb)}</p><div class="meta">${meta}</div></a>
+    <div class="t">${esc(c.title)}</div><p>${esc(c.blurb)}</p></a>
+    ${c.note ? `<details class="notes"><summary>Notes</summary><p>${esc(c.note)}</p></details>` : ""}<div class="meta">${meta}</div>
     ${c.own ? `<a class="own" href="${esc(c.own.href)}"${c.own.href.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}><span>${esc(c.own.text || "Try it with your own data")}</span> <small>${esc(c.own.label)}</small></a>` : ""}</div>`;
 }
 
