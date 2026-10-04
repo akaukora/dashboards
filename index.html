@@ -74,7 +74,7 @@
   .tag.kind { background: transparent; border: 1px solid var(--line-2); color: var(--text-3); line-height: 16px; }
   .tag.livedata { background: transparent; border: 1px solid var(--line-2); color: var(--text-2); line-height: 16px; }
   .tag.livedata::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green-mark); margin: 0 5px 1px 0; }
-  .card .meta .src { display: block; }
+  .card .meta .src { display: block; } .card .meta a:hover { color: var(--green); }
   .grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(320px, 1fr)); gap: 14px; }
   .card { display: flex; flex-direction: column; gap: 8px; background: var(--card); border-radius: var(--radius); padding: 16px 18px 14px; min-width: 0; border: 1px solid var(--line); transition: border-color .12s, transform .12s; position: relative; overflow: hidden; }
   .card .body { display: contents; }
@@ -83,7 +83,7 @@
   .card .t { font-size: 16px; font-weight: 600; display: flex; align-items: flex-start; gap: 8px; line-height: 1.3; }
   .notes summary { cursor: pointer; list-style: none; font-size: 12px; color: var(--text-3); display: inline-flex; align-items: center; gap: 5px; } .notes summary::-webkit-details-marker { display: none; }
   .notes summary::before { content: "▸"; font-size: 10px; } .notes[open] summary::before { content: "▾"; } .notes summary:hover { color: var(--green); }
-  .notes p { margin: 6px 0 0; padding-left: 10px; border-left: 2px solid var(--line-2); color: var(--text-2); font-style: italic; }
+  .notes p { margin: 6px 0 0; padding-left: 10px; border-left: 2px solid var(--line-2); color: var(--text-2); font-style: italic; } .notes a { color: var(--green); text-decoration: underline dotted; }
   .card p { margin: 0; color: var(--text-2); font-size: 13px; line-height: 1.5; }
   .card .meta { margin-top: auto; padding-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.7; } .card .meta .tag { vertical-align: 1px; margin-right: 4px; }
   .card .meta .dot { opacity: .6; }
@@ -123,7 +123,7 @@
     <div id="introRest" hidden>
     <p>The dashboards and tools that I have shared here consist of a HTML file that reads a CSV or JSON stored in GitHub, and the data is drawn in the browser. Where you can input your own data (like the music/Spotify dashboard), the data is stored in your own browser.</p>
     <p>The diaries refresh themselves from the services' data through scheduled GitHub Actions; the rest are built or updated by hand. The three diaries also come as <em>drop-in viewers</em>: open one, drop your own export (e.g. Spotify) on it, and you get the same dashboard for your data.</p>
-    <p>There's a folder for each viz in <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">GitHub</a>, with a README on how the data is refreshed. You can take any of them and you (or your AI agent) can rebuild it around your data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>; the chips below filter by theme, by kind, and by where a piece was made.</p>
+    <p>There's a folder for each viz in <a href="https://github.com/akaukora/dashboards" target="_blank" rel="noopener">GitHub</a>, with a README on how the data is refreshed. You can take any of them and you (or your AI agent) can rebuild it around your data. Many of the Tableau vizzes were made for <a href="https://makeovermonday.vercel.app" target="_blank" rel="noopener">#MakeoverMonday</a>, the weekly challenge where the community remakes the same chart from the same data. The shared look is written up in <a href="STYLE.md">STYLE.md</a>; the chips below filter by theme, by kind, and by where a piece was made.</p>
     </div>
   </div>
   <div class="strip-wrap" id="stripWrap"><button type="button" class="arr prev" id="stripPrev" aria-label="Scroll back">‹</button><div class="strip" id="strip"></div><button type="button" class="arr next" id="stripNext" aria-label="Scroll forward">›</button></div>
@@ -207,7 +207,8 @@ const CARDS = [
    "href": "music-viewer/",
    "label": "Last.fm, Spotify or Apple Music"
   },
-  "added": "2026-09-06"
+  "added": "2026-09-06",
+  "note": "The idea goes back to Andy Cotgreave's blog post [Visualize your listening habits with Last.fm and Spotify data](https://www.tableau.com/blog/visualize-your-listening-habits-lastfm-and-spotify-data) — every scrobbled artist on a timeline at the date they were last played. I first rebuilt it in Tableau, then expanded it here with further analysis and scheduled, automatic data retrieval."
  },
  {
   "id": "duolingo",
@@ -324,7 +325,7 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Favorite artists by when they were last played, the big bubbles far from the right edge being the ones to rediscover.",
   "thumb": "https://public.tableau.com/static/images/Mu/Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites/4_3.png",
-  "note": "The Tableau original of my music dashboard."
+  "note": "The Tableau original of my music dashboard. Andy Cotgreave's blog post [Visualize your listening habits with Last.fm and Spotify data](https://www.tableau.com/blog/visualize-your-listening-habits-lastfm-and-spotify-data) showed a viz with every scrobbled artist on a timeline, at the date they were last listened to. It got me exploring my own Last.fm data, and eventually led to further analysis and scheduled, automatic data retrieval."
  },
  {
   "id": "Musicdashboard-Last_fm-Artistdiscovery/WhenhaveIdiscoveredmusicians",
@@ -695,6 +696,7 @@ const CARDS = [
 <script>
 const $ = (s) => document.querySelector(s);
 const F = { theme: null, kind: null, made: null };
+const md = (s) => esc(s).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');  // [text](url) in notes
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 // filters live in the URL hash, so a filtered view can be linked: #theme=film&made=tableau
@@ -727,12 +729,12 @@ function card(c) {
   const tableau = c.made === "tableau", ext = tableau;
   const kindCls = c.kind === "data art" ? "art" : c.kind;
   const meta = tableau
-    ? `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span> Tableau Public${c.mm ? " · " + esc(c.mm) : ""}`
+    ? `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span> Tableau Public${c.mm ? " · " + (/MakeoverMonday/.test(c.mm) ? `<a href="https://makeovermonday.vercel.app" target="_blank" rel="noopener" title="#MakeoverMonday — the weekly data-viz community challenge">${esc(c.mm)}</a>` : esc(c.mm)) : ""}`
     : `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${c.refresh ? `<span class="tag livedata">live data</span>` : ""}${c.source || c.refresh ? `<span class="src">${c.refresh ? (c.refresh === "automated" ? "automated · " : "manual export · ") : ""}${esc(c.source || "")}</span>` : ""}`;
   return `<div class="card${tableau ? " tableau" : ""}" data-id="${esc(c.id)}">
     <a class="main" href="${esc(c.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="thumb"><img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
     <div class="t">${esc(c.title)}</div><p>${esc(c.blurb)}</p></a>
-    ${c.note ? `<details class="notes"><summary>Notes</summary><p>${esc(c.note)}</p></details>` : ""}<div class="meta">${meta}</div>
+    ${c.note ? `<details class="notes"><summary>Notes</summary><p>${md(c.note)}</p></details>` : ""}<div class="meta">${meta}</div>
     ${c.own ? `<a class="own" href="${esc(c.own.href)}"${c.own.href.startsWith("http") ? ' target="_blank" rel="noopener"' : ""}><span>${esc(c.own.text || "Try it with your own data")}</span> <small>${esc(c.own.label)}</small></a>` : ""}</div>`;
 }
 
