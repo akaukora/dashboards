@@ -2172,6 +2172,12 @@
    "tmdb_id": 517686,
    "year": 2018
   },
+  "the-samurai-and-the-prisoner": {
+   "desc": "When Lord Murashige rises up against the tyrannical Oda, he finds himself besieged within the walls of his own castle. Isolated, he is confronted with a series of mysterious crimes that shatter the fragile order of his court, plunging the fortress into fear and suspicion. With Oda's army closing in and a traitor hiding among his ranks, Murashige is forced into an uneasy alliance with Kanbei, a brilliant and dangerous strategist held prisoner in the dungeon, as he must outwit his enemies and uncover the truth before time runs out.",
+   "title": "The Samurai and the Prisoner",
+   "tmdb_id": 1620313,
+   "year": 2026
+  },
   "the-secret-reading-club-of-kabul": {
    "desc": "In Taliban-controlled Afghanistan, where women are denied the right to study, work, and speak freely, a group of young women risk their lives to form a secret reading circle.",
    "title": "The Secret Reading Club of Kabul",
@@ -2493,5 +2499,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-10-03T04:43:53Z"
+ "updated": "2026-10-04T05:15:13Z"
 }
