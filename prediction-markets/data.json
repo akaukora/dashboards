@@ -1,5 +1,5 @@
 {
-  "generated_at": "2026-10-03T19:50:35+00:00",
+  "generated_at": "2026-10-04T11:06:15+00:00",
   "venues": {
     "polymarket": {
       "ok": true,
@@ -18,7 +18,7 @@
       "worst_loss": -32.58,
       "staked": 1312.23,
       "roi": 0.107273,
-      "irr": 1.804432,
+      "irr": 1.798435,
       "median_days_held": 24
     },
     "kalshi": {
@@ -27,34 +27,34 @@
       "cash": 191.1636,
       "reported_open_value": null,
       "yield_earned": 0.0,
-      "open_value": 247.07,
+      "open_value": 252.12,
       "open_positions": 6,
-      "unrealized_pnl": -2.88,
+      "unrealized_pnl": 2.18,
       "realized_pnl": 22.08,
-      "total_pnl": 19.21,
+      "total_pnl": 24.26,
       "settled_markets": 8,
       "win_rate": 62.5,
       "best_win": 46.1,
       "worst_loss": -29.99,
       "staked": 583.89,
-      "roi": 0.032892,
-      "irr": 0.220545,
+      "roi": 0.041544,
+      "irr": 0.281544,
       "median_days_held": 27
     }
   },
   "totals": {
-    "open_value": 393.56,
+    "open_value": 398.61,
     "open_positions": 10,
-    "unrealized_pnl": 21.61,
+    "unrealized_pnl": 26.66,
     "realized_pnl": 138.36,
-    "total_pnl": 159.97,
+    "total_pnl": 165.02,
     "settled_markets": 31,
     "win_rate": 77.4,
     "best_win": 52.66,
     "worst_loss": -32.58,
     "staked": 1896.12,
-    "roi": 0.084368,
-    "irr": 1.037737,
+    "roi": 0.087032,
+    "irr": 1.070029,
     "median_days_held": 24
   },
   "positions": [
@@ -66,19 +66,19 @@
       "outcome": "No",
       "size": 103.6,
       "avg_price": 0.9651,
-      "cur_price": 0.961,
+      "cur_price": 0.97,
       "price_basis": "last",
       "cost_basis": 99.9842,
-      "current_value": 99.5596,
-      "unrealized_pnl": -0.4246,
-      "pct_pnl": -0.4247,
+      "current_value": 100.492,
+      "unrealized_pnl": 0.5078,
+      "pct_pnl": 0.5079,
       "fees": 0.2616,
       "end_date": "2027-01-01",
       "redeemable": false,
       "url": "https://kalshi.com/markets/KXTRUMPIRAN-27JAN01",
       "opened_at": "2026-08-06",
-      "days_held": 58,
-      "annualized": -0.02642619844111127
+      "days_held": 59,
+      "annualized": 0.03183646664637596
     },
     {
       "venue": "polymarket",
@@ -93,8 +93,8 @@
       "pct_pnl": 25.3846,
       "fees": 0.69999,
       "opened_at": "2026-05-07",
-      "days_held": 149,
-      "annualized": 0.7404668265306744,
+      "days_held": 150,
+      "annualized": 0.7340487853977893,
       "end_date": "2026-09-14",
       "redeemable": false,
       "url": "https://polymarket.com/event/next-prime-minister-of-sweden"
@@ -112,8 +112,8 @@
       "pct_pnl": 19.6202,
       "fees": 0.0,
       "opened_at": "2026-05-28",
-      "days_held": 128,
-      "annualized": 0.6667285312655864,
+      "days_held": 129,
+      "annualized": 0.6601410448617278,
       "end_date": "2027-01-01",
       "redeemable": false,
       "url": "https://polymarket.com/event/us-obtains-iranian-enriched-uranium-by"
@@ -137,8 +137,8 @@
       "redeemable": false,
       "url": "https://kalshi.com/markets/CONTROLH-2026-D",
       "opened_at": "2026-06-17",
-      "days_held": 108,
-      "annualized": 0.7226410917514554
+      "days_held": 109,
+      "annualized": 0.7140673318304669
     },
     {
       "venue": "kalshi",
@@ -159,8 +159,8 @@
       "redeemable": false,
       "url": "https://kalshi.com/markets/SENATETX-26-D",
       "opened_at": "2026-08-25",
-      "days_held": 39,
-      "annualized": 6.060322937287836
+      "days_held": 40,
+      "annualized": 5.723632253860826
     },
     {
       "venue": "kalshi",
@@ -181,7 +181,7 @@
       "redeemable": false,
       "url": "https://kalshi.com/markets/KXAAAGASMAX-26DEC31-4.60",
       "opened_at": "2026-09-28",
-      "days_held": 5,
+      "days_held": 6,
       "annualized": null
     },
     {
@@ -197,11 +197,33 @@
       "pct_pnl": 19.912,
       "fees": 0.0,
       "opened_at": "2026-06-03",
-      "days_held": 122,
-      "annualized": 0.7216410270977414,
+      "days_held": 123,
+      "annualized": 0.7140534907479643,
       "end_date": "2027-01-01",
       "redeemable": false,
       "url": "https://polymarket.com/event/will-the-us-invade-cuba-in-2026"
+    },
+    {
+      "venue": "kalshi",
+      "title": "Will the national average price for diesel in 2026 go above $7.00?",
+      "subtitle": "Above $7.00",
+      "ticker": "KXDIESELMAXY-26DEC31-T7.00",
+      "outcome": "Yes",
+      "size": 45.77,
+      "avg_price": 0.6553,
+      "cur_price": 0.52,
+      "price_basis": "last",
+      "cost_basis": 29.9917,
+      "current_value": 23.8004,
+      "unrealized_pnl": -6.1913,
+      "pct_pnl": -20.6434,
+      "fees": 0.739,
+      "end_date": "2026-12-31",
+      "redeemable": false,
+      "url": "https://kalshi.com/markets/KXDIESELMAXY-26DEC31-T7.00",
+      "opened_at": "2026-09-28",
+      "days_held": 6,
+      "annualized": null
     },
     {
       "venue": "kalshi",
@@ -222,30 +244,8 @@
       "redeemable": false,
       "url": "https://kalshi.com/markets/KXPAHLAVIHEAD-27JAN-RPAH",
       "opened_at": "2026-07-28",
-      "days_held": 67,
-      "annualized": 0.11888085896249145
-    },
-    {
-      "venue": "kalshi",
-      "title": "Will the national average price for diesel in 2026 go above $7.00?",
-      "subtitle": "Above $7.00",
-      "ticker": "KXDIESELMAXY-26DEC31-T7.00",
-      "outcome": "Yes",
-      "size": 45.77,
-      "avg_price": 0.6553,
-      "cur_price": 0.43,
-      "price_basis": "last",
-      "cost_basis": 29.9917,
-      "current_value": 19.6811,
-      "unrealized_pnl": -10.3106,
-      "pct_pnl": -34.3782,
-      "fees": 0.739,
-      "end_date": "2026-12-31",
-      "redeemable": false,
-      "url": "https://kalshi.com/markets/KXDIESELMAXY-26DEC31-T7.00",
-      "opened_at": "2026-09-28",
-      "days_held": 5,
-      "annualized": null
+      "days_held": 68,
+      "annualized": 0.11703410948046566
     },
     {
       "venue": "polymarket",
@@ -260,7 +260,7 @@
       "pct_pnl": -99.997,
       "fees": 0.0,
       "opened_at": "2026-06-15",
-      "days_held": 110,
+      "days_held": 111,
       "annualized": null,
       "end_date": "2026-06-15",
       "redeemable": true,
