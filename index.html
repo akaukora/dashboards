@@ -44,15 +44,15 @@
   .chip:hover { color: var(--text); border-color: var(--text-3); }
   .chip.active { background: var(--green-mark); border-color: var(--green-mark); color: #fff; font-weight: 600; }
   .chip small { color: inherit; opacity: .65; margin-left: 4px; font-size: 11px; } .chip.active small { opacity: .85; }
-  .frow .ext { margin-left: auto; font-size: 12px; color: var(--green); border: 1px solid var(--green-mark); border-radius: 999px; padding: 3px 11px; } .frow .ext:hover { background: var(--green-mark); color: #fff; }
+  .frow .ext { margin-left: auto; font-size: 12px; color: var(--text-2); border: 1px solid var(--line-2); border-radius: 999px; padding: 3px 11px; } .frow .ext:hover { color: var(--text); border-color: var(--text-3); }
   .count { color: var(--text-3); font-size: 12px; margin: -8px 0 10px; }
   /* pinned strip: the live diaries and the newest piece, compact; the same cards also sit in their theme groups below */
   .strip-wrap { position: relative; margin: 0 0 20px; padding-bottom: 20px; border-bottom: 1px solid var(--line); } .strip-wrap[hidden] { display: none; }
   .strip { display: flex; gap: 12px; overflow-x: auto; scroll-snap-type: x mandatory; scroll-behavior: smooth; scrollbar-width: none; padding-bottom: 2px; }
   .strip::-webkit-scrollbar { display: none; }
   .strip .mini { flex: 0 0 calc((100% - 4 * 12px) / 5); scroll-snap-align: start; }
-  .arr { all: unset; cursor: pointer; position: absolute; top: 56px; z-index: 2; width: 30px; height: 30px; border-radius: 50%; background: var(--card); border: 1px solid var(--line-2); color: var(--text-2); display: none; align-items: center; justify-content: center; font-size: 20px; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
-  .arr.prev { left: -15px; } .arr.next { right: -15px; } .arr:hover { color: var(--green); border-color: var(--green-mark); }
+  .arr { all: unset; cursor: pointer; position: absolute; top: 56px; z-index: 2; width: 30px; height: 30px; border-radius: 50%; background: var(--green-mark); border: 1px solid var(--green-mark); color: #fff; display: none; align-items: center; justify-content: center; font-size: 20px; line-height: 1; box-shadow: 0 1px 4px rgba(0,0,0,.25); }
+  .arr.prev { left: -15px; } .arr.next { right: -15px; } .arr:hover { filter: brightness(1.15); }
   .strip-wrap.overflow .arr { display: inline-flex; } .arr[disabled] { opacity: .3; cursor: default; }
   @media (max-width: 860px) { .strip .mini { flex-basis: calc((100% - 2 * 12px) / 3); } }
   .mini { display: flex; flex-direction: column; gap: 5px; background: var(--card); border: 1px solid var(--line); border-radius: var(--radius); overflow: hidden; color: inherit; transition: border-color .12s, transform .12s; }
