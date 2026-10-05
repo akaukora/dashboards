@@ -464,9 +464,9 @@ const CARDS = [
    "economy"
   ],
   "kind": "chart",
-  "blurb": "Every Helsinki-area postcode by its public-transit time to the city center and its average home price per square meter. Close to the center, minutes matter; past 20 minutes, they hardly do.",
+  "blurb": "Every Helsinki-area postcode by its public-transit time to the city center and its average home price per square meter.",
   "thumb": "thumbs/tableau-transit-home-prices.webp",
-  "note": "A remake of a [Helsingin Sanomat piece](https://www.hs.fi/pkseutu/art-2000005604217.html). The article had a tool: you picked how far from the center you wanted to live, and a box listed the neighborhoods at that distance with their prices and the premium or discount against the others. Reading it, I thought my brain handles these comparisons better in a visual format, so I visualized the data in Tableau. The prices were scanned from the newspaper with Office Lens and converted to Excel with ABBYY; the transit times I queried from the Google Maps API with the same definition of city center and the same 8 am arrival the newspaper used."
+  "note": "A remake of a [Helsingin Sanomat piece](https://www.hs.fi/pkseutu/art-2000005604217.html). The article had a tool, where you picked how far from the center you wanted to live, and a box listed the neighborhoods at that distance with their prices and the premium or discount against the others.\n\nReading it, I thought my brain handles these comparisons better in a visual format, so I visualized the data in Tableau. I scanned the prices from the newspaper with my phone and converted to Excel with ABBYY. The transit times I queried from the Google Maps API with the same definition of city center and the same 8 am arrival the newspaper used."
  },
  {
   "id": "Oscarsimpactonboxoffice/BestPicBoxOffice2",
@@ -739,7 +739,7 @@ const CARDS = [
 <script>
 const $ = (s) => document.querySelector(s);
 const F = { theme: null, kind: null, made: null };
-const md = (s) => esc(s).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>');  // [text](url) in notes
+const md = (s) => esc(s).replace(/\[([^\]]+)\]\((https?:\/\/[^\s)]+)\)/g, '<a href="$2" target="_blank" rel="noopener">$1</a>').replace(/\n\n/g, "<br><br>");  // [text](url) and blank-line paragraph breaks in notes
 const esc = (s) => String(s).replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c]);
 
 // filters live in the URL hash, so a filtered view can be linked: #theme=film&made=tableau
