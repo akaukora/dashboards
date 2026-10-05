@@ -67,6 +67,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .kpi .l { color: var(--text-2); font-size: 12px; margin-bottom: 6px; }
   .kpi .v { font-size: 30px; font-weight: 600; line-height: 1.1; letter-spacing: -0.02em; }
   .kpi .v.small { font-size: 18px; line-height: 1.25; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .kpi .v.small.wrap { white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; }
   .kpi .d { color: var(--text-3); font-size: 12px; margin-top: 6px; }
   .kpi .d b { color: var(--text-2); font-weight: 500; }
   .kpi .d .up { color: var(--green); }
@@ -96,6 +97,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .heat .c.sel { outline: 2px solid var(--text); outline-offset: -2px; }
   .heat .c.dim { opacity: 0.35; }
   .heat .c.future { background: transparent; border: 1px dashed var(--line-2); }
+  .heat.wk { grid-template-columns: 44px repeat(7, minmax(0, 1fr)); } .heat.wk .c { aspect-ratio: 2.4; cursor: default; }
   .heat .c[data-n]:hover::after { content: attr(data-tip); position: absolute; left: 50%; bottom: 110%; transform: translateX(-50%); background: #0b0e11; color: var(--text); padding: 4px 8px; border-radius: 6px; white-space: nowrap; font-size: 12px; z-index: 5; pointer-events: none; }
   .heat-scale { display: flex; align-items: center; gap: 6px; font-size: 11px; color: var(--text-3); margin-top: 10px; justify-content: flex-end; }
   .heat-scale i { width: 18px; height: 10px; border-radius: 2px; display: inline-block; }
@@ -129,7 +131,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .chart.clickable canvas { cursor: pointer; }
   .card .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; }
   .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 999px; overflow: hidden; }
-  .seg button { all: unset; cursor: pointer; padding: 3px 10px; font: inherit; font-size: 12px; color: var(--text-2); }
+  .seg button { all: unset; cursor: pointer; padding: 3px 10px; font: inherit; font-size: 12px; color: var(--text-2); white-space: nowrap; }
   .seg button:hover { color: var(--text); }
   .seg button.active { background: var(--card-2); color: var(--text); font-weight: 600; }
 
@@ -269,7 +271,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
       <div class="chart clickable"><canvas id="cYears"></canvas></div>
     </div>
     <div class="card">
-      <h2>Films per month</h2>
+      <div class="head"><h2 id="heatHead">Films per month</h2><div class="seg" id="heatMode"><button type="button" data-m="months">Months</button><button type="button" data-m="wkyear">Weekday · year</button><button type="button" data-m="wkmonth">Weekday · month</button></div></div>
       <div class="note" id="noteHeat">Each cell is one month; brighter means more films. Click a cell to filter to that month.</div>
       <div class="heat" id="heat"></div>
       <div class="heat-scale" id="heatScale"></div>
@@ -475,6 +477,7 @@ function toFilms(rows) {
 /* ---------- state ---------- */
 let ALL = [], YEARS = [], charts = {}, sortKey = "date", sortAsc = false, listFilms = [];
 let yearsMode = "columns"; try { yearsMode = localStorage.getItem("yearsMode") === "lines" ? "lines" : "columns"; } catch (e) {}
+let heatMode = "months"; try { heatMode = ["months", "wkyear", "wkmonth"].includes(localStorage.getItem("heatMode")) ? localStorage.getItem("heatMode") : "months"; } catch (e) {}
 let svcMode = "bars"; try { svcMode = localStorage.getItem("svcMode") === "mekko" ? "mekko" : "bars"; } catch (e) {}
 let mekkoData = null;   // last data drawn, so a resize can redraw without a full render
 // Every filter lives here. "year"/"source" also have button rows; the rest are set by clicking charts.
@@ -643,6 +646,7 @@ function render() {
     { l: "Last watched", v: last ? esc(last.title) : "—", small: true, d: last ? `${fmtDate(last.date)}${last.rating != null ? " · " + starStr(last.rating) : ""}${last.rewatch ? " · rewatch" : ""}${last.tags.length ? " · " + esc(tagsText(last)) : ""}` : "" },
   ];
   $("#kpis").innerHTML = tiles.map((t) => `<div class="kpi"${t.bg ? ` style="background-image:${t.bg}"` : ""}>${t.spark || ""}<div class="l">${t.l}</div><div class="v${t.small ? " small" : ""}" title="${t.small ? t.v : ""}">${t.v}</div><div class="d">${t.d}</div></div>`).join("");
+  fitSmallValues();
 
   /* Films per year — every year, filtered by everything but year; the chosen year highlighted.
      Columns: totals. Lines: cumulative by month, one line per year (green = chosen/current year, grays = the rest, older = darker). */
@@ -682,26 +686,52 @@ function render() {
     $("#noteYears").textContent = `Cumulative films by month, one line per year. ${focusYear} in green. Click a line to filter.`;
   }
 
-  /* Heatmap — filtered by everything but month; the chosen month outlined */
-  const heatBase = filtered("month");
-  const heatYears = F.year != null ? [F.year] : years;
-  const counts = {}; let maxC = 0;
-  for (const f of heatBase) if (f.date) { const k = f.date.getFullYear() + "-" + f.date.getMonth(); counts[k] = (counts[k] || 0) + 1; }
-  for (const y of heatYears) for (let m = 0; m < 12; m++) maxC = Math.max(maxC, counts[y + "-" + m] || 0);
-  const first = ALL.find((f) => f.date)?.date;
-  let h = `<div></div>` + MONTHS.map((m) => `<div class="m">${m[0]}</div>`).join("");
-  for (const y of heatYears) {
-    h += `<div class="y">${y}</div>`;
-    for (let m = 0; m < 12; m++) {
-      const n = counts[y + "-" + m] || 0;
-      const future = (y > cy) || (y === cy && m > now.getMonth()) || (first && (y < first.getFullYear() || (y === first.getFullYear() && m < first.getMonth())));
-      if (future) { h += `<div class="c future"></div>`; continue; }
-      const sel = F.month === m && (F.year == null || F.year === y);
-      h += `<div class="c${sel ? " sel" : F.month != null && F.month !== m ? " dim" : ""}" data-y="${y}" data-m="${m}" data-n="${n}" data-tip="${MONTHS[m]} ${y}: ${n} film${n === 1 ? "" : "s"}" style="background:${heatColor(n, maxC)}"></div>`;
+  /* Heatmap — three views: months (years × months, click to filter), weekdays by year, weekdays by month */
+  document.querySelectorAll("#heatMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === heatMode));
+  $("#heat").classList.toggle("wk", heatMode !== "months");
+  if (heatMode === "months") {
+    $("#heatHead").textContent = "Films per month";
+    $("#noteHeat").textContent = "Each cell is one month; brighter means more films. Click a cell to filter to that month.";
+    const heatBase = filtered("month");
+    const heatYears = F.year != null ? [F.year] : years;
+    const counts = {}; let maxC = 0;
+    for (const f of heatBase) if (f.date) { const k = f.date.getFullYear() + "-" + f.date.getMonth(); counts[k] = (counts[k] || 0) + 1; }
+    for (const y of heatYears) for (let m = 0; m < 12; m++) maxC = Math.max(maxC, counts[y + "-" + m] || 0);
+    const first = ALL.find((f) => f.date)?.date;
+    let h = `<div></div>` + MONTHS.map((m) => `<div class="m">${m[0]}</div>`).join("");
+    for (const y of heatYears) {
+      h += `<div class="y">${y}</div>`;
+      for (let m = 0; m < 12; m++) {
+        const n = counts[y + "-" + m] || 0;
+        const future = (y > cy) || (y === cy && m > now.getMonth()) || (first && (y < first.getFullYear() || (y === first.getFullYear() && m < first.getMonth())));
+        if (future) { h += `<div class="c future"></div>`; continue; }
+        const sel = F.month === m && (F.year == null || F.year === y);
+        h += `<div class="c${sel ? " sel" : F.month != null && F.month !== m ? " dim" : ""}" data-y="${y}" data-m="${m}" data-n="${n}" data-tip="${MONTHS[m]} ${y}: ${n} film${n === 1 ? "" : "s"}" style="background:${heatColor(n, maxC)}"></div>`;
+      }
     }
+    $("#heat").innerHTML = h;
+    $("#heatScale").innerHTML = `0 <i style="background:${heatColor(0, maxC)}"></i><i style="background:${heatColor(maxC * 0.33, maxC)}"></i><i style="background:${heatColor(maxC * 0.66, maxC)}"></i><i style="background:${heatColor(maxC, maxC)}"></i> ${maxC}`;
+  } else {
+    const WD = ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"], wd = (d) => (d.getDay() + 6) % 7;
+    const byYear = heatMode === "wkyear";
+    const base = byYear ? filtered() : filtered("month");
+    const rows = byYear ? (F.year != null ? [F.year] : years) : [...Array(12).keys()];
+    const counts = {}; let maxC = 0;
+    for (const f of base) if (f.date) { const k = (byYear ? f.date.getFullYear() : f.date.getMonth()) + "-" + wd(f.date); counts[k] = (counts[k] || 0) + 1; }
+    for (const r of rows) for (let d = 0; d < 7; d++) maxC = Math.max(maxC, counts[r + "-" + d] || 0);
+    let h = `<div></div>` + WD.map((w) => `<div class="m">${w}</div>`).join("");
+    for (const r of rows) {
+      h += `<div class="y">${byYear ? r : MONTHS[r]}</div>`;
+      for (let d = 0; d < 7; d++) {
+        const n = counts[r + "-" + d] || 0, dimRow = !byYear && F.month != null && F.month !== r;
+        h += `<div class="c${dimRow ? " dim" : ""}" data-n="${n}" data-tip="${WD[d]}${byYear ? "s in " + r : "s in " + MONTHS[r] + (F.year != null ? " " + F.year : "")}: ${n} film${n === 1 ? "" : "s"}" style="background:${heatColor(n, maxC)}"></div>`;
+      }
+    }
+    $("#heatHead").textContent = byYear ? "Films per weekday, by year" : "Films per weekday, by month";
+    $("#noteHeat").textContent = byYear ? "Each cell is one weekday of one year; brighter means more films. Rows follow the year filter." : `Each cell is one weekday of one month${F.year != null ? " in " + F.year : ", all years together"}; brighter means more films.`;
+    $("#heat").innerHTML = h;
+    $("#heatScale").innerHTML = `0 <i style="background:${heatColor(0, maxC)}"></i><i style="background:${heatColor(maxC * 0.33, maxC)}"></i><i style="background:${heatColor(maxC * 0.66, maxC)}"></i><i style="background:${heatColor(maxC, maxC)}"></i> ${maxC}`;
   }
-  $("#heat").innerHTML = h;
-  $("#heatScale").innerHTML = `0 <i style="background:${heatColor(0, maxC)}"></i><i style="background:${heatColor(maxC * 0.33, maxC)}"></i><i style="background:${heatColor(maxC * 0.66, maxC)}"></i><i style="background:${heatColor(maxC, maxC)}"></i> ${maxC}`;
 
   /* Rating distribution — filtered by everything but rating; the chosen rating highlighted */
   const ratedNoR = filtered("rating").filter((f) => f.rating != null);
@@ -1024,6 +1054,7 @@ function buildFilters() {
   const taggedDates = ALL.filter((f) => f.tags.length && f.date).map((f) => f.date);
   if (taggedDates.length) { const a = taggedDates[0], b = taggedDates.at(-1); $("#sourceHint").textContent = `tagged entries: ${MONTHS[a.getMonth()]} ${a.getFullYear()} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`; $("#sourceHint").title = tagCoverage(); }
   document.querySelectorAll("#yearsMode button").forEach((b) => b.addEventListener("click", () => { yearsMode = b.dataset.m; try { localStorage.setItem("yearsMode", yearsMode); } catch (e) {} render(); }));
+  document.querySelectorAll("#heatMode button").forEach((b) => b.addEventListener("click", () => { heatMode = b.dataset.m; try { localStorage.setItem("heatMode", heatMode); } catch (e) {} render(); }));
   document.querySelectorAll("#svcMode button").forEach((b) => b.addEventListener("click", () => { svcMode = b.dataset.m; try { localStorage.setItem("svcMode", svcMode); } catch (e) {} render(); }));
   document.querySelectorAll("#revMode button").forEach((b) => b.addEventListener("click", () => { revMode = b.dataset.m; try { localStorage.setItem("revMode", revMode); } catch (e) {} render(); }));
   let mekkoResize; window.addEventListener("resize", () => { clearTimeout(mekkoResize); mekkoResize = setTimeout(() => { if (svcMode === "mekko" && mekkoData) drawMekko(); }, 150); });
@@ -1050,6 +1081,17 @@ function readHash() {
   }
 }
 
+
+// A long title in a KPI tile ("The Samurai and the Prisoner") shrinks until it fits on one line, down to 13 px; past that it wraps to two lines.
+function fitSmallValues() {
+  document.querySelectorAll(".kpi .v.small").forEach((el) => {
+    el.classList.remove("wrap"); el.style.fontSize = "";
+    let size = 18;
+    while (el.scrollWidth > el.clientWidth + 1 && size > 13) { size -= 1; el.style.fontSize = size + "px"; }
+    if (el.scrollWidth > el.clientWidth + 1) { el.style.fontSize = "15px"; el.classList.add("wrap"); }
+  });
+}
+let fitTimer; window.addEventListener("resize", () => { clearTimeout(fitTimer); fitTimer = setTimeout(fitSmallValues, 120); });
 /* ---------- load ---------- */
 async function load() {
   const app = $("#app"); app.classList.add("loading");
