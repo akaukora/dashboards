@@ -167,5 +167,6 @@ async function load(){const src=new URLSearchParams(location.search).get('src');
   let stored=null;try{stored=JSON.parse(localStorage.getItem(STORE_KEY)||'null')}catch(e){}if(stored&&stored.text)useText(stored.name||'your export',stored.text)}
 window.addEventListener('hashchange',()=>{if(!ALL.length)return;readHash();paintFilters();render()});load();
 </script>
+<script src="../gallery-link.js" defer></script>
 </body>
 </html>
