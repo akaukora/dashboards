@@ -1027,5 +1027,15 @@
     "sent_date": "2026-09-26",
     "subject": "Someone’s 👏 been 👏 busy 👏",
     "streak": 694
+  },
+  {
+    "week_start": "2026-09-26",
+    "week_end": "2026-10-02",
+    "minutes": 101,
+    "xp": 1421,
+    "lessons": 29,
+    "sent_date": "2026-10-03",
+    "subject": "Weekly French results are in. Nice work 🎉",
+    "streak": 701
   }
 ]
