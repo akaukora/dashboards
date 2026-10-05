@@ -1,4 +1,4 @@
-/* gallery-link.js — a small "← Gallery" pill, fixed in the bottom-left corner, linking back to the dashboard gallery.
+/* gallery-link.js — a small "← Gallery" pill, fixed in the bottom-left corner, linking back to the dataviz gallery.
    Include once, near the end of <body>, from any page one folder below the repository root:
        <script src="../gallery-link.js" defer></script>
    One file controls the look and the text for every page. It stays out of the way of page headers, picks a dark or a
