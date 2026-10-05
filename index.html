@@ -171,7 +171,6 @@ const KINDS = ["diary", "tool", "dashboard", "chart", "story", "data art"];
 const CARDS = [
  {
   "id": "films-watched",
-  "medium": "HTML · Chart.js",
   "title": "Films",
   "url": "films-watched/",
   "made": "html",
@@ -191,7 +190,6 @@ const CARDS = [
  },
  {
   "id": "books-read",
-  "medium": "HTML · Chart.js",
   "title": "Books",
   "url": "books-read/",
   "made": "html",
@@ -211,7 +209,6 @@ const CARDS = [
  },
  {
   "id": "music",
-  "medium": "HTML · Chart.js",
   "title": "Music",
   "url": "music/",
   "made": "html",
@@ -232,7 +229,6 @@ const CARDS = [
  },
  {
   "id": "duolingo",
-  "medium": "HTML · SVG",
   "title": "Duolingo",
   "url": "duolingo/",
   "made": "html",
@@ -274,7 +270,6 @@ const CARDS = [
  },
  {
   "id": "wc2026",
-  "medium": "HTML · SVG",
   "title": "World Cup 2026 — how the pool was won",
   "url": "wc2026/",
   "made": "html",
@@ -303,7 +298,6 @@ const CARDS = [
  },
  {
   "id": "violent-protected",
-  "medium": "HTML · canvas",
   "title": "Violent and protected world",
   "url": "violent-protected/",
   "made": "html",
@@ -777,7 +771,7 @@ function renderFilters() {
 function card(c) {
   const tableau = c.made === "tableau", ext = tableau;
   const kindCls = c.kind === "data art" ? "art" : c.kind;
-  // year · medium: an explicit c.year, else the year in the #MakeoverMonday week, else one in the Tableau URL, else the year the piece was added here
+  // year · medium (HTML or Tableau): an explicit c.year, else the year in the #MakeoverMonday week, else one in the Tableau URL, else the year the piece was added here
   const year = c.year || (c.mm && (c.mm.match(/\b(20\d\d)\b/) || [])[1]) || (tableau && (c.url.match(/\b(20\d\d)\b/) || [])[1]) || (!tableau && c.added ? c.added.slice(0, 4) : "");
   const medium = c.medium || (tableau ? "Tableau" : "HTML");
   const wall = `<div class="wall">${year ? esc(String(year)) + " · " : ""}${esc(medium)}</div>`;
