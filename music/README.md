@@ -1,8 +1,18 @@
+> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
+
 # Music — Last.fm scrobbles
 
 A dashboard of the Last.fm listening history plus the pipeline that keeps its data fresh. Live
 at `https://akaukora.github.io/dashboards/music/` once this folder is in the `dashboards`
 repository as `music/`.
+
+## In brief
+
+- **What:** a dashboard of twenty years of Last.fm listening — forgotten favorites, when each artist was last heard, how favorites were made, listening by year, month and hour.
+- **Live at:** `https://akaukora.github.io/dashboards/music/`
+- **Data:** `scrobbles.csv` (one row per play), refreshed daily by `.github/workflows/update-lastfm.yml` running `fetch_lastfm.py` against the Last.fm API; `spotify_backfill.csv` fills the years the scrobbler missed.
+- **Your own data:** use the drop-in viewer at `../music-viewer/` — no setup. To run this pipeline yourself, set `LASTFM_USER` and the `LASTFM_API_KEY` secret and let the workflow run.
+- **Rules worth knowing:** what counts as a favorite, how Spotify plays are matched to scrobbles, UTC → Helsinki time, de-duplication — all under *Files* and *Notes* below.
 
 ## Files
 

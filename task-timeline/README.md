@@ -1,3 +1,5 @@
+> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
+
 # Task timeline
 
 A task tracker that lives in one markdown file, with a board and timeline dashboard on

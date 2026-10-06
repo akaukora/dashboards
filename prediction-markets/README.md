@@ -1,8 +1,17 @@
+> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
+
 # Prediction markets dashboard
 
 Polymarket and Kalshi positions in one view, following the same pattern as the
 other dashboards in `akaukora/dashboards`: a scheduled workflow writes a
 `data.json` snapshot, the page renders it.
+
+## In brief
+
+- **What:** open positions and settled markets on Polymarket and Kalshi in one view.
+- **Live at:** `https://akaukora.github.io/dashboards/prediction-markets/`
+- **Data:** `data.json`, refreshed twice a day by `.github/workflows/update-predictions.yml` running `fetch_data.py`. Polymarket's data API is public; Kalshi needs a read-only API key stored as repository secrets (`KALSHI_KEY_ID`, `KALSHI_PRIVATE_KEY`).
+- **Your own data:** copy the folder and the workflow, put your Polymarket wallet address in the workflow and your Kalshi key in the secrets. Until the Kalshi secrets exist, the page shows Polymarket alone.
 
 Lands at `akaukora.github.io/dashboards/prediction-markets/`.
 

@@ -1,3 +1,5 @@
+> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
+
 # Music viewer — your own listening history
 
 A drop-in version of the [music dashboard](../music/): anyone can open the page, drop the export of

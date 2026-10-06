@@ -1,3 +1,5 @@
+> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
+
 # Reading diary viewer (StoryGraph and Goodreads)
 
 A drop-in version of the reading dashboard for anyone with a StoryGraph or Goodreads account.

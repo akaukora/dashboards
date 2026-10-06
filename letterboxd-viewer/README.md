@@ -1,3 +1,5 @@
+> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
+
 # Letterboxd diary viewer
 
 A drop-in version of the film diary dashboard for anyone with a Letterboxd account. One

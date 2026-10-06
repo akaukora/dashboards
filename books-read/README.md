@@ -1,3 +1,5 @@
+> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
+
 # Books — StoryGraph library
 
 Dashboard of the reading history, live at `https://akaukora.github.io/dashboards/books-read/`.

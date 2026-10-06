@@ -1,7 +1,17 @@
+> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
+
 # Letterboxd diary dashboard
 
 A single self-contained `index.html` that reads `films.csv` from the same folder of the
 repository on every page load and renders the dashboard in the browser. No build step, no backend, nothing to keep running.
+
+## In brief
+
+- **What:** the Letterboxd diary since 2019 — what was watched, when and where, ratings by year and decade, theater vs. home, festival runs, written reviews.
+- **Live at:** `https://akaukora.github.io/dashboards/films-watched/`
+- **Data:** `films.csv`, refreshed nightly by `.github/workflows/update-letterboxd.yml` running `scrape_letterboxd.py` (Letterboxd RSS for entries, diary tag pages for tags); `descriptions.json` from TMDB via `fetch_descriptions.py`.
+- **Your own data:** use the drop-in viewer at `../letterboxd-viewer/` with your Letterboxd export — no setup.
+- **Note:** the *Publish on GitHub Pages* section below describes setting this up as its own repository; in this repository the page simply lives in this folder.
 
 ## Publish on GitHub Pages (one-time, ~3 minutes)
 

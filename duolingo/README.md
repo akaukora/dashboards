@@ -1,9 +1,19 @@
+> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
+
 # Duolingo weekly progress tracker
 
 Keeps the [Duolingo weekly progress dashboard](index.html) up to date
 automatically, without handing your mailbox to any third party (ChatGPT,
 Claude, or otherwise) — the only thing that ever touches the inbox is a
 GitHub Actions job running under your own repo secrets.
+
+## In brief
+
+- **What:** Duolingo time, XP and lessons by week, month or year, reconstructed from the weekly progress-report emails and the account data export.
+- **Live at:** `https://akaukora.github.io/dashboards/duolingo/`
+- **Data:** `data/weekly_duolingo.json` and friends, appended every Monday by `.github/workflows/duolingo-weekly.yml`, which reads a dedicated mailbox over IMAP (`parse_duolingo.py`) and regenerates `index.html` (`build_dashboard.py`). Nothing but a GitHub Actions job ever touches the mailbox.
+- **Your own data:** forward Duolingo's weekly emails to a mailbox of your own, set its IMAP login as the two secrets named in the workflow, and run the workflow.
+- **Note:** parts of this README are written as a message to Antti ("your other dashboards", "your Proton Mail export") because it was produced in conversation; read "you" as the repository owner.
 
 This folder follows the same layout as your other dashboards in
 `akaukora/dashboards` (e.g. `books-read/`): everything for one dashboard
