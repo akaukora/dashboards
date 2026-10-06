@@ -44,7 +44,9 @@
   .intro a { color: var(--text-2); text-decoration: underline dotted; }
   .gh { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; color: var(--text-2); white-space: nowrap; }
   .gh:hover { color: var(--text); border-color: var(--text-3); }
-  .hdr-right { display: flex; gap: 8px; align-items: center; }
+  .hdr-right { display: flex; gap: 8px; align-items: center; position: fixed; top: 14px; right: 18px; z-index: 50; }
+  .hdr-right .gh, .hdr-right .themebtn { background: var(--bg); }
+  @media (max-width: 720px) { .hdr-right { position: static; } }
   .themebtn { all: unset; cursor: pointer; width: 30px; height: 30px; border-radius: 50%; border: 1px solid var(--line-2); color: var(--text-2); display: inline-flex; align-items: center; justify-content: center; font-size: 15px; line-height: 1; } .themebtn:hover { color: var(--text); border-color: var(--text-3); }
   .themebtn .moon { display: none; } :root[data-theme="light"] .themebtn .moon { display: inline; } :root[data-theme="light"] .themebtn .sun { display: none; }
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .themebtn .moon { display: inline; } :root:not([data-theme="dark"]) .themebtn .sun { display: none; } }
@@ -91,7 +93,7 @@
   .tag.livedata::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green-mark); margin: 0 5px 1px 0; }
   .card .meta .src { display: block; } .card .meta a:hover { color: var(--green); }
   .grid { display: block; }
-  .masonry { display: grid; gap: 0; align-items: start; position: relative; padding-left: 54px; }
+  .masonry { display: grid; gap: 0; align-items: start; position: relative; padding-left: 44px; }
   .col { min-width: 0; }
   .field { padding: 6px 10px; }
   .field.tstart { padding-top: 12px; border-radius: 12px 12px 0 0; } .field.tstart:not(:first-child) { margin-top: 14px; }
@@ -100,15 +102,21 @@
   .field .card:hover { border-color: rgba(255,255,255,.3); }
   .spine { position: absolute; left: 0; width: 44px; border-radius: 12px; display: flex; justify-content: center; align-items: flex-start; padding-top: 14px; overflow: hidden; }
   .spine span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 26px; line-height: 1; font-weight: 800; letter-spacing: -.01em; text-transform: lowercase; white-space: nowrap; }
-  /* theme tints, in THEMES order (culture, sports & games, economy, society, world, productivity) */
-  .t-0 { background: rgba(0,168,63,.22); } .t-0.spine span { color: var(--green); }
-  .t-1 { background: rgba(42,157,209,.24); } .t-1.spine span { color: #5fb8e6; }
-  .t-2 { background: rgba(255,128,0,.20); } .t-2.spine span { color: var(--orange); }
-  .t-3 { background: rgba(255,161,231,.20); } .t-3.spine span { color: #ffa1e7; }
-  .t-4 { background: rgba(230,237,243,.14); } .t-4.spine span { color: var(--text-2); }
-  .t-5 { background: rgba(251,212,192,.20); } .t-5.spine span { color: #fbd4c0; }
+  /* theme tints, in THEMES order (culture, sports & games, economy, society, world, productivity): six hues that stay apart in both modes */
+  .t-0 { background: rgba(0,168,63,.22); } .t-0.spine span { color: #19c85a; }
+  .t-1 { background: rgba(61,123,234,.28); } .t-1.spine span { color: #7aa6ff; }
+  .t-2 { background: rgba(255,128,0,.22); } .t-2.spine span { color: #ff9a33; }
+  .t-3 { background: rgba(255,106,213,.22); } .t-3.spine span { color: #ff8fe0; }
+  .t-4 { background: rgba(155,107,255,.26); } .t-4.spine span { color: #b894ff; }
+  .t-5 { background: rgba(230,194,41,.22); } .t-5.spine span { color: #e9cc4a; }
   @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .field .card { border-color: rgba(0,0,0,.14); box-shadow: 0 2px 10px rgba(0,0,0,.12); }
-    :root:not([data-theme="dark"]) .t-0 { background: rgba(0,145,58,.14); } :root:not([data-theme="dark"]) .t-1 { background: rgba(42,157,209,.16); } :root:not([data-theme="dark"]) .t-2 { background: rgba(255,128,0,.14); } :root:not([data-theme="dark"]) .t-3 { background: rgba(255,161,231,.26); } :root:not([data-theme="dark"]) .t-4 { background: rgba(30,26,19,.08); } :root:not([data-theme="dark"]) .t-5 { background: rgba(251,212,192,.4); } }
+    :root:not([data-theme="dark"]) .t-0 { background: rgba(0,145,58,.20); } :root:not([data-theme="dark"]) .t-0.spine span { color: #00732e; }
+    :root:not([data-theme="dark"]) .t-1 { background: rgba(61,123,234,.24); } :root:not([data-theme="dark"]) .t-1.spine span { color: #2a5fcb; }
+    :root:not([data-theme="dark"]) .t-2 { background: rgba(255,128,0,.24); } :root:not([data-theme="dark"]) .t-2.spine span { color: #b85a00; }
+    :root:not([data-theme="dark"]) .t-3 { background: rgba(255,106,213,.26); } :root:not([data-theme="dark"]) .t-3.spine span { color: #b3338d; }
+    :root:not([data-theme="dark"]) .t-4 { background: rgba(155,107,255,.24); } :root:not([data-theme="dark"]) .t-4.spine span { color: #6a3fd1; }
+    :root:not([data-theme="dark"]) .t-5 { background: rgba(230,194,41,.32); } :root:not([data-theme="dark"]) .t-5.spine span { color: #8a6d00; } }
+
   .card { display: flex; flex-direction: column; gap: 8px; background: var(--card); border-radius: var(--radius); padding: 16px 18px 14px; min-width: 0; border: 1px solid var(--line); transition: border-color .12s, transform .12s; position: relative; overflow: hidden; }
   .card .body { display: contents; }
   .card a.main { color: inherit; display: contents; }
@@ -123,6 +131,7 @@
   .card .meta { margin-top: auto; padding-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.7; } .card .meta .tag { vertical-align: 1px; margin-right: 4px; }
   .card .meta .dot { opacity: .6; }
   .tag { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 11px; line-height: 18px; color: var(--text-2); background: var(--card-2); }
+  .tag.how { background: transparent; border: 1px dashed var(--line-2); color: var(--text-3); }
   .card .thumb { display: block; margin: -16px -18px 6px; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; aspect-ratio: var(--ar, 16 / 10); background: var(--card-2); border-bottom: 1px solid var(--line); }
   .card .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; filter: saturate(.95); transition: transform .25s; }
   :root[data-theme="light"] .card .thumb { border-bottom-color: var(--line-2); } @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .card .thumb { border-bottom-color: var(--line-2); } }
@@ -204,7 +213,8 @@ const CARDS = [
    "href": "letterboxd-viewer/",
    "label": "Letterboxd export"
   },
-  "added": "2026-09-02"
+  "added": "2026-09-02",
+  "how": "scraped"
  },
  {
   "id": "books-read",
@@ -223,7 +233,8 @@ const CARDS = [
    "href": "storygraph-viewer/",
    "label": "StoryGraph or Goodreads export"
   },
-  "added": "2026-09-05"
+  "added": "2026-09-05",
+  "how": "export"
  },
  {
   "id": "music",
@@ -243,7 +254,8 @@ const CARDS = [
    "label": "Last.fm, Spotify or Apple Music"
   },
   "added": "2026-09-06",
-  "note": "The idea goes back to Andy Cotgreave's blog post [Visualize your listening habits with Last.fm and Spotify data](https://www.tableau.com/blog/visualize-your-listening-habits-lastfm-and-spotify-data) — every scrobbled artist on a timeline at the date they were last played. I first rebuilt it in Tableau, then expanded it here with further analysis and scheduled, automatic data retrieval."
+  "note": "The idea goes back to Andy Cotgreave's blog post [Visualize your listening habits with Last.fm and Spotify data](https://www.tableau.com/blog/visualize-your-listening-habits-lastfm-and-spotify-data) — every scrobbled artist on a timeline at the date they were last played. I first rebuilt it in Tableau, then expanded it here with further analysis and scheduled, automatic data retrieval.",
+  "how": "API"
  },
  {
   "id": "duolingo",
@@ -258,7 +270,8 @@ const CARDS = [
   "thumb": "thumbs/duolingo.webp",
   "refresh": "automated",
   "source": "progress-report emails",
-  "added": "2026-09-07"
+  "added": "2026-09-07",
+  "how": "email"
  },
  {
   "id": "hiff2026",
@@ -313,7 +326,8 @@ const CARDS = [
   "thumb": "thumbs/prediction-markets.webp",
   "refresh": "automated",
   "source": "Polymarket + Kalshi → data.json",
-  "added": "2026-09-18"
+  "added": "2026-09-18",
+  "how": "API"
  },
  {
   "id": "violent-protected",
@@ -363,7 +377,8 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Favorite artists by when they were last played, the big bubbles far from the right edge being the ones to rediscover.",
   "thumb": "thumbs/full/tableau-forgotten-favorites.webp",
-  "note": "The Tableau original of my music dashboard. Andy Cotgreave's blog post [Visualize your listening habits with Last.fm and Spotify data](https://www.tableau.com/blog/visualize-your-listening-habits-lastfm-and-spotify-data) showed a viz with every scrobbled artist on a timeline, at the date they were last listened to. It got me exploring my own Last.fm data, and eventually led to further analysis and scheduled, automatic data retrieval."
+  "note": "The Tableau original of my music dashboard. Andy Cotgreave's blog post [Visualize your listening habits with Last.fm and Spotify data](https://www.tableau.com/blog/visualize-your-listening-habits-lastfm-and-spotify-data) showed a viz with every scrobbled artist on a timeline, at the date they were last listened to. It got me exploring my own Last.fm data, and eventually led to further analysis and scheduled, automatic data retrieval.",
+  "data": "My Last.fm profile"
  },
  {
   "id": "Musicdashboard-Last_fm-Artistdiscovery/WhenhaveIdiscoveredmusicians",
@@ -377,7 +392,8 @@ const CARDS = [
   ],
   "kind": "dashboard",
   "blurb": "When each artist was first heard, and how many new ones each year brought.",
-  "thumb": "thumbs/full/tableau-artist-discovery.webp"
+  "thumb": "thumbs/full/tableau-artist-discovery.webp",
+  "data": "My Last.fm profile"
  },
  {
   "id": "TheFilmsIveLovedandnot/Filmsdashboard",
@@ -392,7 +408,9 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Films by year watched and rating, and where they were seen, and how many of each were liked or loved.",
   "thumb": "thumbs/full/tableau-films-loved.webp",
-  "note": "Originally fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone, superseded by my html tracker."
+  "note": "Originally fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone, superseded by my html tracker.",
+  "data": "My Letterboxd diary",
+  "how": "scraped"
  },
  {
   "id": "Myfilmtracker2019/Filmswatched20192",
@@ -437,7 +455,8 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, showing which contestants were trending up.",
   "thumb": "thumbs/full/tableau-eurovision-2025.webp",
-  "note": "This helped me bet on the winner."
+  "note": "This helped me bet on the winner.",
+  "data": "YouTube"
  },
  {
   "id": "CouchtoHalfMarathon/CouchtoHalfMarathon",
@@ -466,7 +485,9 @@ const CARDS = [
   "kind": "tool",
   "blurb": "Driving time against snow conditions and resort size across the Alps.",
   "thumb": "thumbs/full/tableau-ski-trip.webp",
-  "note": "Made for planning a skiing weekend back in the day. I scraped a ski-resort site with ParseHub for each resort's size, address and snow situation, pulled driving times from the airports with the Google Maps API, and mapped it all in Tableau with user-adjustable parameters. Our group was coming from different parts of Europe, so the tool accounted for every member of the party."
+  "note": "Made for planning a skiing weekend back in the day. I scraped a ski-resort site with ParseHub for each resort's size, address and snow situation, pulled driving times from the airports with the Google Maps API, and mapped it all in Tableau with user-adjustable parameters. Our group was coming from different parts of Europe, so the tool accounted for every member of the party.",
+  "data": "Resort websites, Google Maps",
+  "how": "API"
  },
  {
   "id": "HowuniqueareHelsinkimalls/MallsofHelsinki",
@@ -481,7 +502,9 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "The top 20 malls of a city by leasable area and the share of shops unique to each; click a mall for a \"floorplan\" of its shops on three floors: unique, more common and very common.",
   "thumb": "thumbs/full/tableau-helsinki-malls.webp",
-  "note": "Built on Helsinki, but the idea works for any city."
+  "note": "Built on Helsinki, but the idea works for any city. I used ParseHub to scrape through the mall websites to pick up the store information.",
+  "data": "Mall websites",
+  "how": "scraped"
  },
  {
   "id": "Transittimesandhomepricesbypostcodescatteronly/Transitonlyscatter",
@@ -497,7 +520,9 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Every Helsinki-area postcode by its public-transit time to the city center and its average home price per square meter.",
   "thumb": "thumbs/full/tableau-transit-home-prices.webp",
-  "note": "A remake of a [Helsingin Sanomat piece](https://www.hs.fi/pkseutu/art-2000005604217.html). The article had a tool, where you picked how far from the center you wanted to live, and a box listed the neighborhoods at that distance with their prices and the premium or discount against the others.\n\nReading it, I thought my brain handles these comparisons better in a visual format, so I visualized the data in Tableau. I scanned the prices from the newspaper with my phone and converted to Excel with ABBYY. The transit times I queried from the Google Maps API with the same definition of city center and the same 8 am arrival the newspaper used."
+  "note": "A remake of a [Helsingin Sanomat piece](https://www.hs.fi/pkseutu/art-2000005604217.html). The article had a tool, where you picked how far from the center you wanted to live, and a box listed the neighborhoods at that distance with their prices and the premium or discount against the others.\n\nReading it, I thought my brain handles these comparisons better in a visual format, so I visualized the data in Tableau. I scanned the prices from the newspaper with my phone and converted to Excel with ABBYY. The transit times I queried from the Google Maps API with the same definition of city center and the same 8 am arrival the newspaper used.",
+  "data": "Helsingin Sanomat (prices), Google Maps (transit times)",
+  "how": "API"
  },
  {
   "id": "Oscarsimpactonboxoffice/BestPicBoxOffice2",
@@ -511,7 +536,9 @@ const CARDS = [
   ],
   "kind": "chart",
   "blurb": "What a Best Picture nomination and win did to each film's box office.",
-  "thumb": "thumbs/full/tableau-oscars.webp"
+  "thumb": "thumbs/full/tableau-oscars.webp",
+  "data": "Box Office Mojo",
+  "how": "scraped"
  },
  {
   "id": "Whichtimetochoose/Simplebubbles",
@@ -540,7 +567,8 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Daily number of articles in YLE and the NY Times, and daily Google Search Trends for coronavirus and COVID-19 by country. Static data, January–April 2020.",
   "thumb": "thumbs/full/tableau-coronavirus.webp",
-  "note": "Early days of Covid news. With my parents living in Hong Kong until their scheduled move back to Finland, just as international flights shut down, I followed Covid news perhaps earlier than most in Europe. At some point it struck me how what seemed like such important news was not getting the attention it seemed to warrant. That inspired me to scrape the NYT and Yle websites for Covid-related news, and Google Trends for web searches, to see how the data aligned with my observations. In hindsight — after the total shutdowns, the long-term changes to our societies, not to mention the global death count — it is difficult to imagine that Covid was not at the top of everyone's mind from the start."
+  "note": "Early days of Covid news. With my parents living in Hong Kong until their scheduled move back to Finland, just as international flights shut down, I followed Covid news perhaps earlier than most in Europe. At some point it struck me how what seemed like such important news was not getting the attention it seemed to warrant. That inspired me to scrape the NYT and Yle websites for Covid-related news, and Google Trends for web searches, to see how the data aligned with my observations. In hindsight — after the total shutdowns, the long-term changes to our societies, not to mention the global death count — it is difficult to imagine that Covid was not at the top of everyone's mind from the start.",
+  "data": "yle.fi, nytimes.com and Google Trends"
  },
  {
   "id": "VizForSocialGood-JapanFoodBank/Foodlossandpovertyviz",
@@ -555,7 +583,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Food waste against poverty in Japan, for the Viz for Social Good project.",
   "mm": "#VizForSocialGood",
-  "thumb": "thumbs/full/tableau-japan-food-bank.webp"
+  "thumb": "thumbs/full/tableau-japan-food-bank.webp",
+  "data": "Ministry of Agriculture, Forestry and Fisheries, Japan"
  },
  {
   "id": "BikeRevolution2020-MM2021/MM2021wk1",
@@ -569,7 +598,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Week-by-week change in bikes counted by Rails to Trails' 31 US counters, 2019 to 2020: biking was already trending up, and the pandemic boosted it.",
   "mm": "#MakeoverMonday 2021 wk 1",
-  "thumb": "thumbs/full/tableau-bike-boom.webp"
+  "thumb": "thumbs/full/tableau-bike-boom.webp",
+  "data": "Rails to Trails"
  },
  {
   "id": "AmericasDebt-MM2020wk47/PathtoDebtwhitebackground",
@@ -583,7 +613,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "US federal debt's path over time.",
   "mm": "#MakeoverMonday 2020 wk 47",
-  "thumb": "thumbs/full/tableau-us-debt.webp"
+  "thumb": "thumbs/full/tableau-us-debt.webp",
+  "data": "Federal Reserve Bank of St. Louis, Wikipedia"
  },
  {
   "id": "XmasspendingMakeoverMonday2019wk52/Dashboard1",
@@ -610,7 +641,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Does defense win? Team defensive rating against league position.",
   "mm": "#MakeoverMonday 2019 wk 51",
-  "thumb": "thumbs/full/tableau-nba-defense.webp"
+  "thumb": "thumbs/full/tableau-nba-defense.webp",
+  "data": "NBA"
  },
  {
   "id": "MonthlysunshinehoursaroundtheworldMakeoverMonday2019wk44/Sunshinehoursaroundtheworld",
@@ -624,7 +656,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Hours of sunshine per month for cities around the world, annual charts mapped based on coordinates.",
   "mm": "#MakeoverMonday 2019 wk 44",
-  "thumb": "thumbs/full/tableau-sunshine.webp"
+  "thumb": "thumbs/full/tableau-sunshine.webp",
+  "data": "Wikipedia"
  },
  {
   "id": "SeasonpreferencesintheUS-MakeoverMonday2019wk36/Seasonpreference2",
@@ -638,7 +671,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Which season Americans prefer, by age group.",
   "mm": "#MakeoverMonday 2019 wk 36",
-  "thumb": "thumbs/full/tableau-seasons.webp"
+  "thumb": "thumbs/full/tableau-seasons.webp",
+  "data": "YouGov"
  },
  {
   "id": "Gamesmarketrevenuetrend-MakeoverMonday2019wk35/Gamerevenuesarea",
@@ -667,7 +701,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Registered clinical trials by year and type.",
   "mm": "#MakeoverMonday 2019 wk 33",
-  "thumb": "thumbs/full/tableau-clinical-trials.webp"
+  "thumb": "thumbs/full/tableau-clinical-trials.webp",
+  "data": "ClinicalTrials.gov"
  },
  {
   "id": "Alcoholconsumptioninthenorthsouthandtropics/Alcoholdashboardnort-south2",
@@ -681,7 +716,8 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Every country's liters of pure alcohol per person against its latitude: the tropics average 5.2 liters, the north 7.1, the south 9.5.",
   "mm": "inspired by #MakeoverMonday 2019 wk 26",
-  "thumb": "thumbs/full/tableau-alcohol.webp"
+  "thumb": "thumbs/full/tableau-alcohol.webp",
+  "data": "WHO 2016"
  },
  {
   "id": "CO2emissionsbycountry-MakeoverMonday2019wk22/CO2dashboard",
@@ -695,7 +731,8 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Every country's emissions since 1960 as gray lines; pick one and it lights up blue or red for whether it fell or rose last year, with its reference group in black.",
   "mm": "#MakeoverMonday 2019 wk 22",
-  "thumb": "thumbs/full/tableau-co2.webp"
+  "thumb": "thumbs/full/tableau-co2.webp",
+  "data": "The World Bank"
  },
  {
   "id": "MM2019w20-Rhinopoaching/rhinos",
@@ -710,7 +747,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Rhinos poached per year since 2006 against the running total: the yearly count is falling, but is that because of more arrests, or because so few animals are left?",
   "mm": "#MakeoverMonday 2019 wk 20",
-  "thumb": "thumbs/full/tableau-rhinos.webp"
+  "thumb": "thumbs/full/tableau-rhinos.webp",
+  "data": "Minister of Environmental Affairs, South Africa"
  },
  {
   "id": "SeaicecoverageMakeoverMonday/iceberg2_1",
@@ -725,7 +763,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "The yearly maximum and minimum extent of Arctic sea ice from 1979 to 2017, measured in multiples of the land area of the USA: permanent ice equal to 0.2 USAs melted away.",
   "mm": "#MakeoverMonday",
-  "thumb": "thumbs/full/tableau-sea-ice.webp"
+  "thumb": "thumbs/full/tableau-sea-ice.webp",
+  "data": "National Snow and Ice Data Center"
  },
  {
   "id": "MakeoverMonday2019w03-USminimumwagepopulation/Minimumwagedashboard",
@@ -739,7 +778,8 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "State minimum wages weighted by how many people live under each.",
   "mm": "#MakeoverMonday 2019 wk 3",
-  "thumb": "thumbs/full/tableau-minimum-wage.webp"
+  "thumb": "thumbs/full/tableau-minimum-wage.webp",
+  "data": "Bureau of Labor Statistics"
  },
  {
   "id": "MM2019w02-PressFreedomtrail/Trail",
@@ -753,7 +793,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Each country's press-freedom score against its economy, year by year, drawn as a trail.",
   "mm": "#MakeoverMonday 2019 wk 2",
-  "thumb": "thumbs/full/tableau-press-freedom.webp"
+  "thumb": "thumbs/full/tableau-press-freedom.webp",
+  "data": "Freedom House, World Bank"
  },
  {
   "id": "NHLattendancechanges2001-2018MakeoverMonday2019wk01lines/NHLattendancechange",
@@ -767,7 +808,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Home attendance per team across seventeen seasons, one line each.",
   "mm": "#MakeoverMonday 2019 wk 1",
-  "thumb": "thumbs/full/tableau-nhl-attendance.webp"
+  "thumb": "thumbs/full/tableau-nhl-attendance.webp",
+  "data": "ESPN"
  },
  {
   "id": "MM2018w50-Landusepergramofprotein/Foodlanddashboard",
@@ -783,7 +825,8 @@ const CARDS = [
   "blurb": "How much land each food needs to produce a gram of protein.",
   "mm": "#MakeoverMonday 2018 wk 50",
   "thumb": "thumbs/full/tableau-land-use.webp",
-  "note": "A MakeoverMonday project. The provided original had clear colors (single color for bars), bars are probably the clearest way to compare sizes. The accompanying text explained that meats with high environmental impact could be substituted with other products, and the chart didn't color-code or show categories of foods, so it was not easy to see which ones were the meats and which ones the substitutes.\n\nWhat I did: I added food categories and a highlight function to the color legend. The original labels showed land use in square meters. I have trouble imagining 0.014 sqm, so the absolute numbers were meaningless to me; instead I chose to show how many times more land each food requires than the most productive one (pulses). That's of course the same as the bar length, but the numerical label reinforces the visual message."
+  "note": "A MakeoverMonday project. The provided original had clear colors (single color for bars), bars are probably the clearest way to compare sizes. The accompanying text explained that meats with high environmental impact could be substituted with other products, and the chart didn't color-code or show categories of foods, so it was not easy to see which ones were the meats and which ones the substitutes.\n\nWhat I did: I added food categories and a highlight function to the color legend. The original labels showed land use in square meters. I have trouble imagining 0.014 sqm, so the absolute numbers were meaningless to me; instead I chose to show how many times more land each food requires than the most productive one (pulses). That's of course the same as the bar length, but the numerical label reinforces the visual message.",
+  "data": "Our World in Data"
  },
  {
   "id": "DeathsFromConflicts2017-MakeoverMonday2018w34/justtimeline",
@@ -856,9 +899,11 @@ function card(c) {
   const year = c.year || (c.mm && (c.mm.match(/\b(20\d\d)\b/) || [])[1]) || (tableau && (c.url.match(/(20\d\d)/) || [])[1]) || (!tableau && c.added ? c.added.slice(0, 4) : "");
   const medium = c.medium || (tableau ? "Tableau" : "HTML");
   const wall = `<div class="wall">${year ? esc(String(year)) + " · " : ""}${esc(medium)}</div>`;
+  // how the data was obtained: a small outlined pill (API, scraped, export, email); nothing when the data came ready-made (e.g. a MakeoverMonday set)
+  const how = c.how ? `<span class="tag how" title="How the data was obtained">${esc(c.how)}</span>` : "";
   const meta = tableau
-    ? `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span> Tableau Public${c.mm ? " · " + (/MakeoverMonday/.test(c.mm) ? `<a href="https://makeovermonday.vercel.app" target="_blank" rel="noopener" title="#MakeoverMonday — the weekly data-viz community challenge">${esc(c.mm)}</a>` : esc(c.mm)) : ""}`
-    : `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${c.refresh ? `<span class="tag livedata">live data</span>` : ""}${c.source || c.refresh ? `<span class="src">${c.refresh ? (c.refresh === "automated" ? "automated · " : "manual export · ") : ""}${esc(c.source || "")}</span>` : ""}`;
+    ? `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${how} Tableau Public${c.mm ? " · " + (/MakeoverMonday/.test(c.mm) ? `<a href="https://makeovermonday.vercel.app" target="_blank" rel="noopener" title="#MakeoverMonday — the weekly data-viz community challenge">${esc(c.mm)}</a>` : esc(c.mm)) : ""}${c.data ? `<span class="src">data · ${esc(c.data)}</span>` : ""}`
+    : `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${how}${c.refresh ? `<span class="tag livedata">live data</span>` : ""}${c.source || c.refresh ? `<span class="src">${c.refresh ? (c.refresh === "automated" ? "automated · " : "manual export · ") : ""}${esc(c.source || "")}</span>` : ""}`;
   return `<div class="card${tableau ? " tableau" : ""}" data-id="${esc(c.id)}">
     <a class="main" href="${esc(c.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="thumb" ${c.aspect ? `style="--ar:${c.aspect}"` : 'data-auto="1" style="--ar:16/10"'}><img src="${esc(c.thumb)}" alt="" loading="lazy" style="object-position:top" onload="if(this.parentElement.dataset.auto){const r=Math.min(16/9,Math.max(3/4,this.naturalWidth/this.naturalHeight));this.parentElement.style.setProperty('--ar',r)}" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
     <div class="t">${esc(c.title)}</div>${wall}<p>${esc(c.blurb)}</p></a>
@@ -890,7 +935,7 @@ function masonry(groups, dividers) {
   // columns by width, like the grid did; each card is placed into the currently shortest column, theme after theme,
   // so a theme forms a band across the page and the next theme starts where each column happens to end
   const grid = $("#grid"), GAP = 14;
-  const n = Math.max(1, Math.floor((grid.clientWidth - 54 + 14) / (320 + 14)));
+  const n = Math.max(1, Math.floor((grid.clientWidth - 44 + 14) / (320 + 14)));
   grid.innerHTML = `<div class="masonry" style="grid-template-columns: repeat(${n}, minmax(0, 1fr))">${Array.from({ length: n }, () => '<div class="col"></div>').join("")}</div>`;
   const cols = [...grid.querySelectorAll(".col")];
   const shortest = () => cols.reduce((a, b) => (b.offsetHeight < a.offsetHeight ? b : a));
