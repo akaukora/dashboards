@@ -374,6 +374,7 @@ const CARDS = [
  },
  {
   "id": "Myfilmtracker2019/Filmswatched20192",
+  "year": 2019,
   "title": "Film and subscription tracker",
   "url": "https://public.tableau.com/app/profile/antti1275/viz/Myfilmtracker2019/Filmswatched20192",
   "made": "tableau",
@@ -401,6 +402,7 @@ const CARDS = [
  },
  {
   "id": "Eurovision2025/ViewsLine",
+  "year": 2025,
   "title": "Eurovision 2025 — views on YouTube",
   "url": "https://public.tableau.com/app/profile/antti1275/viz/Eurovision2025/ViewsLine",
   "made": "tableau",
@@ -772,7 +774,7 @@ function card(c) {
   const tableau = c.made === "tableau", ext = tableau;
   const kindCls = c.kind === "data art" ? "art" : c.kind;
   // year · medium (HTML or Tableau): an explicit c.year, else the year in the #MakeoverMonday week, else one in the Tableau URL, else the year the piece was added here
-  const year = c.year || (c.mm && (c.mm.match(/\b(20\d\d)\b/) || [])[1]) || (tableau && (c.url.match(/\b(20\d\d)\b/) || [])[1]) || (!tableau && c.added ? c.added.slice(0, 4) : "");
+  const year = c.year || (c.mm && (c.mm.match(/\b(20\d\d)\b/) || [])[1]) || (tableau && (c.url.match(/(20\d\d)/) || [])[1]) || (!tableau && c.added ? c.added.slice(0, 4) : "");
   const medium = c.medium || (tableau ? "Tableau" : "HTML");
   const wall = `<div class="wall">${year ? esc(String(year)) + " · " : ""}${esc(medium)}</div>`;
   const meta = tableau
