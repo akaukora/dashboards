@@ -91,13 +91,14 @@
   .tag.livedata::before { content: ""; display: inline-block; width: 6px; height: 6px; border-radius: 50%; background: var(--green-mark); margin: 0 5px 1px 0; }
   .card .meta .src { display: block; } .card .meta a:hover { color: var(--green); }
   .grid { display: block; }
-  .masonry { display: grid; gap: 0; align-items: start; position: relative; padding-left: 52px; }
+  .masonry { display: grid; gap: 0; align-items: start; position: relative; padding-left: 54px; }
   .col { min-width: 0; }
   .field { padding: 6px 10px; }
-  .field:first-child { padding-top: 12px; } .col .field:last-child { padding-bottom: 16px; }
+  .field.tstart { padding-top: 12px; border-radius: 12px 12px 0 0; } .field.tstart:not(:first-child) { margin-top: 14px; }
+  .field.tend { padding-bottom: 12px; border-radius: 0 0 12px 12px; } .field.tstart.tend { border-radius: 12px; }
   .field .card { margin: 0; background: var(--card); border: 1px solid rgba(255,255,255,.14); box-shadow: 0 2px 10px rgba(0,0,0,.35); }
   .field .card:hover { border-color: rgba(255,255,255,.3); }
-  .spine { position: absolute; left: 0; width: 52px; display: flex; justify-content: center; align-items: flex-start; padding-top: 14px; overflow: hidden; }
+  .spine { position: absolute; left: 0; width: 44px; border-radius: 12px; display: flex; justify-content: center; align-items: flex-start; padding-top: 14px; overflow: hidden; }
   .spine span { writing-mode: vertical-rl; transform: rotate(180deg); font-size: 26px; line-height: 1; font-weight: 800; letter-spacing: -.01em; text-transform: lowercase; white-space: nowrap; }
   /* theme tints, in THEMES order (culture, sports & games, economy, society, world, productivity) */
   .t-0 { background: rgba(0,168,63,.22); } .t-0.spine span { color: var(--green); }
@@ -195,7 +196,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "diary",
-  "blurb": "The Letterboxd diary since 2019: what I watched, when and where, ratings by year and decade, theater vs. home, festival runs, written reviews.",
+  "blurb": "My Letterboxd diary since 2019: what I watched, when and where, ratings by year and decade, theater vs. home, film festivals, my reviews.",
   "thumb": "thumbs/films-watched.webp",
   "refresh": "automated",
   "source": "Letterboxd RSS + diary pages → films.csv",
@@ -214,7 +215,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "diary",
-  "blurb": "The StoryGraph library: books finished per year and month, ratings, moods, currently reading, recent reviews.",
+  "blurb": "My StoryGraph library: books finished per year and month, ratings, currently reading, recent reviews.",
   "thumb": "thumbs/books-read.webp",
   "refresh": "manual",
   "source": "StoryGraph library export → books.csv",
@@ -233,7 +234,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "diary",
-  "blurb": "Twenty years of Last.fm scrobbles. Highlights the favorite artists and tracks you haven't heard for a long time — and the ones you've come back to — plus when each artist was last heard, how favorites were made, and listening by year, month and hour.",
+  "blurb": "Twenty years of Last.fm scrobbles. Highlights the favorite artists and tracks you haven't heard for a long time, and the ones you've come back to + when each artist was last heard, how favorites were made, and listening trends.",
   "thumb": "thumbs/music.webp",
   "refresh": "automated",
   "source": "Last.fm API + Spotify export → scrobbles.csv",
@@ -281,7 +282,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "tool",
-  "blurb": "The same planner for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule, add screenings to calendar.",
+  "blurb": "The same planner as HIFF for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule, add screenings to calendar.",
   "thumb": "thumbs/tiff2026.webp",
   "added": "2026-09-10"
  },
@@ -294,9 +295,10 @@ const CARDS = [
    "sports & games"
   ],
   "kind": "story",
-  "blurb": "The story of a prediction pool: the nine parts of the game scored separately, the top five in each, and a round-by-round recap of how the podium came together.",
+  "blurb": "The story of a prediction pool: the nine scoring parts broken down, and a round-by-round recap.",
   "thumb": "thumbs/wc2026.webp",
-  "added": "2026-07-28"
+  "added": "2026-07-28",
+  "note": "I finished third, and I had given up hope in the quarterfinal stage, seeing that the winner and goal scorer choices ruled out a podium finish. A Rodrigo de Paul yellow lifted me to 3rd place.\n\nThis was an iterative process with Claude. I detailed my design wishes for clicking through the rounds, the way the round recaps are told and presented, how I wanted a bump chart aligned with a table on the right, and the round indicator buttons at the top. What remained from Claude's initial suggestion of a line chart was the background color pattern."
  },
  {
   "id": "prediction-markets",
@@ -322,11 +324,11 @@ const CARDS = [
    "world"
   ],
   "kind": "data art",
-  "blurb": "Two world maps drawn only from data, no basemap underneath: every square on one is a place where someone was killed in organized violence between 1989 and 2025; the other shows the protected areas of 2026. Toggle between the two.",
+  "blurb": "Two world maps drawn only from data, drawing the world in squares colored by the number of deaths or amount of protected environment.",
   "source": "UCDP GED v26.1 · Protected Planet / WDPA, Sept 2026",
   "thumb": "thumbs/two-worlds.webp",
   "added": "2026-10-01",
-  "note": "The next generation of my 2018 Tableau viz on riot and protest violence."
+  "note": "The next generation of my 2018 Tableau viz on riot and protest violence. I chose to not include a basemap, and show the world the way the data shows it. The world is divided into squares, every colored square a place where someone was killed in organized violence between 1989 and 2025; and in the other view, the protected environmental areas of 2026. Toggle between the two."
  },
  {
   "id": "task-timeline",
@@ -337,7 +339,7 @@ const CARDS = [
    "productivity"
   ],
   "kind": "tool",
-  "blurb": "A task tracker that lives in one markdown file, with a board, a list and a timeline on top and an AI assistant that keeps it up to date with you. Swimlanes by category with roll-up bars, drag to reschedule, recurring tasks, overdue highlighting, holidays and vacations shaded.",
+  "blurb": "A task tracker, with a kanban board, a list, and a timeline. Set up for an AI assistant to keep it up to date.",
   "source": "TASKS.md → board · list · timeline",
   "thumb": "thumbs/task-timeline.webp",
   "own": {
@@ -346,7 +348,7 @@ const CARDS = [
    "label": "TASKS.md + skills on GitHub"
   },
   "added": "2026-10-02",
-  "note": "A demo copy of the tracker I use every day, with fictional tasks dated around today — nothing is saved."
+  "note": "A demo copy of the tracker I use every day, with fictional tasks dated around today — nothing is saved.\n\nTimeline swimlanes by category, drag to reschedule, recurring tasks automated rescheduling, overdue highlighting, holidays and vacations shaded."
  },
  {
   "id": "Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites",
@@ -390,7 +392,7 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Films by year watched and rating, and where they were seen, and how many of each were liked or loved.",
   "thumb": "thumbs/full/tableau-films-loved.webp",
-  "note": "Once fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone."
+  "note": "Originally fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone, superseded by my html tracker."
  },
  {
   "id": "Myfilmtracker2019/Filmswatched20192",
@@ -420,7 +422,7 @@ const CARDS = [
   "kind": "data art",
   "blurb": "The principal colors extracted from selected scenes of his films, each bubble sized by how prominent the color is.",
   "thumb": "thumbs/full/tableau-wes-anderson.webp",
-  "note": "Made to get something colorful on the living-room wall, from one of my favorite directors."
+  "note": "Made to get something colorful on the living-room wall, from one of my favorite directors. Extracted scenes that I thought represented the colors of each movie well. Put them through a color extractor website, which gave the prominence shares of each color."
  },
  {
   "id": "Eurovision2025/ViewsLine",
@@ -433,7 +435,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "dashboard",
-  "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, with who gained the most since yesterday. Static data up to the last collection day.",
+  "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, showing which contestants were trending up.",
   "thumb": "thumbs/full/tableau-eurovision-2025.webp",
   "note": "This helped me bet on the winner."
  },
@@ -620,7 +622,7 @@ const CARDS = [
    "society"
   ],
   "kind": "chart",
-  "blurb": "Hours of sunshine per month for cities around the world.",
+  "blurb": "Hours of sunshine per month for cities around the world, annual charts mapped based on coordinates.",
   "mm": "#MakeoverMonday 2019 wk 44",
   "thumb": "thumbs/full/tableau-sunshine.webp"
  },
@@ -677,7 +679,7 @@ const CARDS = [
    "society"
   ],
   "kind": "dashboard",
-  "blurb": "Every country's liters of pure alcohol per person against its latitude: the tropics average 5.2 liters, the north 7.1, the south 9.5. Inspired by the top-25 data of the week.",
+  "blurb": "Every country's liters of pure alcohol per person against its latitude: the tropics average 5.2 liters, the north 7.1, the south 9.5.",
   "mm": "inspired by #MakeoverMonday 2019 wk 26",
   "thumb": "thumbs/full/tableau-alcohol.webp"
  },
@@ -781,7 +783,7 @@ const CARDS = [
   "blurb": "How much land each food needs to produce a gram of protein.",
   "mm": "#MakeoverMonday 2018 wk 50",
   "thumb": "thumbs/full/tableau-land-use.webp",
-  "note": "My thoughts on the original: clear colors (one for the bars, one for the text), bars are probably the clearest way to compare sizes, and the chart title is clear. But the accompanying text explained that meats with high environmental impact could be substituted with other products, and the chart didn't color-code or show categories of foods; the subheading was very long and would have been better in the footer, so the viewer isn't stuck reading it; and the gridlines and axis are arguably not needed when the numbers are in the labels.\n\nWhat I did: I kept the bar chart, since I couldn't think of anything that would deliver the message more clearly, and added food categories and a highlight function to the color legend. The original labels showed land use in square meters. I have trouble imagining 0.014 sqm, so the absolute numbers were meaningless to me; instead the labels show how many times more land each food requires than the most productive one (pulses). That's of course the same as the bar length, but the numerical label reinforces the visual message."
+  "note": "A MakeoverMonday project. The provided original had clear colors (single color for bars), bars are probably the clearest way to compare sizes. The accompanying text explained that meats with high environmental impact could be substituted with other products, and the chart didn't color-code or show categories of foods, so it was not easy to see which ones were the meats and which ones the substitutes.\n\nWhat I did: I added food categories and a highlight function to the color legend. The original labels showed land use in square meters. I have trouble imagining 0.014 sqm, so the absolute numbers were meaningless to me; instead I chose to show how many times more land each food requires than the most productive one (pulses). That's of course the same as the bar length, but the numerical label reinforces the visual message."
  },
  {
   "id": "DeathsFromConflicts2017-MakeoverMonday2018w34/justtimeline",
@@ -887,12 +889,17 @@ function renderStrip() {
 function masonry(groups, dividers) {
   // columns by width, like the grid did; each card is placed into the currently shortest column, theme after theme,
   // so a theme forms a band across the page and the next theme starts where each column happens to end
-  const grid = $("#grid");
-  const n = Math.max(1, Math.floor((grid.clientWidth - 52 + 14) / (320 + 14)));
+  const grid = $("#grid"), GAP = 14;
+  const n = Math.max(1, Math.floor((grid.clientWidth - 54 + 14) / (320 + 14)));
   grid.innerHTML = `<div class="masonry" style="grid-template-columns: repeat(${n}, minmax(0, 1fr))">${Array.from({ length: n }, () => '<div class="col"></div>').join("")}</div>`;
   const cols = [...grid.querySelectorAll(".col")];
   const shortest = () => cols.reduce((a, b) => (b.offsetHeight < a.offsetHeight ? b : a));
-  for (const [t, cs] of groups) cs.forEach((c) => shortest().insertAdjacentHTML("beforeend", `<div class="field t-${THEMES.indexOf(t)}" data-theme="${esc(t)}">${card(c)}</div>`));
+  for (const [t, cs] of groups) cs.forEach((c) => {
+    const col = shortest(), prev = col.lastElementChild, starts = !prev || prev.dataset.theme !== t;   // a new theme in this column: leave a gap of page background above it
+    if (starts && prev) prev.classList.add("tend");
+    col.insertAdjacentHTML("beforeend", `<div class="field t-${THEMES.indexOf(t)}${starts ? " tstart" : ""}" data-theme="${esc(t)}">${card(c)}</div>`);
+  });
+  cols.forEach((col) => col.lastElementChild && col.lastElementChild.classList.add("tend"));
   if (dividers) {
     // spines: one per theme, as tall as that theme's band in the first column, as wide as the text
     const wall = grid.querySelector(".masonry"), wallTop = wall.getBoundingClientRect().top;
@@ -902,7 +909,7 @@ function masonry(groups, dividers) {
       if (!start) return;
       const next = firsts.find((f, i) => i > firsts.indexOf(start) && f.dataset.theme !== t);
       const top = start.getBoundingClientRect().top - wallTop;
-      const bottom = next ? next.getBoundingClientRect().top - wallTop : wall.offsetHeight;
+      const bottom = next ? next.getBoundingClientRect().top - wallTop - GAP : wall.offsetHeight;
       wall.insertAdjacentHTML("beforeend", `<div class="spine t-${THEMES.indexOf(t)}" style="top:${top}px;height:${bottom - top}px"><span>${esc(t)}</span></div>`);
     });
   }

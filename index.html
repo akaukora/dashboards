@@ -178,7 +178,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "diary",
-  "blurb": "The Letterboxd diary since 2019: what I watched, when and where, ratings by year and decade, theater vs. home, festival runs, written reviews.",
+  "blurb": "My Letterboxd diary since 2019: what I watched, when and where, ratings by year and decade, theater vs. home, film festivals, my reviews.",
   "thumb": "thumbs/films-watched.webp",
   "refresh": "automated",
   "source": "Letterboxd RSS + diary pages → films.csv",
@@ -197,7 +197,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "diary",
-  "blurb": "The StoryGraph library: books finished per year and month, ratings, moods, currently reading, recent reviews.",
+  "blurb": "My StoryGraph library: books finished per year and month, ratings, currently reading, recent reviews.",
   "thumb": "thumbs/books-read.webp",
   "refresh": "manual",
   "source": "StoryGraph library export → books.csv",
@@ -216,7 +216,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "diary",
-  "blurb": "Twenty years of Last.fm scrobbles. Highlights the favorite artists and tracks you haven't heard for a long time — and the ones you've come back to — plus when each artist was last heard, how favorites were made, and listening by year, month and hour.",
+  "blurb": "Twenty years of Last.fm scrobbles. Highlights the favorite artists and tracks you haven't heard for a long time, and the ones you've come back to + when each artist was last heard, how favorites were made, and listening trends.",
   "thumb": "thumbs/music.webp",
   "refresh": "automated",
   "source": "Last.fm API + Spotify export → scrobbles.csv",
@@ -264,7 +264,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "tool",
-  "blurb": "The same planner for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule, add screenings to calendar.",
+  "blurb": "The same planner as HIFF for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule, add screenings to calendar.",
   "thumb": "thumbs/tiff2026.webp",
   "added": "2026-09-10"
  },
@@ -277,9 +277,10 @@ const CARDS = [
    "sports & games"
   ],
   "kind": "story",
-  "blurb": "The story of a prediction pool: the nine parts of the game scored separately, the top five in each, and a round-by-round recap of how the podium came together.",
+  "blurb": "The story of a prediction pool: the nine scoring parts broken down, and a round-by-round recap.",
   "thumb": "thumbs/wc2026.webp",
-  "added": "2026-07-28"
+  "added": "2026-07-28",
+  "note": "I finished third, and I had given up hope in the quarterfinal stage, seeing that the winner and goal scorer choices ruled out a podium finish. A Rodrigo de Paul yellow lifted me to 3rd place.\n\nThis was an iterative process with Claude. I detailed my design wishes for clicking through the rounds, the way the round recaps are told and presented, how I wanted a bump chart aligned with a table on the right, and the round indicator buttons at the top. What remained from Claude's initial suggestion of a line chart was the background color pattern."
  },
  {
   "id": "prediction-markets",
@@ -305,11 +306,11 @@ const CARDS = [
    "world"
   ],
   "kind": "data art",
-  "blurb": "Two world maps drawn only from data, no basemap underneath: every square on one is a place where someone was killed in organized violence between 1989 and 2025; the other shows the protected areas of 2026. Toggle between the two.",
+  "blurb": "Two world maps drawn only from data, drawing the world in squares colored by the number of deaths or amount of protected environment.",
   "source": "UCDP GED v26.1 · Protected Planet / WDPA, Sept 2026",
   "thumb": "thumbs/two-worlds.webp",
   "added": "2026-10-01",
-  "note": "The next generation of my 2018 Tableau viz on riot and protest violence."
+  "note": "The next generation of my 2018 Tableau viz on riot and protest violence. I chose to not include a basemap, and show the world the way the data shows it. The world is divided into squares, every colored square a place where someone was killed in organized violence between 1989 and 2025; and in the other view, the protected environmental areas of 2026. Toggle between the two."
  },
  {
   "id": "task-timeline",
@@ -320,7 +321,7 @@ const CARDS = [
    "productivity"
   ],
   "kind": "tool",
-  "blurb": "A task tracker that lives in one markdown file, with a board, a list and a timeline on top and an AI assistant that keeps it up to date with you. Swimlanes by category with roll-up bars, drag to reschedule, recurring tasks, overdue highlighting, holidays and vacations shaded.",
+  "blurb": "A task tracker, with a kanban board, a list, and a timeline. Set up for an AI assistant to keep it up to date.",
   "source": "TASKS.md → board · list · timeline",
   "thumb": "thumbs/task-timeline.webp",
   "own": {
@@ -329,7 +330,7 @@ const CARDS = [
    "label": "TASKS.md + skills on GitHub"
   },
   "added": "2026-10-02",
-  "note": "A demo copy of the tracker I use every day, with fictional tasks dated around today — nothing is saved."
+  "note": "A demo copy of the tracker I use every day, with fictional tasks dated around today — nothing is saved.\n\nTimeline swimlanes by category, drag to reschedule, recurring tasks automated rescheduling, overdue highlighting, holidays and vacations shaded."
  },
  {
   "id": "Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites",
@@ -370,7 +371,7 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Films by year watched and rating, and where they were seen, and how many of each were liked or loved.",
   "thumb": "thumbs/tableau-films-loved.webp",
-  "note": "Once fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone."
+  "note": "Originally fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone, superseded by my html tracker."
  },
  {
   "id": "Myfilmtracker2019/Filmswatched20192",
@@ -398,7 +399,7 @@ const CARDS = [
   "kind": "data art",
   "blurb": "The principal colors extracted from selected scenes of his films, each bubble sized by how prominent the color is.",
   "thumb": "https://public.tableau.com/static/images/We/WesAndersonColorPalettes/PaletteBubbles/4_3.png",
-  "note": "Made to get something colorful on the living-room wall, from one of my favorite directors."
+  "note": "Made to get something colorful on the living-room wall, from one of my favorite directors. Extracted scenes that I thought represented the colors of each movie well. Put them through a color extractor website, which gave the prominence shares of each color."
  },
  {
   "id": "Eurovision2025/ViewsLine",
@@ -410,7 +411,7 @@ const CARDS = [
    "culture"
   ],
   "kind": "dashboard",
-  "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, with who gained the most since yesterday. Static data up to the last collection day.",
+  "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, showing which contestants were trending up.",
   "thumb": "thumbs/tableau-eurovision-2025.webp",
   "note": "This helped me bet on the winner."
  },
@@ -585,7 +586,7 @@ const CARDS = [
    "society"
   ],
   "kind": "chart",
-  "blurb": "Hours of sunshine per month for cities around the world.",
+  "blurb": "Hours of sunshine per month for cities around the world, annual charts mapped based on coordinates.",
   "mm": "#MakeoverMonday 2019 wk 44",
   "thumb": "https://public.tableau.com/static/images/Mo/MonthlysunshinehoursaroundtheworldMakeoverMonday2019wk44/Sunshinehoursaroundtheworld/4_3.png"
  },
@@ -638,7 +639,7 @@ const CARDS = [
    "society"
   ],
   "kind": "dashboard",
-  "blurb": "Every country's liters of pure alcohol per person against its latitude: the tropics average 5.2 liters, the north 7.1, the south 9.5. Inspired by the top-25 data of the week.",
+  "blurb": "Every country's liters of pure alcohol per person against its latitude: the tropics average 5.2 liters, the north 7.1, the south 9.5.",
   "mm": "inspired by #MakeoverMonday 2019 wk 26",
   "thumb": "thumbs/tableau-alcohol.webp"
  },
@@ -735,7 +736,7 @@ const CARDS = [
   "blurb": "How much land each food needs to produce a gram of protein.",
   "mm": "#MakeoverMonday 2018 wk 50",
   "thumb": "https://public.tableau.com/static/images/MM/MM2018w50-Landusepergramofprotein/Foodlanddashboard/4_3.png",
-  "note": "My thoughts on the original: clear colors (one for the bars, one for the text), bars are probably the clearest way to compare sizes, and the chart title is clear. But the accompanying text explained that meats with high environmental impact could be substituted with other products, and the chart didn't color-code or show categories of foods; the subheading was very long and would have been better in the footer, so the viewer isn't stuck reading it; and the gridlines and axis are arguably not needed when the numbers are in the labels.\n\nWhat I did: I kept the bar chart, since I couldn't think of anything that would deliver the message more clearly, and added food categories and a highlight function to the color legend. The original labels showed land use in square meters. I have trouble imagining 0.014 sqm, so the absolute numbers were meaningless to me; instead the labels show how many times more land each food requires than the most productive one (pulses). That's of course the same as the bar length, but the numerical label reinforces the visual message."
+  "note": "A MakeoverMonday project. The provided original had clear colors (single color for bars), bars are probably the clearest way to compare sizes. The accompanying text explained that meats with high environmental impact could be substituted with other products, and the chart didn't color-code or show categories of foods, so it was not easy to see which ones were the meats and which ones the substitutes.\n\nWhat I did: I added food categories and a highlight function to the color legend. The original labels showed land use in square meters. I have trouble imagining 0.014 sqm, so the absolute numbers were meaningless to me; instead I chose to show how many times more land each food requires than the most productive one (pulses). That's of course the same as the bar length, but the numerical label reinforces the visual message."
  },
  {
   "id": "DeathsFromConflicts2017-MakeoverMonday2018w34/justtimeline",
