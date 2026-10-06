@@ -107,7 +107,7 @@
   .card .meta { margin-top: auto; padding-top: 6px; color: var(--text-3); font-size: 12px; line-height: 1.7; } .card .meta .tag { vertical-align: 1px; margin-right: 4px; }
   .card .meta .dot { opacity: .6; }
   .tag { display: inline-block; border-radius: 999px; padding: 0 8px; font-size: 11px; line-height: 18px; color: var(--text-2); background: var(--card-2); }
-  .tag.how { background: transparent; border: 1px dashed var(--line-2); color: var(--text-3); }
+  .src .live { display: inline-block; width: 7px; height: 7px; border-radius: 50%; background: var(--green-mark); margin-right: 6px; vertical-align: 1px; }
   .card .thumb { display: block; margin: -16px -18px 6px; border-radius: var(--radius) var(--radius) 0 0; overflow: hidden; aspect-ratio: 16 / 10; background: var(--card-2); border-bottom: 1px solid var(--line); }
   .card .thumb img { display: block; width: 100%; height: 100%; object-fit: cover; object-position: top; filter: saturate(.95); transition: transform .25s; }
   :root[data-theme="light"] .card .thumb { border-bottom-color: var(--line-2); } @media (prefers-color-scheme: light) { :root:not([data-theme="dark"]) .card .thumb { border-bottom-color: var(--line-2); } }
@@ -843,12 +843,12 @@ function card(c) {
   // year · medium (HTML or Tableau): an explicit c.year, else the year in the #MakeoverMonday week, else one in the Tableau URL, else the year the piece was added here
   const year = c.year || (c.mm && (c.mm.match(/\b(20\d\d)\b/) || [])[1]) || (tableau && (c.url.match(/(20\d\d)/) || [])[1]) || (!tableau && c.added ? c.added.slice(0, 4) : "");
   const medium = c.medium || (tableau ? "Tableau" : "HTML");
-  const wall = `<div class="wall">${year ? esc(String(year)) + " · " : ""}${esc(medium)}</div>`;
-  // how the data was obtained: a small outlined pill (API, scraped, export, email); nothing when the data came ready-made (e.g. a MakeoverMonday set)
-  const how = c.how ? `<span class="tag how" title="How the data was obtained">${esc(c.how)}</span>` : "";
+  const wall = `<div class="wall">${year ? esc(String(year)) + " · " : ""}${esc(medium)} · ${esc(c.kind)}</div>`;
+  // footer lines in dim text, no pills: where the piece lives / how it refreshes, and where the data came from and how it was obtained
+  const dataLine = c.data ? `<span class="src">data · ${esc(c.data)}${c.how ? ", " + esc(c.how) : ""}</span>` : (c.how && !c.source ? `<span class="src">data ${esc(c.how)}</span>` : "");
   const meta = tableau
-    ? `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${how} Tableau Public${c.mm ? " · " + (/MakeoverMonday/.test(c.mm) ? `<a href="https://makeovermonday.vercel.app" target="_blank" rel="noopener" title="#MakeoverMonday — the weekly data-viz community challenge">${esc(c.mm)}</a>` : esc(c.mm)) : ""}${c.data ? `<span class="src">data · ${esc(c.data)}</span>` : ""}`
-    : `${c.themes.map((t) => `<span class="tag theme">${esc(t)}</span>`).join("")}<span class="tag kind ${kindCls}">${esc(c.kind)}</span>${how}${c.refresh ? `<span class="tag livedata">live data</span>` : ""}${c.source || c.refresh ? `<span class="src">${c.refresh ? (c.refresh === "automated" ? "automated · " : "manual export · ") : ""}${esc(c.source || "")}</span>` : ""}`;
+    ? `${c.mm ? `<span class="src">${/MakeoverMonday/.test(c.mm) ? `<a href="https://makeovermonday.vercel.app" target="_blank" rel="noopener" title="#MakeoverMonday — the weekly data-viz community challenge">${esc(c.mm)}</a>` : esc(c.mm)}</span>` : ""}${dataLine}`
+    : `${c.refresh || c.source ? `<span class="src">${c.refresh ? `<span class="live"></span>live data · ${c.refresh === "automated" ? "automated" : "manual export"}` : ""}${c.source ? (c.refresh ? " · " : "") + esc(c.source) : ""}</span>` : dataLine}`;
   return `<div class="card${tableau ? " tableau" : ""}" data-id="${esc(c.id)}">
     <a class="main" href="${esc(c.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="thumb"><img src="${esc(c.thumb)}" alt="" loading="lazy" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
     <div class="t">${esc(c.title)}</div>${wall}<p>${esc(c.blurb)}</p></a>
