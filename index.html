@@ -208,13 +208,13 @@ const CARDS = [
   "blurb": "My Letterboxd diary since 2019: what I watched, when and where, ratings by year and decade, theater vs. home, film festivals, my reviews.",
   "thumb": "thumbs/films-watched.webp",
   "refresh": "automated",
-  "source": "Letterboxd RSS + diary pages → films.csv",
   "own": {
    "href": "letterboxd-viewer/",
    "label": "Letterboxd export"
   },
   "added": "2026-09-02",
-  "how": "scraped"
+  "data": "Letterboxd RSS + TMDB API",
+  "year": 2026
  },
  {
   "id": "books-read",
@@ -228,13 +228,13 @@ const CARDS = [
   "blurb": "My StoryGraph library: books finished per year and month, ratings, currently reading, recent reviews.",
   "thumb": "thumbs/books-read.webp",
   "refresh": "manual",
-  "source": "StoryGraph library export → books.csv",
   "own": {
    "href": "storygraph-viewer/",
    "label": "StoryGraph or Goodreads export"
   },
   "added": "2026-09-05",
-  "how": "export"
+  "data": "StoryGraph library export + Open Library and Google Books APIs",
+  "year": 2026
  },
  {
   "id": "music",
@@ -248,14 +248,14 @@ const CARDS = [
   "blurb": "Twenty years of Last.fm scrobbles. Highlights the favorite artists and tracks you haven't heard for a long time, and the ones you've come back to + when each artist was last heard, how favorites were made, and listening trends.",
   "thumb": "thumbs/music.webp",
   "refresh": "automated",
-  "source": "Last.fm API + Spotify export → scrobbles.csv",
   "own": {
    "href": "music-viewer/",
    "label": "Last.fm, Spotify or Apple Music"
   },
   "added": "2026-09-06",
   "note": "The idea goes back to Andy Cotgreave's blog post [Visualize your listening habits with Last.fm and Spotify data](https://www.tableau.com/blog/visualize-your-listening-habits-lastfm-and-spotify-data) — every scrobbled artist on a timeline at the date they were last played. I first rebuilt it in Tableau, then expanded it here with further analysis and scheduled, automatic data retrieval.",
-  "how": "API"
+  "data": "Last.fm API + Spotify export",
+  "year": 2026
  },
  {
   "id": "duolingo",
@@ -269,9 +269,9 @@ const CARDS = [
   "blurb": "Time, XP and lessons by week, month or year, reconstructed from Duolingo's weekly progress-report emails and the account data export.",
   "thumb": "thumbs/duolingo.webp",
   "refresh": "automated",
-  "source": "progress-report emails",
   "added": "2026-09-07",
-  "how": "email"
+  "data": "Parsing progress-report emails",
+  "year": 2026
  },
  {
   "id": "hiff2026",
@@ -284,7 +284,8 @@ const CARDS = [
   "kind": "tool",
   "blurb": "Helsinki International Film Festival: pick films, pick times, see clashes and tight transfers between venues on a timetable grid, share a plan with friends, add screenings to calendar.",
   "thumb": "thumbs/hiff2026.webp",
-  "added": "2026-09-08"
+  "added": "2026-09-08",
+  "year": 2026
  },
  {
   "id": "tiff2026",
@@ -297,7 +298,8 @@ const CARDS = [
   "kind": "tool",
   "blurb": "The same planner as HIFF for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule, add screenings to calendar.",
   "thumb": "thumbs/tiff2026.webp",
-  "added": "2026-09-10"
+  "added": "2026-09-10",
+  "year": 2026
  },
  {
   "id": "wc2026",
@@ -311,7 +313,8 @@ const CARDS = [
   "blurb": "The story of a prediction pool: the nine scoring parts broken down, and a round-by-round recap.",
   "thumb": "thumbs/wc2026.webp",
   "added": "2026-07-28",
-  "note": "I finished third, and I had given up hope in the quarterfinal stage, seeing that the winner and goal scorer choices ruled out a podium finish. A Rodrigo de Paul yellow lifted me to 3rd place.\n\nThis was an iterative process with Claude. I detailed my design wishes for clicking through the rounds, the way the round recaps are told and presented, how I wanted a bump chart aligned with a table on the right, and the round indicator buttons at the top. What remained from Claude's initial suggestion of a line chart was the background color pattern."
+  "note": "I finished third, and I had given up hope in the quarterfinal stage, seeing that the winner and goal scorer choices ruled out a podium finish. A Rodrigo de Paul yellow lifted me to 3rd place.\n\nThis was an iterative process with Claude. I detailed my design wishes for clicking through the rounds, the way the round recaps are told and presented, how I wanted a bump chart aligned with a table on the right, and the round indicator buttons at the top. What remained from Claude's initial suggestion of a line chart was the background color pattern.",
+  "year": 2026
  },
  {
   "id": "prediction-markets",
@@ -325,9 +328,9 @@ const CARDS = [
   "blurb": "Open positions and settled markets on Polymarket and Kalshi in one view.",
   "thumb": "thumbs/prediction-markets.webp",
   "refresh": "automated",
-  "source": "Polymarket + Kalshi → data.json",
   "added": "2026-09-18",
-  "how": "API"
+  "data": "Polymarket + Kalshi APIs",
+  "year": 2026
  },
  {
   "id": "violent-protected",
@@ -339,10 +342,10 @@ const CARDS = [
   ],
   "kind": "data art",
   "blurb": "Two world maps drawn only from data, drawing the world in squares colored by the number of deaths or amount of protected environment.",
-  "source": "UCDP GED v26.1 · Protected Planet / WDPA, Sept 2026",
   "thumb": "thumbs/two-worlds.webp",
   "added": "2026-10-01",
-  "note": "The next generation of my 2018 Tableau viz on riot and protest violence. I chose to not include a basemap, and show the world the way the data shows it. The world is divided into squares, every colored square a place where someone was killed in organized violence between 1989 and 2025; and in the other view, the protected environmental areas of 2026. Toggle between the two."
+  "note": "The next generation of my 2018 Tableau viz on riot and protest violence. I chose to not include a basemap, and show the world the way the data shows it. The world is divided into squares, every colored square a place where someone was killed in organized violence between 1989 and 2025; and in the other view, the protected environmental areas of 2026. Toggle between the two.",
+  "year": 2026
  },
  {
   "id": "task-timeline",
@@ -354,7 +357,6 @@ const CARDS = [
   ],
   "kind": "tool",
   "blurb": "A task tracker, with a kanban board, a list, and a timeline. Set up for an AI assistant to keep it up to date.",
-  "source": "TASKS.md → board · list · timeline",
   "thumb": "thumbs/task-timeline.webp",
   "own": {
    "href": "https://github.com/akaukora/dashboards/tree/main/task-timeline",
@@ -362,7 +364,8 @@ const CARDS = [
    "label": "TASKS.md + skills on GitHub"
   },
   "added": "2026-10-02",
-  "note": "A demo copy of the tracker I use every day, with fictional tasks dated around today — nothing is saved.\n\nTimeline swimlanes by category, drag to reschedule, recurring tasks automated rescheduling, overdue highlighting, holidays and vacations shaded."
+  "note": "A demo copy of the tracker I use every day, with fictional tasks dated around today — nothing is saved.\n\nTimeline swimlanes by category, drag to reschedule, recurring tasks automated rescheduling, overdue highlighting, holidays and vacations shaded.",
+  "year": 2026
  },
  {
   "id": "Musicdashboard-Last_fm-Forgottenfavorites/Re-discoverfavorites",
@@ -378,7 +381,7 @@ const CARDS = [
   "blurb": "Favorite artists by when they were last played, the big bubbles far from the right edge being the ones to rediscover.",
   "thumb": "thumbs/full/tableau-forgotten-favorites.webp",
   "note": "The Tableau original of my music dashboard. Andy Cotgreave's blog post [Visualize your listening habits with Last.fm and Spotify data](https://www.tableau.com/blog/visualize-your-listening-habits-lastfm-and-spotify-data) showed a viz with every scrobbled artist on a timeline, at the date they were last listened to. It got me exploring my own Last.fm data, and eventually led to further analysis and scheduled, automatic data retrieval.",
-  "data": "My Last.fm profile"
+  "data": "Data export (Last.fm + Spotify)"
  },
  {
   "id": "Musicdashboard-Last_fm-Artistdiscovery/WhenhaveIdiscoveredmusicians",
@@ -393,7 +396,7 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "When each artist was first heard, and how many new ones each year brought.",
   "thumb": "thumbs/full/tableau-artist-discovery.webp",
-  "data": "My Last.fm profile"
+  "data": "Data export (Last.fm + Spotify)"
  },
  {
   "id": "TheFilmsIveLovedandnot/Filmsdashboard",
@@ -409,8 +412,7 @@ const CARDS = [
   "blurb": "Films by year watched and rating, and where they were seen, and how many of each were liked or loved.",
   "thumb": "thumbs/full/tableau-films-loved.webp",
   "note": "Originally fed live by a Google Sheet scraping the Letterboxd RSS feed; now a static snapshot, redone for the phone, superseded by my html tracker.",
-  "data": "My Letterboxd diary",
-  "how": "scraped"
+  "data": "Letterboxd RSS · was live, now static"
  },
  {
   "id": "Myfilmtracker2019/Filmswatched20192",
@@ -456,8 +458,7 @@ const CARDS = [
   "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, showing which contestants were trending up.",
   "thumb": "thumbs/full/tableau-eurovision-2025.webp",
   "note": "This helped me bet on the winner.\n\nI kept a Google Sheet with the YouTube links to the official music videos and the semi-final performances, with a mapping to combine them per country. An Apps Script looked up the view counts from YouTube once a day, and Tableau pulled the data from the sheet. The updates ran from March to December 2025; I turned them off once live updates were no longer relevant, and the viz now shows the data up to the end of June 2025, six weeks after the final.",
-  "data": "YouTube Data API, daily via a Google Sheet",
-  "how": "API"
+  "data": "YouTube Data API, through a Google Sheets script · was live, now static"
  },
  {
   "id": "CouchtoHalfMarathon/CouchtoHalfMarathon",
@@ -487,8 +488,7 @@ const CARDS = [
   "blurb": "Driving time against snow conditions and resort size across the Alps.",
   "thumb": "thumbs/full/tableau-ski-trip.webp",
   "note": "Made for planning a skiing weekend back in the day. I scraped a ski-resort site with ParseHub for each resort's size, address and snow situation, pulled driving times from the airports with the Google Maps API, and mapped it all in Tableau with user-adjustable parameters. Our group was coming from different parts of Europe, so the tool accounted for every member of the party.",
-  "data": "Resort websites, Google Maps",
-  "how": "API"
+  "data": "Resort websites scraped with ParseHub, driving times from the Google Maps API"
  },
  {
   "id": "HowuniqueareHelsinkimalls/MallsofHelsinki",
@@ -504,8 +504,7 @@ const CARDS = [
   "blurb": "The top 20 malls of a city by leasable area and the share of shops unique to each; click a mall for a \"floorplan\" of its shops on three floors: unique, more common and very common.",
   "thumb": "thumbs/full/tableau-helsinki-malls.webp",
   "note": "Built on Helsinki, but the idea works for any city. I used ParseHub to scrape through the mall websites to pick up the store information.",
-  "data": "Mall websites",
-  "how": "scraped"
+  "data": "Mall websites scraped with ParseHub"
  },
  {
   "id": "Transittimesandhomepricesbypostcodescatteronly/Transitonlyscatter",
@@ -522,8 +521,7 @@ const CARDS = [
   "blurb": "Every Helsinki-area postcode by its public-transit time to the city center and its average home price per square meter.",
   "thumb": "thumbs/full/tableau-transit-home-prices.webp",
   "note": "A remake of a [Helsingin Sanomat piece](https://www.hs.fi/pkseutu/art-2000005604217.html). The article had a tool, where you picked how far from the center you wanted to live, and a box listed the neighborhoods at that distance with their prices and the premium or discount against the others.\n\nReading it, I thought my brain handles these comparisons better in a visual format, so I visualized the data in Tableau. I scanned the prices from the newspaper with my phone and converted to Excel with ABBYY. The transit times I queried from the Google Maps API with the same definition of city center and the same 8 am arrival the newspaper used.",
-  "data": "Helsingin Sanomat (prices), Google Maps (transit times)",
-  "how": "API"
+  "data": "Printed newspaper → photo → Excel with ABBYY; transit times from the Google Maps API"
  },
  {
   "id": "Oscarsimpactonboxoffice/BestPicBoxOffice2",
@@ -538,8 +536,7 @@ const CARDS = [
   "kind": "chart",
   "blurb": "What a Best Picture nomination and win did to each film's box office.",
   "thumb": "thumbs/full/tableau-oscars.webp",
-  "data": "Box Office Mojo",
-  "how": "scraped"
+  "data": "Scraped from Box Office Mojo with ParseHub"
  },
  {
   "id": "Whichtimetochoose/Simplebubbles",
@@ -569,7 +566,7 @@ const CARDS = [
   "blurb": "Daily number of articles in YLE and the NY Times, and daily Google Search Trends for coronavirus and COVID-19 by country. Static data, January–April 2020.",
   "thumb": "thumbs/full/tableau-coronavirus.webp",
   "note": "Early days of Covid news. With my parents living in Hong Kong until their scheduled move back to Finland, just as international flights shut down, I followed Covid news perhaps earlier than most in Europe. At some point it struck me how what seemed like such important news was not getting the attention it seemed to warrant. That inspired me to scrape the NYT and Yle websites for Covid-related news, and Google Trends for web searches, to see how the data aligned with my observations. In hindsight — after the total shutdowns, the long-term changes to our societies, not to mention the global death count — it is difficult to imagine that Covid was not at the top of everyone's mind from the start.",
-  "data": "yle.fi, nytimes.com and Google Trends"
+  "data": "NY Times and YLE News search result scraped with ParseHub; Google trends"
  },
  {
   "id": "VizForSocialGood-JapanFoodBank/Foodlossandpovertyviz",
@@ -584,8 +581,7 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Food waste against poverty in Japan, for the Viz for Social Good project.",
   "mm": "#VizForSocialGood",
-  "thumb": "thumbs/full/tableau-japan-food-bank.webp",
-  "data": "Ministry of Agriculture, Forestry and Fisheries, Japan"
+  "thumb": "thumbs/full/tableau-japan-food-bank.webp"
  },
  {
   "id": "BikeRevolution2020-MM2021/MM2021wk1",
@@ -600,7 +596,7 @@ const CARDS = [
   "blurb": "Week-by-week change in bikes counted by Rails to Trails' 31 US counters, 2019 to 2020: biking was already trending up, and the pandemic boosted it.",
   "mm": "#MakeoverMonday 2021 wk 1",
   "thumb": "thumbs/full/tableau-bike-boom.webp",
-  "data": "Rails to Trails"
+  "year": 2021
  },
  {
   "id": "AmericasDebt-MM2020wk47/PathtoDebtwhitebackground",
@@ -615,7 +611,7 @@ const CARDS = [
   "blurb": "US federal debt's path over time.",
   "mm": "#MakeoverMonday 2020 wk 47",
   "thumb": "thumbs/full/tableau-us-debt.webp",
-  "data": "Federal Reserve Bank of St. Louis, Wikipedia"
+  "year": 2020
  },
  {
   "id": "XmasspendingMakeoverMonday2019wk52/Dashboard1",
@@ -628,7 +624,8 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "How much people planned to spend on Christmas, by country.",
   "mm": "#MakeoverMonday 2019 wk 52",
-  "thumb": "https://public.tableau.com/static/images/Xm/XmasspendingMakeoverMonday2019wk52/Dashboard1/4_3.png"
+  "thumb": "https://public.tableau.com/static/images/Xm/XmasspendingMakeoverMonday2019wk52/Dashboard1/4_3.png",
+  "year": 2019
  },
  {
   "id": "NBAdefensiveratingsvsNBAstandingsMakeoverMonday2019wk51/Dashboard1",
@@ -643,7 +640,7 @@ const CARDS = [
   "blurb": "Does defense win? Team defensive rating against league position.",
   "mm": "#MakeoverMonday 2019 wk 51",
   "thumb": "thumbs/full/tableau-nba-defense.webp",
-  "data": "NBA"
+  "year": 2019
  },
  {
   "id": "MonthlysunshinehoursaroundtheworldMakeoverMonday2019wk44/Sunshinehoursaroundtheworld",
@@ -658,7 +655,7 @@ const CARDS = [
   "blurb": "Hours of sunshine per month for cities around the world, annual charts mapped based on coordinates.",
   "mm": "#MakeoverMonday 2019 wk 44",
   "thumb": "thumbs/full/tableau-sunshine.webp",
-  "data": "Wikipedia"
+  "year": 2019
  },
  {
   "id": "SeasonpreferencesintheUS-MakeoverMonday2019wk36/Seasonpreference2",
@@ -673,7 +670,7 @@ const CARDS = [
   "blurb": "Which season Americans prefer, by age group.",
   "mm": "#MakeoverMonday 2019 wk 36",
   "thumb": "thumbs/full/tableau-seasons.webp",
-  "data": "YouGov"
+  "year": 2019
  },
  {
   "id": "Gamesmarketrevenuetrend-MakeoverMonday2019wk35/Gamerevenuesarea",
@@ -688,7 +685,8 @@ const CARDS = [
   "kind": "chart",
   "blurb": "PC, console and mobile game revenue 2012–2021, actuals and forecast, each segment against the whole market. The rise of mobile gaming.",
   "mm": "#MakeoverMonday 2019 wk 35",
-  "thumb": "thumbs/full/tableau-games-revenue.webp"
+  "thumb": "thumbs/full/tableau-games-revenue.webp",
+  "year": 2019
  },
  {
   "id": "MM2019w33-Clinicaltrials/MM2019xk33v1",
@@ -703,7 +701,7 @@ const CARDS = [
   "blurb": "Registered clinical trials by year and type.",
   "mm": "#MakeoverMonday 2019 wk 33",
   "thumb": "thumbs/full/tableau-clinical-trials.webp",
-  "data": "ClinicalTrials.gov"
+  "year": 2019
  },
  {
   "id": "Alcoholconsumptioninthenorthsouthandtropics/Alcoholdashboardnort-south2",
@@ -716,9 +714,9 @@ const CARDS = [
   ],
   "kind": "dashboard",
   "blurb": "Every country's liters of pure alcohol per person against its latitude: the tropics average 5.2 liters, the north 7.1, the south 9.5.",
-  "mm": "inspired by #MakeoverMonday 2019 wk 26",
+  "mm": "#MakeoverMonday 2019 wk 26",
   "thumb": "thumbs/full/tableau-alcohol.webp",
-  "data": "WHO 2016"
+  "year": 2019
  },
  {
   "id": "CO2emissionsbycountry-MakeoverMonday2019wk22/CO2dashboard",
@@ -733,7 +731,7 @@ const CARDS = [
   "blurb": "Every country's emissions since 1960 as gray lines; pick one and it lights up blue or red for whether it fell or rose last year, with its reference group in black.",
   "mm": "#MakeoverMonday 2019 wk 22",
   "thumb": "thumbs/full/tableau-co2.webp",
-  "data": "The World Bank"
+  "year": 2019
  },
  {
   "id": "MM2019w20-Rhinopoaching/rhinos",
@@ -748,8 +746,7 @@ const CARDS = [
   "kind": "chart",
   "blurb": "Rhinos poached per year since 2006 against the running total: the yearly count is falling, but is that because of more arrests, or because so few animals are left?",
   "mm": "#MakeoverMonday 2019 wk 20",
-  "thumb": "thumbs/full/tableau-rhinos.webp",
-  "data": "Minister of Environmental Affairs, South Africa"
+  "thumb": "thumbs/full/tableau-rhinos.webp"
  },
  {
   "id": "SeaicecoverageMakeoverMonday/iceberg2_1",
@@ -764,8 +761,7 @@ const CARDS = [
   "kind": "chart",
   "blurb": "The yearly maximum and minimum extent of Arctic sea ice from 1979 to 2017, measured in multiples of the land area of the USA: permanent ice equal to 0.2 USAs melted away.",
   "mm": "#MakeoverMonday",
-  "thumb": "thumbs/full/tableau-sea-ice.webp",
-  "data": "National Snow and Ice Data Center"
+  "thumb": "thumbs/full/tableau-sea-ice.webp"
  },
  {
   "id": "MakeoverMonday2019w03-USminimumwagepopulation/Minimumwagedashboard",
@@ -780,7 +776,7 @@ const CARDS = [
   "blurb": "State minimum wages weighted by how many people live under each.",
   "mm": "#MakeoverMonday 2019 wk 3",
   "thumb": "thumbs/full/tableau-minimum-wage.webp",
-  "data": "Bureau of Labor Statistics"
+  "year": 2019
  },
  {
   "id": "MM2019w02-PressFreedomtrail/Trail",
@@ -795,7 +791,7 @@ const CARDS = [
   "blurb": "Each country's press-freedom score against its economy, year by year, drawn as a trail.",
   "mm": "#MakeoverMonday 2019 wk 2",
   "thumb": "thumbs/full/tableau-press-freedom.webp",
-  "data": "Freedom House, World Bank"
+  "year": 2019
  },
  {
   "id": "NHLattendancechanges2001-2018MakeoverMonday2019wk01lines/NHLattendancechange",
@@ -810,7 +806,7 @@ const CARDS = [
   "blurb": "Home attendance per team across seventeen seasons, one line each.",
   "mm": "#MakeoverMonday 2019 wk 1",
   "thumb": "thumbs/full/tableau-nhl-attendance.webp",
-  "data": "ESPN"
+  "year": 2019
  },
  {
   "id": "MM2018w50-Landusepergramofprotein/Foodlanddashboard",
@@ -827,7 +823,7 @@ const CARDS = [
   "mm": "#MakeoverMonday 2018 wk 50",
   "thumb": "thumbs/full/tableau-land-use.webp",
   "note": "A MakeoverMonday project. The provided original had clear colors (single color for bars), bars are probably the clearest way to compare sizes. The accompanying text explained that meats with high environmental impact could be substituted with other products, and the chart didn't color-code or show categories of foods, so it was not easy to see which ones were the meats and which ones the substitutes.\n\nWhat I did: I added food categories and a highlight function to the color legend. The original labels showed land use in square meters. I have trouble imagining 0.014 sqm, so the absolute numbers were meaningless to me; instead I chose to show how many times more land each food requires than the most productive one (pulses). That's of course the same as the bar length, but the numerical label reinforces the visual message.",
-  "data": "Our World in Data"
+  "year": 2018
  },
  {
   "id": "DeathsFromConflicts2017-MakeoverMonday2018w34/justtimeline",
@@ -842,7 +838,8 @@ const CARDS = [
   "blurb": "Yemen in 2017, one circle per day sized by the number of deaths.",
   "mm": "#MakeoverMonday 2018 wk 34",
   "thumb": "thumbs/full/tableau-conflict-deaths.webp",
-  "note": "Data art more than analysis: not the most accurate way to read the numbers, but one that grabs attention."
+  "note": "Data art more than analysis: not the most accurate way to read the numbers, but one that grabs attention.",
+  "year": 2018
  },
  {
   "id": "Riotandprotestviolence-MakeoverMonday2018w34/Conflictsviz-MM2018w34",
@@ -857,7 +854,8 @@ const CARDS = [
   "blurb": "Riots and protests that turned violent across Africa, the Middle East and Asia, on a dot-grid map.",
   "mm": "#MakeoverMonday 2018 wk 34",
   "thumb": "thumbs/full/tableau-riot-violence.webp",
-  "note": "From the same week's MakeoverMonday data as the Yemen timeline."
+  "note": "From the same week's MakeoverMonday data as the Yemen timeline.",
+  "year": 2018
  }
 ];
 </script>
@@ -900,11 +898,11 @@ function card(c) {
   const year = c.year || (c.mm && (c.mm.match(/\b(20\d\d)\b/) || [])[1]) || (tableau && (c.url.match(/(20\d\d)/) || [])[1]) || (!tableau && c.added ? c.added.slice(0, 4) : "");
   const medium = c.medium || (tableau ? "Tableau" : "HTML");
   const wall = `<div class="wall">${year ? esc(String(year)) + " · " : ""}${esc(medium)} · ${esc(c.kind)}</div>`;
-  // footer lines in dim text, no pills: where the piece lives / how it refreshes, and where the data came from and how it was obtained
-  const dataLine = c.data ? `<span class="src">data · ${esc(c.data)}${c.how ? ", " + esc(c.how) : ""}</span>` : (c.how && !c.source ? `<span class="src">data ${esc(c.how)}</span>` : "");
-  const meta = tableau
-    ? `${c.mm ? `<span class="src">${/MakeoverMonday/.test(c.mm) ? `<a href="https://makeovermonday.vercel.app" target="_blank" rel="noopener" title="#MakeoverMonday — the weekly data-viz community challenge">${esc(c.mm)}</a>` : esc(c.mm)}</span>` : ""}${dataLine}`
-    : `${c.refresh || c.source ? `<span class="src">${c.refresh ? `<span class="live"></span>live data · ${c.refresh === "automated" ? "automated" : "manual export"}` : ""}${c.source ? (c.refresh ? " · " : "") + esc(c.source) : ""}</span>` : dataLine}`;
+  // footer lines in dim text, no pills: the project or event (e.g. the MakeoverMonday week), and the data line — prefixed with the
+  // refresh status where the page keeps itself up to date
+  const mmLine = c.mm ? `<span class="src">${/MakeoverMonday/.test(c.mm) ? `<a href="https://makeovermonday.vercel.app" target="_blank" rel="noopener" title="#MakeoverMonday — the weekly data-viz community challenge">${esc(c.mm)}</a>` : esc(c.mm)}</span>` : "";
+  const dataLine = c.refresh || c.data ? `<span class="src">${c.refresh ? `<span class="live"></span>live data · ${c.refresh === "automated" ? "automated" : "manual export"}` : ""}${c.data ? (c.refresh ? " · " : "") + esc(c.data) : ""}</span>` : "";
+  const meta = mmLine + dataLine;
   return `<div class="card${tableau ? " tableau" : ""}" data-id="${esc(c.id)}">
     <a class="main" href="${esc(c.url)}"${ext ? ' target="_blank" rel="noopener"' : ""}><span class="thumb" ${c.aspect ? `style="--ar:${c.aspect}"` : 'data-auto="1" style="--ar:16/10"'}><img src="${esc(c.thumb)}" alt="" loading="lazy" style="object-position:top" onload="if(this.parentElement.dataset.auto){const r=Math.min(16/9,Math.max(3/4,this.naturalWidth/this.naturalHeight));this.parentElement.style.setProperty('--ar',r)}" onerror="this.parentElement.style.background='var(--card-2)';this.remove()"></span>
     <div class="t">${esc(c.title)}</div>${wall}<p>${esc(c.blurb)}</p></a>
