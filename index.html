@@ -444,7 +444,7 @@ const CARDS = [
  },
  {
   "id": "Eurovision2025/ViewsLine",
-  "aspect": "1.25",
+  "aspect": "0.887",
   "year": 2025,
   "title": "Eurovision 2025 — views on YouTube",
   "url": "https://public.tableau.com/app/profile/antti1275/viz/Eurovision2025/ViewsLine",
@@ -455,8 +455,9 @@ const CARDS = [
   "kind": "dashboard",
   "blurb": "Daily YouTube view counts for every Eurovision 2025 entry, showing which contestants were trending up.",
   "thumb": "thumbs/full/tableau-eurovision-2025.webp",
-  "note": "This helped me bet on the winner.",
-  "data": "YouTube"
+  "note": "This helped me bet on the winner.\n\nI kept a Google Sheet with the YouTube links to the official music videos and the semi-final performances, with a mapping to combine them per country. An Apps Script looked up the view counts from YouTube once a day, and Tableau pulled the data from the sheet. The updates ran from March to December 2025; I turned them off once live updates were no longer relevant, and the viz now shows the data up to the end of June 2025, six weeks after the final.",
+  "data": "YouTube Data API, daily via a Google Sheet",
+  "how": "API"
  },
  {
   "id": "CouchtoHalfMarathon/CouchtoHalfMarathon",
