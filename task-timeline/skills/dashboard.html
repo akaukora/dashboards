@@ -4136,7 +4136,21 @@
 
       // Render category groups
       // Order: process categories first (most useful), then bags, then '(No category)'
+      // With "Deadline" sort: groups whose next open (unchecked) deadline is soonest come first
+      // (overdue ones highest); groups with no open dated tasks sink to the bottom.
+      // Ties, and "Manual" sort, fall back to process-first then label.
+      const nextOpenDeadline = (tag) => {
+        let m = Infinity;
+        groups[tag].items.forEach(i => {
+          if (!i.task.checked && i.task.endDate) m = Math.min(m, i.task.endDate.getTime());
+        });
+        return m;
+      };
       const groupTags = Object.keys(groups).sort((a, b) => {
+        if (taskSort === 'deadline') {
+          const da = nextOpenDeadline(a), db = nextOpenDeadline(b);
+          if (da !== db) return da < db ? -1 : 1;
+        }
         const ta = groups[a].type, tb = groups[b].type;
         const aProc = ta === 'process' ? 0 : 1;
         const bProc = tb === 'process' ? 0 : 1;
