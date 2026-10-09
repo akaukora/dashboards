@@ -83,6 +83,11 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .card .note { color: var(--text-3); font-size: 12px; margin-bottom: 10px; min-height: 16px; }
   .card .head { display: flex; align-items: center; justify-content: space-between; gap: 10px; flex-wrap: wrap; }
   .chart { position: relative; height: 240px; } .chart.clickable canvas { cursor: pointer; }
+  /* timeline of favorites: one row per artist, first play → became a favorite → last play; scrolls inside the card */
+  .dumb { height: 420px; overflow-y: auto; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
+  .dumb svg { display: block; width: 100%; height: auto; } .dumb .row { cursor: pointer; } .dumb .row:hover rect.bg, .dumb .row.on rect.bg { fill: var(--card-2); }
+  .dumb .axis text { font-size: 10px; fill: var(--text-3); } .dumb .row text { font-size: 11px; fill: var(--text-2); } .dumb .row.on text { fill: var(--text); font-weight: 600; }
+  .alist.flist li { grid-template-columns: 22px minmax(0, 1fr) 56px; gap: 8px; }
   .legend { display: flex; flex-wrap: wrap; gap: 14px; row-gap: 4px; font-size: 12px; color: var(--text-2); margin: 6px 0 4px; }
   .legend i { display: inline-block; width: 10px; height: 10px; border-radius: 50%; margin-right: 6px; vertical-align: -1px; }
   .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 999px; overflow: hidden; }
@@ -234,10 +239,26 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
       <div class="chart" id="cSeasonWrap" hidden><canvas id="cSeason"></canvas></div>
     </div>
     <div class="card">
-      <div class="head"><h2 id="growHead">Favorites discovered per year</h2><div class="seg" id="growMode"><button type="button" data-m="count">Per year</button><button type="button" data-m="lines">Growth lines</button></div></div>
+      <div class="head"><h2 id="growHead">Favorites discovered per year</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><div class="seg" id="growX" hidden><button type="button" data-m="cal">Calendar</button><button type="button" data-m="rel">Since first play</button></div><div class="seg" id="growMode"><button type="button" data-m="count">Per year</button><button type="button" data-m="lines">Growth lines</button><button type="button" data-m="time">Timeline</button></div></div></div>
       <div class="note" id="noteGrow"></div>
       <div class="legend" id="growLegend"></div>
-      <div class="chart clickable" style="height:300px"><canvas id="cGrow"></canvas></div>
+      <div class="chart clickable" style="height:300px" id="cGrowWrap"><canvas id="cGrow"></canvas></div>
+      <div class="dumb" id="dumb" hidden></div>
+    </div>
+  </section>
+  <section class="grid" style="align-items:start">
+    <div class="card">
+      <div class="head"><h2 id="cohortHead">Do new artists stick?</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><div class="seg" id="cohortN"><button type="button" data-m="1">1 yr</button><button type="button" data-m="2">2 yrs</button><button type="button" data-m="3">3 yrs</button></div><div class="seg" id="cohortMode"><button type="button" data-m="summary">Summary</button><button type="button" data-m="curves">Curves</button></div></div></div>
+      <div class="note" id="noteCohort"></div>
+      <div class="legend" id="cohortLegend"></div>
+      <div class="chart" style="height:300px"><canvas id="cCohort"></canvas></div>
+    </div>
+    <div class="card">
+      <div class="head"><h2 id="flingHead">Flings and long-term favorites</h2><div class="seg" id="flingWin"><button type="button" data-m="1">1 mo</button><button type="button" data-m="3">3 mo</button><button type="button" data-m="6">6 mo</button></div></div>
+      <div class="note" id="noteFling"></div>
+      <div class="legend" id="flingLegend"></div>
+      <div class="chart clickable" style="height:300px"><canvas id="cFling"></canvas></div>
+      <div class="two" style="margin-top:10px"><ul class="alist flist" id="flingA"></ul><ul class="alist flist" id="flingB"></ul></div>
     </div>
   </section>
   <section class="grid one">
@@ -547,7 +568,11 @@ let yearsMode = "columns"; try { yearsMode = ["lines", "depth"].includes(localSt
 let groups = { rediscover: true, discover: true, listening: true }; try { Object.assign(groups, JSON.parse(localStorage.getItem("musicGroups") || "{}")); } catch (e) {}
 function paintGroups() { for (const g of Object.keys(groups)) { $(`#g-${g}`).hidden = !groups[g]; document.querySelector(`h2.group[data-g="${g}"] button`).setAttribute("aria-expanded", groups[g]); } }
 let wowMode = 7; try { wowMode = [30, 365].includes(+localStorage.getItem("musicWow")) ? +localStorage.getItem("musicWow") : 7; } catch (e) {}
-let growMode = "count"; try { growMode = localStorage.getItem("musicGrow") === "lines" ? "lines" : "count"; } catch (e) {}
+let growMode = "count"; try { growMode = ["lines", "time"].includes(localStorage.getItem("musicGrow")) ? localStorage.getItem("musicGrow") : "count"; } catch (e) {}
+let growX = "cal"; try { growX = localStorage.getItem("musicGrowX") === "rel" ? "rel" : "cal"; } catch (e) {}                 // growth lines: calendar time, or months since each artist's first play
+let cohortMode = "summary", cohortN = 2; try { cohortMode = localStorage.getItem("musicCohort") === "curves" ? "curves" : "summary"; cohortN = [1, 3].includes(+localStorage.getItem("musicCohortN")) ? +localStorage.getItem("musicCohortN") : 2; } catch (e) {}
+let flingWin = 1; try { flingWin = [3, 6].includes(+localStorage.getItem("musicFling")) ? +localStorage.getItem("musicFling") : 1; } catch (e) {}
+const QUICK_COLOR = "#ff8000", SLOW_COLOR = "#2a9dd1";   // the fastest and the slowest artist to become a favorite
 let topMode = "sel", topWeeks = 6; try { const t = JSON.parse(localStorage.getItem("musicTop") || "{}"); if (t.mode) topMode = t.mode; if (t.weeks) topWeeks = t.weeks; } catch (e) {}
 const saveTop = () => { try { localStorage.setItem("musicTop", JSON.stringify({ mode: topMode, weeks: topWeeks })); } catch (e) {} };
 let heatMode = "months"; try { heatMode = localStorage.getItem("musicHeatMode") === "clock" ? "clock" : "months"; } catch (e) {}
@@ -586,6 +611,22 @@ Chart.register({ id: "milestones", afterDatasetsDraw(chart, args, opts) {
     ctx.save(); ctx.translate(px - 4, ca.top + 4); ctx.rotate(Math.PI / 2); ctx.textAlign = "left"; ctx.textBaseline = "bottom";
     const tw = ctx.measureText(m.label).width; ctx.fillStyle = hexA(css("--card"), 0.85); ctx.fillRect(-3, -12, tw + 6, 14); ctx.fillStyle = css("--text-2"); ctx.fillText(m.label, 0, 0); ctx.restore();
   }
+  ctx.restore(); } });
+Chart.register({ id: "crossDots", afterDatasetsDraw(chart, args, opts) {   // a dot where a highlighted line reaches the favorite threshold, with the artist's name beside it
+  if (!opts || !opts.pts) return; const { ctx, chartArea: ca, scales: { x, y } } = chart;
+  ctx.save(); ctx.font = "600 11px " + css("--font"); ctx.textBaseline = "middle";
+  for (const p of opts.pts) {
+    if (p.x != null && p.x >= x.min && p.x <= x.max) { const px = x.getPixelForValue(p.x), py = y.getPixelForValue(p.y); ctx.beginPath(); ctx.arc(px, py, 4.5, 0, Math.PI * 2); ctx.fillStyle = p.color; ctx.fill(); ctx.lineWidth = 2; ctx.strokeStyle = css("--card"); ctx.stroke(); }
+    if (p.x != null && p.x >= x.min && p.x <= x.max) { const px = x.getPixelForValue(p.x), below = px > ca.right - 170, py = y.getPixelForValue(p.y) + (below ? 1 : -1) * (14 + (p.row || 0) * 15); const tw = ctx.measureText(p.label).width; ctx.textAlign = px + tw + 8 > ca.right ? "right" : "left"; const lx = ctx.textAlign === "left" ? px + 7 : px - 7; ctx.fillStyle = hexA(css("--card"), 0.85); ctx.fillRect(ctx.textAlign === "left" ? lx - 2 : lx - tw - 2, py - 8, tw + 4, 16); ctx.fillStyle = p.color; ctx.fillText(p.label, lx, py); }
+  }
+  ctx.restore(); } });
+Chart.register({ id: "endLabels", afterDatasetsDraw(chart, args, opts) {   // dataset label at the right end of each line, nudged apart where they would overlap
+  if (!opts || !opts.on) return; const { ctx, chartArea: ca, scales: { x, y } } = chart;
+  const items = chart.data.datasets.map((d, i) => ({ d, i, meta: chart.getDatasetMeta(i) })).filter((o) => !o.meta.hidden && o.d.data.length && (opts.min == null || o.d.data.at(-1).y >= opts.min)).map((o) => { const last = o.d.data.at(-1); return { label: o.d.label, color: o.d.borderColor, px: Math.min(x.getPixelForValue(last.x), ca.right), py: y.getPixelForValue(last.y) }; }).sort((a, b) => a.py - b.py);
+  for (let i = 1; i < items.length; i++) if (items[i].py - items[i - 1].py < 12) items[i].py = items[i - 1].py + 12;
+  for (let i = items.length - 1; i >= 0; i--) { const lim = ca.bottom - 6 - (items.length - 1 - i) * 12; if (items[i].py > lim) items[i].py = lim; }
+  ctx.save(); ctx.font = "600 10px " + css("--font"); ctx.textBaseline = "middle"; ctx.textAlign = "left";
+  for (const it of items) { ctx.fillStyle = it.color; ctx.fillText(it.label, it.px + 4, it.py); }
   ctx.restore(); } });
 Chart.register({ id: "threshold", afterDatasetsDraw(chart, args, opts) {
   if (!opts || opts.y == null) return; const { ctx, chartArea: ca, scales: { y } } = chart; const py = y.getPixelForValue(opts.y); if (py < ca.top || py > ca.bottom) return;
@@ -789,18 +830,35 @@ function render() {
   if (F.artist && A.has(F.artist) && !favList.some((a) => a.name === F.artist)) favList.push(A.get(F.artist));   // a selected non-favorite still gets its line drawn
   const q0 = Math.floor(monthX(S[0].uts) / 3) * 3, qEnd = Math.ceil(monthX(NOW) / 3) * 3, quarters = []; for (let q = q0; q <= qEnd; q += 3) quarters.push(q);
   const crossAt = (a) => a.times.length >= thr ? a.times[thr - 1] : null;   // when the artist reached the threshold
-  $("#growHead").textContent = growMode === "lines" ? "How favorites were made" : "Favorites discovered per year";
-  if (growMode === "lines") {
+  $("#growHead").textContent = growMode === "lines" ? "How favorites were made" : growMode === "time" ? "Favorites on a timeline" : "Favorites discovered per year";
+  $("#growX").hidden = growMode !== "lines"; document.querySelectorAll("#growX button").forEach((b) => b.classList.toggle("active", b.dataset.m === growX));
+  $("#cGrowWrap").hidden = growMode === "time"; $("#dumb").hidden = growMode !== "time";
+  const sinceFirst = (a) => { const x = crossAt(a); return x ? monthsBetween(a.first, x) : null; };   // months from first play to the favorite threshold
+  const daysBefore = (a) => new Set(a.times.slice(0, thr).map((t) => Math.floor(localDate(t) / 86400000))).size;   // distinct listening days up to the threshold; one long album day is not a "quick favorite"
+  const timed = favList.filter((a) => crossAt(a)), paced = timed.filter((a) => daysBefore(a) >= 3); const quick = paced.length ? paced.reduce((m, a) => sinceFirst(a) < sinceFirst(m) ? a : m) : null, slow = paced.length ? paced.reduce((m, a) => sinceFirst(a) > sinceFirst(m) ? a : m) : null;
+  if (growMode === "time") {
+    drawDumbbell(timed, thr);
+    $("#growLegend").innerHTML = `<span><i style="background:${css("--text-3")};border-radius:50%"></i>First play</span><span><i style="background:${css("--green-mark")};border-radius:50%"></i>Became a favorite (${thr} plays)</span><span><i style="background:${RECENCY[0][1]};border-radius:50%"></i>Last play, colored by how recent</span><span><i style="background:${QUICK_COLOR}"></i>Quickest</span><span><i style="background:${SLOW_COLOR}"></i>Slowest</span>`;
+    note("#noteGrow", `One row per favorite, newest favorite at the top: from the first play to the day the artist crossed the ${thr}-play line, and on to the last play. A short first stretch is a fast favorite; a short second stretch is a fling. ${quick ? `Quickest: **${esc(quick.name)}** (${Math.round(sinceFirst(quick))} months)` : ""}${slow ? `, slowest: **${esc(slow.name)}** (${Math.round(sinceFirst(slow) / 12)} years)` : ""}. Click a row to select the artist.`);
+  } else if (growMode === "lines") {
     if (charts.cGrow && charts.cGrow.config.type !== "line") { charts.cGrow.destroy(); delete charts.cGrow; }
     const series = favList.map((a) => { const pts = []; let i = 0; for (const q of quarters) { const qUts = Date.UTC(Math.floor(q / 12), q % 12, 1) / 1000; while (i < a.times.length && a.times[i] <= qUts) i++; if (i > 0) pts.push({ x: q, y: i }); } if (pts.length && pts.at(-1).x < qEnd) pts.push({ x: monthX(NOW), y: a.times.length }); return pts; });
     const focusIdx = favList.findIndex((a) => a.name === F.artist);
-    upsert("cGrow", { type: "line", data: { datasets: favList.map((a, i) => ({ label: a.name, data: series[i], borderColor: i === focusIdx ? "#3ddc7a" : hexA("#7a8794", 0.22), borderWidth: i === focusIdx ? 2.5 : 1, pointRadius: 0, pointHitRadius: 4, tension: 0, spanGaps: true, order: i === focusIdx ? 0 : 1 })) },
+    const rel = growX === "rel";
+    const relSeries = rel ? favList.map((a) => { const pts = []; const span = monthsBetween(a.first, NOW); for (let k = 0; k <= span + 3; k += 3) { const until = a.first + k * 30.44 * 86400; let n = 0; while (n < a.times.length && a.times[n] <= until) n++; pts.push({ x: k, y: Math.max(1, n) }); if (n >= a.times.length) break; } return pts; }) : null;
+    const xs = rel ? relSeries : series, relMax = rel ? Math.max(12, ...relSeries.map((p) => p.at(-1)?.x || 0)) : 0;
+    const colorOf = (a, i) => i === focusIdx ? "#3ddc7a" : a === quick ? QUICK_COLOR : a === slow ? SLOW_COLOR : hexA("#7a8794", 0.22);
+    const widthOf = (a, i) => i === focusIdx ? 2.5 : a === quick || a === slow ? 2 : 1;
+    const orderOf = (a, i) => i === focusIdx ? 0 : a === quick || a === slow ? 1 : 2;
+    const dots = [focusIdx >= 0 ? favList[focusIdx] : null, quick, slow].filter((a, i, arr) => a && arr.indexOf(a) === i).map((a) => { const x = crossAt(a), pts = xs[favList.indexOf(a)]; return { x: x ? (rel ? monthsBetween(a.first, x) : monthX(x)) : null, y: thr, color: colorOf(a, favList.indexOf(a)), label: a.name }; });
+    dots.forEach((d, i) => { d.row = dots.slice(0, i).filter((o) => o.x != null && d.x != null && Math.abs(o.x - d.x) < (rel ? relMax : qEnd - q0) * 0.25).length; });   // stack names that would overlap
+    upsert("cGrow", { type: "line", data: { datasets: favList.map((a, i) => ({ label: a.name, data: xs[i], borderColor: colorOf(a, i), borderWidth: widthOf(a, i), order: orderOf(a, i), pointRadius: 0, pointHitRadius: 4, tension: 0, spanGaps: true, order: i === focusIdx ? 0 : 1 })) },
       options: { maintainAspectRatio: false, animation: false, interaction: { mode: "nearest", intersect: false, axis: "xy" }, parsing: false, normalized: true, events: ["mousemove", "click"],
         onClick: (e, els) => { if (els.length) toggleFilter("artist", favList[els[0].datasetIndex].name); },
-        scales: { x: { ...AXIS, type: "linear", min: q0, max: qEnd, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 12, autoSkip: false, maxRotation: 0, callback(v) { const y = Math.round(v / 12); if (Math.abs(v / 12 - y) > 1e-6) return ""; const every = this.chart.width < 520 ? 4 : 2; return y % every === 0 ? String(y) : ""; } } },
+        scales: { x: rel ? { ...AXIS, type: "linear", min: 0, max: relMax, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 12, autoSkip: false, maxRotation: 0, callback(v) { if (v % 12 !== 0) return ""; const every = this.chart.width < 520 ? 5 : relMax > 120 ? 2 : 1; return v === 0 ? "first play" : (v / 12) % every === 0 ? `${v / 12} yr${v > 12 ? "s" : ""}` : ""; } } } : { ...AXIS, type: "linear", min: q0, max: qEnd, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 12, autoSkip: false, maxRotation: 0, callback(v) { const y = Math.round(v / 12); if (Math.abs(v / 12 - y) > 1e-6) return ""; const every = this.chart.width < 520 ? 4 : 2; return y % every === 0 ? String(y) : ""; } } },
           y: { ...AXIS, type: "logarithmic", min: 1, grid: { ...GRID, color: (c) => LOG_TICKS.includes(c.tick.value) || c.tick.value === 1 ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, callback: (v) => LOG_TICKS.includes(v) || v === 1 ? fmt(v) : "" }, title: { display: true, text: "Cumulative plays", color: css("--text-3"), font: { size: 11 } } } },
-        plugins: { tooltip: { callbacks: { title: (c) => c[0].dataset.label, label: (c) => { const a = favList[c.datasetIndex], x = crossAt(a); return [`${fmt(c.parsed.y)} plays by ${MONTHS[Math.round(c.parsed.x) % 12]} ${Math.floor(c.parsed.x / 12)}`, x ? `became a favorite ${fmtDate(localDate(x))}` : ""].filter(Boolean); } } }, milestones: { on: true }, threshold: { y: thr, label: `${thr} plays = favorite` } } } });
-    $("#growLegend").innerHTML = `<span><i style="background:${hexA("#7a8794", 0.6)}"></i>One line per favorite artist (${fmt(favArtists.length)})</span><span><i style="background:#3ddc7a"></i>Selected artist</span><span><i style="background:${css("--text-3")};width:14px;height:2px;border-radius:1px"></i>Favorite threshold</span>`;
+        plugins: { tooltip: { callbacks: { title: (c) => c[0].dataset.label, label: (c) => { const a = favList[c.datasetIndex], x = crossAt(a); return [rel ? `${fmt(c.parsed.y)} plays ${Math.round(c.parsed.x)} months after the first play` : `${fmt(c.parsed.y)} plays by ${MONTHS[Math.round(c.parsed.x) % 12]} ${Math.floor(c.parsed.x / 12)}`, x ? `became a favorite ${fmtDate(localDate(x))} (${Math.round(monthsBetween(a.first, x))} months after the first play)` : ""].filter(Boolean); } } }, milestones: { on: !rel }, threshold: { y: thr, label: `${thr} plays = favorite` }, crossDots: { pts: dots } } } });
+    $("#growLegend").innerHTML = `<span><i style="background:${hexA("#7a8794", 0.6)}"></i>One line per favorite artist (${fmt(favArtists.length)})</span><span><i style="background:#3ddc7a"></i>Selected artist</span><span><i style="background:${QUICK_COLOR}"></i>Quickest to the line${quick ? ` · ${esc(quick.name)}` : ""}</span><span><i style="background:${SLOW_COLOR}"></i>Slowest${slow ? ` · ${esc(slow.name)}` : ""}</span><span><i style="background:${css("--text-3")};width:14px;height:2px;border-radius:1px"></i>Favorite threshold</span>`;
     const fa = focusIdx >= 0 ? favList[focusIdx] : null, fx = fa ? crossAt(fa) : null;
     $("#noteGrow").textContent = fa ? `${fa.name}: first heard ${fmtDate(localDate(fa.first))}, ${fx ? `crossed ${thr} plays ${fmtDate(localDate(fx))} (${Math.round(monthsBetween(fa.first, fx))} months later)` : `not a favorite yet — ${thr - fa.plays} plays short`}, ${fmt(fa.plays)} plays now. Hover any line for its artist; click to select.` : `Cumulative plays over time for every current favorite. A steep line is an obsession, a long flat one a slow burner. Hover for the artist, click to select and see when they crossed the line.`;
   } else {
@@ -820,6 +878,61 @@ function render() {
     note("#noteGrow", fa
       ? `**${esc(fa.name)}**: first heard **${localDate(fa.first).getUTCFullYear()}**${fx ? `, crossed the ${thr}-play line in **${localDate(fx).getUTCFullYear()}** (${fmtDate(localDate(fx))})` : `, ${thr - fa.plays} plays short of the line`}. Bars: all of today's ${fmt(favList.length)} favorites — [[#5b8fb9]]first heard and [[var(--green-mark)]]crossed the line, per year.`
       : `Of today's ${fmt(favList.length)} favorite artists: how many were [[#5b8fb9]]**heard for the first time** each year, and how many [[var(--green-mark)]]**crossed the ${thr}-play line** that year. The list below names them. Click a bar to filter.`);
+  }
+
+  /* Do new artists stick? — of the artists first heard each year, the share that reached the favorite threshold within N years
+     (every cohort judged by the same window), or the full curves: share that had become favorites after 0, 1, 2 … years */
+  document.querySelectorAll("#cohortMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === cohortMode));
+  document.querySelectorAll("#cohortN button").forEach((b) => b.classList.toggle("active", +b.dataset.m === cohortN));
+  {
+    const YR = 365.25 * 86400, nowY = localDate(NOW).getUTCFullYear();
+    const cohort = {}; for (const a of A.values()) { const y = localDate(a.first).getUTCFullYear(); (cohort[y] = cohort[y] || []).push(a); }
+    const years = YEARS.filter((y) => cohort[y]?.length).slice(1);   // the first year holds everything already loved before scrobbling began, so it is left out
+    const favIn = (y, k) => cohort[y].filter((a) => { const x = crossAt(a); return x && x - a.first <= k * YR; }).length;
+    const complete = (y, k) => NOW - Date.UTC(y, 11, 31) / 1000 >= k * YR;   // every artist of the cohort has had the whole window
+    if (cohortMode === "summary") {
+      if (charts.cCohort && charts.cCohort.config.type !== "line") { charts.cCohort.destroy(); delete charts.cCohort; }
+      const share = years.map((y) => 100 * favIn(y, cohortN) / cohort[y].length), partial = years.map((y) => !complete(y, cohortN));
+      upsert("cCohort", { type: "line", data: { labels: years.map(String), datasets: [{ label: "share", data: share, borderColor: css("--green-mark"), backgroundColor: css("--green-mark"), borderWidth: 2, tension: 0.2, pointRadius: 4, pointHoverRadius: 6, pointBackgroundColor: partial.map((p) => p ? css("--card") : css("--green-mark")), pointBorderColor: css("--green-mark"), pointBorderWidth: 2, segment: { borderDash: (c) => partial[c.p1DataIndex] ? [4, 4] : undefined } }] },
+        options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, onClick: (e, els) => { if (els.length) toggleFilter("year", years[els[0].index]); },
+          scales: { x: { ...AXIS, grid: { display: false }, ticks: { ...AXIS.ticks, maxRotation: 0 } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, callback: (v) => v + "%" } } },
+          plugins: { tooltip: { callbacks: { title: (c) => `First heard in ${c[0].label}`, label: (c) => { const y = years[c.dataIndex]; return [`${c.parsed.y.toFixed(1)}% became favorites within ${cohortN} yr${cohortN > 1 ? "s" : ""} (${fmt(favIn(y, cohortN))} of ${fmt(cohort[y].length)} new artists)`, ...(partial[c.dataIndex] ? ["window not complete yet"] : [])]; } } }, milestones: { on: true, years } } } });
+      $("#cohortLegend").innerHTML = `<span><i style="background:${css("--green-mark")};border-radius:50%"></i>Share of that year's new artists that crossed the ${thr}-play line within ${cohortN} yr${cohortN > 1 ? "s" : ""}</span><span><i style="background:${css("--card")};border:2px solid ${css("--green-mark")};border-radius:50%;box-sizing:border-box"></i>Window not over yet</span>`;
+      note("#noteCohort", `Every year's new artists judged by the same rule, so recent years aren't short-changed for lack of time. A falling line means fewer of the artists you discover stick; a flat line with more new artists per year means wider listening, not shallower. ${years[0] - 1}, when scrobbling started, is left out: that cohort also held everything you already knew and loved. Last.fm missed much of 2014, 2016 and 2018 before the Spotify backfill, so those cohorts are thinner than they were.`);
+    } else {
+      if (charts.cCohort && charts.cCohort.config.type !== "line") { charts.cCohort.destroy(); delete charts.cCohort; }
+      const maxK = Math.min(10, nowY - years[0]);
+      const sel = years.filter((y) => yearOn(y));
+      upsert("cCohort", { type: "line", data: { datasets: years.map((y, i) => { const pts = []; for (let k = 0; k <= maxK; k++) { if (!complete(y, k) && k > 0) break; pts.push({ x: k, y: 100 * favIn(y, k) / cohort[y].length }); } const on = anyYear() ? F.year.includes(y) : true, t = (i + 1) / years.length; return { label: String(y), data: pts, borderColor: on ? (anyYear() ? css("--green") : `rgba(${Math.round(60 + 120 * t)},${Math.round(200 - 60 * t)},${Math.round(90 + 100 * t)},0.85)`) : hexA("#7a8794", 0.15), borderWidth: on && anyYear() ? 2.5 : 1.5, pointRadius: 0, pointHitRadius: 6, tension: 0.15 }; }) },
+        options: { maintainAspectRatio: false, parsing: false, interaction: { mode: "nearest", intersect: false }, layout: { padding: { right: 34 } }, onClick: (e, els) => { if (els.length) toggleFilter("year", years[els[0].datasetIndex]); },
+          scales: { x: { ...AXIS, type: "linear", min: 0, max: maxK, grid: { display: false }, ticks: { ...AXIS.ticks, stepSize: 1, maxRotation: 0, autoSkip: true, callback: (v) => v === 0 ? "start" : `${v} yr${v > 1 ? "s" : ""}` } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, callback: (v) => v + "%" } } },
+          plugins: { endLabels: { on: true, min: 0.8 }, tooltip: { callbacks: { title: (c) => `First heard in ${c[0].dataset.label}`, label: (c) => `${c.parsed.y.toFixed(1)}% were favorites ${c.parsed.x} yr${c.parsed.x === 1 ? "" : "s"} after the first play` } } } } });
+      $("#cohortLegend").innerHTML = `<span><i style="background:linear-gradient(90deg,rgb(60,200,90),rgb(180,140,190))"></i>One curve per year of first listen, older green → newer pink</span>`;
+      note("#noteCohort", `Each curve is one year's new artists: the share that had become favorites after so many years. Curves stop where the window isn't over yet. Select a year with the chips to pick its curve out${sel.length && anyYear() ? ` — showing ${yearsLabel()}` : ""}.`);
+    }
+  }
+
+  /* Flings and long-term favorites — for every favorite, how concentrated the listening was: the share of all plays that fall
+     inside the artist's best window of flingWin months. 90% = one season and done; 25% = spread over years. */
+  document.querySelectorAll("#flingWin button").forEach((b) => b.classList.toggle("active", +b.dataset.m === flingWin));
+  {
+    const win = flingWin * 30.44 * 86400;
+    const conc = (a) => { let best = 0, lo = 0; for (let i = 0; i < a.times.length; i++) { while (a.times[i] - a.times[lo] > win) lo++; best = Math.max(best, i - lo + 1); } return best / a.times.length; };
+    const yearsActive = (a) => Object.values(a.byYear).filter((n) => n >= 5).length;
+    const pts = favArtists.map((f) => f.a).map((a) => ({ a, x: Math.round(100 * conc(a)), y: a.plays, rec: monthsBetween(a.last, NOW), yrs: yearsActive(a) }));
+    const fi = pts.findIndex((p) => p.a.name === F.artist);
+    upsert("cFling", { type: "scatter", data: { datasets: [{ data: pts, pointRadius: pts.map((p, i) => i === fi ? 8 : 4), pointHoverRadius: 8, backgroundColor: pts.map((p, i) => i === fi ? "#3ddc7a" : hexA(recencyColor(p.rec), 0.8)), borderColor: pts.map((p, i) => i === fi ? "#fff" : "transparent"), borderWidth: 1.5 }] },
+      options: { maintainAspectRatio: false, animation: false, onClick: (e, els) => { if (els.length) toggleFilter("artist", pts[els[0].index].a.name); },
+        scales: { x: { ...AXIS, min: 0, max: 100, grid: { display: false }, ticks: { ...AXIS.ticks, callback: (v) => v + "%" }, title: { display: true, text: `share of plays inside the best ${flingWin} month${flingWin > 1 ? "s" : ""}  →  flings`, color: css("--text-3"), font: { size: 11 } } },
+          y: { ...AXIS, type: "logarithmic", min: Math.max(1, thr * 0.8), grid: { ...GRID, color: (c) => LOG_TICKS.includes(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, callback: (v) => LOG_TICKS.includes(v) ? fmt(v) : "" }, title: { display: true, text: "plays", color: css("--text-3"), font: { size: 11 } } } },
+        plugins: { tooltip: { callbacks: { title: (c) => pts[c[0].dataIndex].a.name, label: (c) => { const p = pts[c.dataIndex]; return [`${fmt(p.y)} plays, ${p.x}% of them within ${flingWin} month${flingWin > 1 ? "s" : ""}`, `active in ${p.yrs} year${p.yrs === 1 ? "" : "s"} · last played ${ago(p.rec)}`]; } } } } } });
+    $("#flingLegend").innerHTML = RECENCY.map(([lim, col], i) => `<span><i style="background:${col};border-radius:50%"></i>${i === 0 ? "played in the last 3 months" : i === 1 ? "within a year" : i === 2 ? "within 3 years" : "longer ago"}</span>`).join("") + `<span><i style="background:#3ddc7a;border-radius:50%"></i>Selected</span>`;
+    const flings = pts.filter((p) => p.x >= 60 && p.rec >= 12).sort((a, b) => b.x - a.x || b.y - a.y).slice(0, 8), steady = pts.slice().sort((a, b) => b.yrs - a.yrs || a.x - b.x).slice(0, 8);
+    const li = (p, i, right) => `<li><span class="rank">${i + 1}.</span><span class="who"><button type="button" data-a="${esc(p.a.name)}">${esc(p.a.name)}</button><span class="sub">${fmt(p.y)} plays · ${ago(p.rec)}</span></span><span class="num">${right(p)}</span></li>`;
+    $("#flingA").innerHTML = `<li style="grid-template-columns:1fr;color:var(--text-3);font-size:12px;padding:4px 0">Flings — most plays in ${flingWin} month${flingWin > 1 ? "s" : ""}, quiet for a year</li>` + flings.map((p, i) => li(p, i, (q) => `<b>${q.x}%</b>`)).join("");
+    $("#flingB").innerHTML = `<li style="grid-template-columns:1fr;color:var(--text-3);font-size:12px;padding:4px 0">Long-term — years with real listening</li>` + steady.map((p, i) => li(p, i, (q) => `<b>${q.yrs}</b> yrs`)).join("");
+    document.querySelectorAll("#flingA button, #flingB button").forEach((b) => b.addEventListener("click", () => toggleFilter("artist", b.dataset.a)));
+    note("#noteFling", `Each dot is a favorite artist. Far right: a fling — nearly everything played within ${flingWin === 1 ? "a month" : flingWin + " months"}, then little since. Far left: a steady companion whose plays spread over years. Height is total plays, so the top-right corner is the obsessions that burned out and the top-left the ones that lasted. Click a dot or a name to select the artist.`);
   }
 
   /* Now vs before — last 7 / 30 days against the period before, or this year to date against the same days last year */
@@ -886,6 +999,32 @@ function render() {
 
 /* Real listening: a play counts only if there are `n`+ plays within a 12-month window around it (±6 months);
    fewer are stray plays. n = 1 turns the rule off. `times` must be sorted. */
+/* Favorites on a timeline: one row per favorite (newest favorite first) — first play ○, became a favorite ●, last play ● colored by recency */
+function drawDumbbell(timed, thr) {
+  const box = $("#dumb"), rows = timed.slice().sort((a, b) => a.times[thr - 1] - b.times[thr - 1]).reverse();
+  const W = Math.max(420, box.clientWidth - 2), L = W < 560 ? 130 : 170, R = 24, rowH = 14, top = 22, H = top + rows.length * rowH + 8;
+  const t0 = S[0].uts, t1 = NOW, px = (uts) => L + (W - L - R) * (uts - t0) / (t1 - t0);
+  const sinceFirst = (a) => monthsBetween(a.first, a.times[thr - 1]);
+  const paced = rows.filter((a) => new Set(a.times.slice(0, thr).map((t) => Math.floor(localDate(t) / 86400000))).size >= 3);
+  const quick = paced.length ? paced.reduce((m, a) => sinceFirst(a) < sinceFirst(m) ? a : m) : null, slow = paced.length ? paced.reduce((m, a) => sinceFirst(a) > sinceFirst(m) ? a : m) : null;
+  const y0 = localDate(t0).getUTCFullYear(), y1 = localDate(t1).getUTCFullYear(); let axis = "";
+  for (let y = y0; y <= y1; y++) { const x = px(Date.UTC(y, 0, 1) / 1000); if (x < L) continue; axis += `<line x1="${x.toFixed(1)}" y1="${top - 4}" x2="${x.toFixed(1)}" y2="${H}" stroke="${css("--line")}"/>` + (y % 2 === 0 ? `<text x="${x.toFixed(1)}" y="12" text-anchor="middle">${y}</text>` : ""); }
+  const body = rows.map((a, i) => {
+    const y = top + i * rowH + rowH / 2, fav = a.times[thr - 1], x1 = px(a.first), x2 = px(fav), x3 = px(a.last), on = a.name === F.artist;
+    const stroke = on ? "#3ddc7a" : a === quick ? QUICK_COLOR : a === slow ? SLOW_COLOR : css("--line-2");
+    return `<g class="row${on ? " on" : ""}" data-a="${esc(a.name)}"><title>${esc(a.name)}: first play ${fmtDate(localDate(a.first))}, favorite ${fmtDate(localDate(fav))} (${Math.round(sinceFirst(a))} months), last play ${fmtDate(localDate(a.last))}</title>
+      <rect class="bg" x="0" y="${y - rowH / 2}" width="${W}" height="${rowH}" fill="transparent"/>
+      <text x="${L - 8}" y="${y + 3.5}" text-anchor="end">${esc(a.name.length > 26 ? a.name.slice(0, 25) + "…" : a.name)}</text>
+      <line x1="${x1.toFixed(1)}" y1="${y}" x2="${x2.toFixed(1)}" y2="${y}" stroke="${stroke}" stroke-width="${on || a === quick || a === slow ? 2.5 : 1.5}"/>
+      <line x1="${x2.toFixed(1)}" y1="${y}" x2="${x3.toFixed(1)}" y2="${y}" stroke="${stroke}" stroke-width="${on ? 2.5 : 1.5}" stroke-dasharray="${on ? "" : "2 3"}"/>
+      <circle cx="${x1.toFixed(1)}" cy="${y}" r="3" fill="${css("--card")}" stroke="${css("--text-3")}" stroke-width="1.5"/>
+      <circle cx="${x2.toFixed(1)}" cy="${y}" r="3.5" fill="${css("--green-mark")}"/>
+      <circle cx="${x3.toFixed(1)}" cy="${y}" r="3" fill="${recencyColor(monthsBetween(a.last, NOW))}"/></g>`;
+  }).join("");
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="xMinYMin meet"><g class="axis">${axis}</g>${body}</svg>`;
+  box.querySelectorAll(".row").forEach((g) => g.addEventListener("click", () => toggleFilter("artist", g.dataset.a)));
+  const on = box.querySelector(".row.on"); if (on) on.scrollIntoView({ block: "center" });
+}
 function realTimes(times, n) {
   if (n <= 1 || times.length < n) return n <= 1 ? times : [];
   const half = 182.6 * 86400, out = []; let lo = 0, hi = 0;
@@ -1045,6 +1184,10 @@ function wire() {
   $("#topWeeks").addEventListener("click", (e) => e.stopPropagation());
   $("#topWeeks").addEventListener("change", () => { topWeeks = Math.max(1, Math.min(520, +$("#topWeeks").value || 6)); $("#topWeeks").value = topWeeks; topMode = "w"; saveTop(); render(); });
   document.querySelectorAll("#growMode button").forEach((b) => b.addEventListener("click", () => { growMode = b.dataset.m; try { localStorage.setItem("musicGrow", growMode); } catch (e) {} render(); }));
+  document.querySelectorAll("#growX button").forEach((b) => b.addEventListener("click", () => { growX = b.dataset.m; try { localStorage.setItem("musicGrowX", growX); } catch (e) {} render(); }));
+  document.querySelectorAll("#cohortMode button").forEach((b) => b.addEventListener("click", () => { cohortMode = b.dataset.m; try { localStorage.setItem("musicCohort", cohortMode); } catch (e) {} render(); }));
+  document.querySelectorAll("#cohortN button").forEach((b) => b.addEventListener("click", () => { cohortN = +b.dataset.m; try { localStorage.setItem("musicCohortN", cohortN); } catch (e) {} render(); }));
+  document.querySelectorAll("#flingWin button").forEach((b) => b.addEventListener("click", () => { flingWin = +b.dataset.m; try { localStorage.setItem("musicFling", flingWin); } catch (e) {} render(); }));
   document.querySelectorAll("#heatMode button").forEach((b) => b.addEventListener("click", () => { heatMode = b.dataset.m; try { localStorage.setItem("musicHeatMode", heatMode); } catch (e) {} render(); }));
   document.querySelectorAll("#favUnit button").forEach((b) => b.addEventListener("click", () => { ui.unit = b.dataset.u; favShown = FAV_PAGE; saveUi(); render(); }));
   document.querySelectorAll("#minPlaysTrack button").forEach((b) => b.addEventListener("click", () => { ui.minPlaysTrack = +b.dataset.v; favShown = FAV_PAGE; saveUi(); render(); }));
