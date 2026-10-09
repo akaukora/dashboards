@@ -478,7 +478,7 @@ function toFilms(rows) {
 let ALL = [], YEARS = [], charts = {}, sortKey = "date", sortAsc = false, listFilms = [];
 let yearsMode = "columns"; try { yearsMode = localStorage.getItem("yearsMode") === "lines" ? "lines" : "columns"; } catch (e) {}
 let heatMode = "months"; try { heatMode = ["months", "wkyear", "wkmonth"].includes(localStorage.getItem("heatMode")) ? localStorage.getItem("heatMode") : "months"; } catch (e) {}
-let svcMode = "bars"; try { svcMode = localStorage.getItem("svcMode") === "mekko" ? "mekko" : "bars"; } catch (e) {}
+let svcMode = "mekko"; try { svcMode = localStorage.getItem("svcMode") === "bars" ? "bars" : "mekko"; } catch (e) {}   // mekko by default; bars if chosen
 let mekkoData = null;   // last data drawn, so a resize can redraw without a full render
 // Every filter lives here. "year"/"source" also have button rows; the rest are set by clicking charts.
 const F = { year: null, source: null, tag: null, rating: null, decade: null, month: null };
@@ -558,8 +558,15 @@ Chart.register({
   afterDatasetsDraw(chart, args, opts) {
     if (!opts || !opts.text) return;
     const { ctx, chartArea, scales: { y } } = chart;
-    ctx.save(); ctx.font = "11px " + css("--font"); ctx.fillStyle = css("--text-2"); ctx.textAlign = "left"; ctx.textBaseline = "middle";
-    opts.text.forEach((t, i) => ctx.fillText(t, chartArea.right + 8, y.getPixelForValue(i)));
+    ctx.save(); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    opts.text.forEach((t, i) => {
+      const py = y.getPixelForValue(i), name = opts.name && opts.name[i];
+      if (name) {   // "Service  3.61★ · 42": the name in the text color, the figures dimmer
+        ctx.font = "600 12px " + css("--font"); ctx.fillStyle = css("--text"); ctx.fillText(name, chartArea.right + 8, py);
+        const w = ctx.measureText(name).width;
+        ctx.font = "11px " + css("--font"); ctx.fillStyle = css("--text-2"); ctx.fillText(t.slice(name.length).trim(), chartArea.right + 8 + w + 8, py);
+      } else { ctx.font = "11px " + css("--font"); ctx.fillStyle = css("--text-2"); ctx.fillText(t, chartArea.right + 8, py); }
+    });
     ctx.restore();
   },
 });
@@ -845,13 +852,13 @@ function render() {
       backgroundColor: svcTags.map((t) => rowOn(t) ? RATING_COLORS[lv] : hexA(RATING_COLORS[lv], 0.25)), hoverBackgroundColor: RATING_COLORS[lv],
       borderColor: css("--card"), borderWidth: { left: lv > 1 ? 2 : 0 }, borderSkipped: false, maxBarThickness: 18, raw: svc.map(([, fs]) => fs.filter((f) => bucket(f.rating) === lv).length),
     })) },
-    options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: 90 } },
-      scales: { x: { ...AXIS, stacked: true, min: 0, max: 100, ticks: { ...AXIS.ticks, stepSize: 25, callback: (v) => v + "%" } }, y: { ...AXIS, stacked: true, grid: { display: false }, ticks: { ...AXIS.ticks, color: css("--text-2") } } },
+    options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: 240 } },
+      scales: { x: { ...AXIS, stacked: true, min: 0, max: 100, ticks: { ...AXIS.ticks, stepSize: 25, callback: (v) => v + "%" } }, y: { ...AXIS, stacked: true, grid: { display: false }, ticks: { display: false } } },
       plugins: { tooltip: { callbacks: {
         title: (c) => `${c[0].label} · ${svc[c[0].dataIndex][1].length} rated films`,
         label: (c) => `${c.dataset.label} ${RATING_MEANING[+c.dataset.label[0]]}: ${c.dataset.raw[c.dataIndex]} films (${Math.round(c.parsed.x)}%)`,
         afterBody: (c) => { const fs = svc[c[0].dataIndex][1]; const venues = {}; fs.forEach((f) => { if (f.venueName) venues[f.venueName] = (venues[f.venueName] || 0) + 1; }); const v = Object.entries(venues).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", "); return [`Average ${avgOf(fs).toFixed(2)}★ · click to filter`, ...(v ? [`Venues: ${v}`] : [])]; },
-      } }, rowEnd: { text: svc.map(([, fs]) => `${avgOf(fs).toFixed(2)}★ · ${fs.length}`) }, rowHighlight: {} } },
+      } }, rowEnd: { text: svc.map(([t, fs]) => `${sourceLabel(t)}  ${avgOf(fs).toFixed(2)}★ · ${fs.length}`), name: svc.map(([t]) => sourceLabel(t)) }, rowHighlight: {} } },
   });
   charts.cTags.$tags = svcTags;
   if (!charts.cTags.$wired) {   // Chart.js only fires onHover/onClick inside the plot area, so listen on the canvas to cover the labels too
