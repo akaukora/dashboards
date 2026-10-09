@@ -13,7 +13,7 @@
     --radius: 10px;
     --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
   }
-  * { box-sizing: border-box; }
+  * { box-sizing: border-box; } [hidden] { display: none !important; }
   html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.45; }
   a { color: var(--text-2); text-decoration: none; } a:hover { color: var(--text); }
   .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; }
@@ -37,6 +37,27 @@
   .flows text { font-size: 11px; fill: var(--text-2); } .flows text.n { fill: var(--text); font-weight: 600; } .flows text.sub { fill: var(--text-3); font-size: 10px; } .flows text.hdr { fill: var(--text-3); font-size: 11px; }
   .flows path.flow { opacity: 0.45; } .flows path.flow:hover { opacity: 0.9; }
   #entry { margin-bottom: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--line-2); }
+  /* the story: step texts scroll on the left while the charts stay put on the right and reveal one column per step */
+  .story.plain .steps { display: none; }
+  .story:not(.plain) { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 0 28px; align-items: stretch; }
+  .story:not(.plain) .stage-in { position: sticky; top: 14px; }
+  .story:not(.plain) .steps { padding: 30vh 0 40vh; }
+  .step-text { min-height: 42vh; padding: 0 0 12px; font-size: 14px; line-height: 1.55; color: var(--text-3); transition: color .3s; }
+  .step-text b { color: var(--text-2); font-weight: 600; } .step-text.on { color: var(--text); } .step-text.on b { color: var(--green); }
+  .step-text .k { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
+  .story svg g.step { transition: opacity .5s; }
+  .story:not(.plain)[data-step="0"] #entry [data-e="1"], .story:not(.plain)[data-step="0"] #entry [data-e="2"], .story:not(.plain)[data-step="1"] #entry [data-e="2"] { opacity: 0; }
+  .story:not(.plain)[data-step="0"] #flows, .story:not(.plain)[data-step="1"] #flows, .story:not(.plain)[data-step="2"] #flows { opacity: 0; }
+  .story:not(.plain)[data-step="3"] #entry, .story:not(.plain)[data-step="4"] #entry, .story:not(.plain)[data-step="5"] #entry { opacity: .35; }
+  .story:not(.plain)[data-step="3"] #entry .favnode, .story:not(.plain)[data-step="4"] #entry .favnode, .story:not(.plain)[data-step="5"] #entry .favnode { opacity: 1; }
+  .story:not(.plain)[data-step="3"] #flows [data-k="1"], .story:not(.plain)[data-step="3"] #flows [data-k="2"], .story:not(.plain)[data-step="4"] #flows [data-k="2"] { opacity: 0; }
+  #entry, #flows { transition: opacity .5s; }
+  /* in the story the funnel starts big, then shrinks to a thumbnail when the favorites take the frame */
+  .story:not(.plain) #entry { height: 440px; overflow: visible; transition: height .6s, opacity .5s; border-bottom: 0; }
+  .story:not(.plain) #entry svg { transform-origin: 0 0; transition: transform .6s; }
+  .story:not(.plain)[data-step="3"] #entry, .story:not(.plain)[data-step="4"] #entry, .story:not(.plain)[data-step="5"] #entry { height: 150px; }
+  .story:not(.plain)[data-step="3"] #entry svg, .story:not(.plain)[data-step="4"] #entry svg, .story:not(.plain)[data-step="5"] #entry svg { transform: scale(.32); }
+  @media (max-width: 900px) { .story:not(.plain) { display: block; } .story:not(.plain) .stage-in { position: static; } .story:not(.plain) .steps { display: none; } }
   .flows.dim path.flow { opacity: 0.12; } .flows.dim path.flow.lit { opacity: 0.85; }
   .status { color: var(--text-3); font-size: 13px; padding: 20px 0; }
   footer { color: var(--text-3); font-size: 12px; margin-top: 18px; }
@@ -47,23 +68,31 @@
   <header>
     <div>
       <h1>Where new <span>artists</span> go</h1>
-      <div class="sub">Each year's new artists as one column, then year by year: favorite, in rotation, faded, or back again.</div>
+      <div class="sub">Each year's new artists as one stack, then what became of the ones that became favorites: quick or slow to win you over, and whether they stayed.</div>
     </div>
     <div class="nav"><a href="index.html">← Music dashboard</a></div>
   </header>
   <div class="card">
     <div class="controls">
       <div class="group">Cohorts <span id="cohorts"></span></div>
-      <div class="group">Years <div class="seg" id="horizon"><button data-v="5">5</button><button data-v="8" class="active">8</button><button data-v="10">10</button><button data-v="15">15</button><button data-v="99">max</button></div></div>
+      <div class="group">View <div class="seg" id="view"><button data-v="fav" class="active">Favorites</button><button data-v="early">Early or late</button><button data-v="life">Whole story</button><button data-v="years">Year by year</button></div></div>
+      <div class="group" id="favGroup">Quick = within <div class="seg" id="quickM"><button data-v="3">3</button><button data-v="6" class="active">6</button><button data-v="12">12</button></div> mo · slow burn = over <div class="seg" id="slowM"><button data-v="12">12</button><button data-v="24" class="active">24</button><button data-v="36">36</button></div> mo · faded = <div class="seg" id="favGap"><button data-v="6">6</button><button data-v="12" class="active">12</button><button data-v="24">24</button></div> mo gap</div>
+      <div class="group" id="earlyGroup">Favorite within <div class="seg" id="winY"><button data-v="1" class="active">1</button><button data-v="2">2</button><button data-v="3">3</button></div> yrs · silence <div class="seg" id="silM"><button data-v="6">6</button><button data-v="12" class="active">12</button><button data-v="24">24</button></div> mo</div>
+      <div class="group" id="horizonGroup">Years <div class="seg" id="horizon"><button data-v="5">5</button><button data-v="8" class="active">8</button><button data-v="10">10</button><button data-v="15">15</button><button data-v="99">max</button></div></div>
       <div class="group">Favorite <div class="seg" id="thr"><button data-v="20">20</button><button data-v="50" class="active">50</button><button data-v="100">100</button></div> plays</div>
       <div class="group">Artists <div class="seg" id="scope"><button data-v="10" class="active">10+ plays</button><button data-v="3">3+ plays</button><button data-v="1">all</button></div></div>
     </div>
     <div class="note" id="note"></div>
     <div class="legend" id="legend"></div>
-    <div class="flows" id="entry" hidden></div>
-    <div class="flows" id="flows"><div class="status">Loading scrobbles…</div></div>
+    <div class="story plain" id="story" data-step="5">
+      <div class="steps" id="steps"></div>
+      <div class="stage"><div class="stage-in">
+        <div class="flows" id="entry" hidden></div>
+        <div class="flows" id="flows"><div class="status">Loading scrobbles…</div></div>
+      </div></div>
+    </div>
   </div>
-  <footer>A state is judged at the end of each calendar year after the first play. <b>Favorite</b>: cumulative plays reached the line (and stays a favorite from then on). <b>In rotation</b>: played that year and the year before. <b>Back again</b>: played that year after a year of silence. <b>Faded</b>: not played that year. Only complete years are drawn, so the span is cut to what the youngest selected cohort has lived through. Data: <code>scrobbles.csv</code>, artist names as scrobbled.</footer>
+  <footer><b>Favorites</b>: only artists that crossed the line. Arrival is the time from the first play to the play that crossed it. Stayed = no gap of the chosen length between plays since becoming a favorite, and a play in the last 12 months; faded for a while = such a gap, but a play in the last 12 months; faded out = nothing in the last 12 months. <b>Early or late</b>: measured from each artist's own first play, so recent cohorts take part as soon as their first years are over. A gap is S+ months between two plays, or from the last play to the latest scrobble, anywhere in the history — before or after becoming a favorite. "Now" means at least one play in the last 12 months. <b>Whole story</b>: a silent year is a complete calendar year with no plays after the first; "came back" means any play after one; a favorite is "only after coming back" when it crossed the line after its first silent year. Young cohorts have had less time to go silent or come back, so they lean toward "never silent". <b>Year by year</b>: a state at the end of each calendar year after the first play — favorite (cumulative plays reached the line, and it stays one), in rotation (played that year and the year before), back again (played after a silent year), faded (not played that year); only complete years are drawn, so the span is cut to what the youngest selected cohort has lived through. Data: <code>scrobbles.csv</code>, artist names as scrobbled.</footer>
 </div>
 <script>
 const $ = (s) => document.querySelector(s);
@@ -97,8 +126,8 @@ function parseCSV(text) {
 const STATES = [["fav", "Favorite", "#00a83f"], ["rot", "In rotation", "#3f88c5"], ["back", "Back again", "#3f88c5"], ["out", "Faded", "#3a4654"]];   // green for favorites, one blue for artists still being played whether steadily or sporadically, gray for the faded
 const COHORT = "#8a98a6", CGAP = 5;   // the first column: one gray block per cohort, with a small gap between years
 const SI = Object.fromEntries(STATES.map((s, i) => [s[0], i]));
-let ARTISTS = [], YEARS = [], NOW_Y = 0;
-const ui = { cohorts: new Set(), horizon: 8, thr: 50, scope: 10 };
+let ARTISTS = [], YEARS = [], NOW_Y = 0, LAST = 0;
+const ui = { cohorts: new Set(), horizon: 8, thr: 50, scope: 10, view: "fav", winY: 1, silM: 12, quickM: 6, slowM: 24, favGap: 12 };
 
 function build(rows) {
   const hdr = rows[0].map((h) => h.trim().toLowerCase()), iU = hdr.indexOf("uts"), iA = hdr.indexOf("artist");
@@ -106,14 +135,14 @@ function build(rows) {
   for (let i = 1; i < rows.length; i++) {
     const uts = +rows[i][iU]; if (!uts) continue; const name = rows[i][iA]; if (!name) continue;
     const y = localDate(uts).getUTCFullYear(); last = Math.max(last, uts);
-    let a = by.get(name); if (!a) { a = { name, first: y, plays: 0, perYear: {} }; by.set(name, a); }
-    a.plays++; a.perYear[y] = (a.perYear[y] || 0) + 1; if (y < a.first) a.first = y;
+    let a = by.get(name); if (!a) { a = { name, first: y, plays: 0, perYear: {}, times: [] }; by.set(name, a); }
+    a.plays++; a.perYear[y] = (a.perYear[y] || 0) + 1; if (y < a.first) a.first = y; a.times.push(uts);
   }
-  ARTISTS = [...by.values()];
-  NOW_Y = localDate(last).getUTCFullYear();
+  ARTISTS = [...by.values()]; for (const a of ARTISTS) a.times.sort((p, q) => p - q);
+  NOW_Y = localDate(last).getUTCFullYear(); LAST = last;
   const ys = new Set(ARTISTS.map((a) => a.first)); YEARS = [...ys].sort();
-  // default: four early cohorts with plenty of years behind them
-  for (const y of YEARS.slice(1, 5)) ui.cohorts.add(y);
+  // default: every cohort but the first (which also holds the pre-scrobbling library)
+  for (const y of YEARS.slice(1)) ui.cohorts.add(y);
 }
 
 /* the state of one artist at the end of relative year k (calendar year first + k) */
@@ -126,88 +155,207 @@ function stateAt(a, k, thr) {
   return "back";
 }
 
-function render() {
-  const box = $("#flows"), cohorts = [...ui.cohorts].sort(); if (!cohorts.length) { box.innerHTML = `<div class="status">Pick at least one cohort.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; return; }
-  const K = Math.max(1, Math.min(ui.horizon, NOW_Y - 1 - cohorts.at(-1)));   // only complete years
-  const arts = ARTISTS.filter((a) => ui.cohorts.has(a.first) && a.plays >= ui.scope);
-  const paths = arts.map((a) => { const st = []; for (let k = 0; k <= K; k++) st.push(stateAt(a, k, ui.thr)); return { a, st }; });
-  const cohortColor = () => COHORT;
-  const colorOf = (y, s) => STATES[SI[s]][2];
-  // counts per column and node, flows per (cohort, from, to) between consecutive columns
-  const nodeN = []; for (let k = 0; k <= K; k++) { const n = {}; for (const p of paths) n[p.st[k]] = (n[p.st[k]] || 0) + 1; nodeN.push(n); }
-  const flows = []; for (let k = 0; k < K; k++) { const m = new Map(); for (const p of paths) { const key = `${p.a.first}|${p.st[k]}|${p.st[k + 1]}`; m.set(key, (m.get(key) || 0) + 1); } flows.push([...m].map(([key, n]) => { const [y, from, to] = key.split("|"); return { y: +y, from, to, n }; })); }
-  // layout
-  const W = 1140, H = 520, L = 86, R = 136, NW = 12, GAP = 10, top = 28, bottom = 8;
+/* one alluvial drawing for both views: cols[k] = the nodes of column k in top-to-bottom order; paths = one entry per artist
+   with its cohort year and node id per column. The first column is drawn as a stack of cohort blocks. */
+function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW = 12, GAP = 10, top = 28, bottom = 8, cohorts, labels = "last", tip }) {
+  const K = cols.length - 1, order = cols.map((c) => Object.fromEntries(c.map((n, i) => [n.id, i]))), byId = cols.map((c) => Object.fromEntries(c.map((n) => [n.id, n])));
   const colX = (k) => L + (W - L - R - NW) * k / K;
-  const usable = H - top - bottom - Math.max(GAP * (STATES.length - 1), CGAP * (cohorts.length - 1)), scale = usable / paths.length;
-  const nodeY = []; for (let k = 0; k <= K; k++) { let y = top; const ys = {}; for (const [s] of STATES) { ys[s] = y; y += (nodeN[k][s] || 0) * scale + ((nodeN[k][s] || 0) ? GAP : 0); } nodeY.push(ys); }
-  // slice ribbons out of nodes: at the left edge by cohort first (the stacked column), elsewhere by partner state first
+  const nodeN = cols.map((c, k) => { const n = {}; for (const p of paths) n[p.st[k]] = (n[p.st[k]] || 0) + 1; return n; });
+  const maxGaps = Math.max(...cols.map((c, k) => GAP * (Object.keys(nodeN[k]).length - 1)), CGAP * (cohorts.length - 1));
+  const scale = (H - top - bottom - maxGaps) / paths.length;
+  const nodeY = cols.map((c, k) => { let y = top; const ys = {}; for (const n of c) { ys[n.id] = y; if (nodeN[k][n.id]) y += nodeN[k][n.id] * scale + GAP; } return ys; });
   let svg = "";
   for (let k = 0; k < K; k++) {
-    const outOff = {}, inOff = {};
-    const fl = flows[k].slice().sort((p, q) => k === 0 ? (p.y - q.y || SI[p.to] - SI[q.to]) : (SI[p.to] - SI[q.to] || p.y - q.y));
-    const inc = flows[k].slice().sort((p, q) => SI[p.from] - SI[q.from] || p.y - q.y);
-    const inPos = new Map(); for (const f of inc) { const key = `${f.y}|${f.from}|${f.to}`; inPos.set(key, inOff[f.to] || 0); inOff[f.to] = (inOff[f.to] || 0) + f.n * scale; }
-    let lastY = null;
+    const m = new Map(); for (const p of paths) { const key = `${p.y}|${p.st[k]}|${p.st[k + 1]}`; m.set(key, (m.get(key) || 0) + 1); }
+    const flows = [...m].map(([key, n]) => { const [y, from, to] = key.split("|"); return { y: +y, from, to, n }; });
+    const fl = flows.slice().sort((p, q) => k === 0 ? (p.y - q.y || order[k + 1][p.to] - order[k + 1][q.to]) : (order[k + 1][p.to] - order[k + 1][q.to] || p.y - q.y));
+    const inc = flows.slice().sort((p, q) => order[k][p.from] - order[k][q.from] || p.y - q.y);
+    const outOff = {}, inOff = {}, inPos = new Map();
+    for (const f of inc) { inPos.set(`${f.y}|${f.from}|${f.to}`, inOff[f.to] || 0); inOff[f.to] = (inOff[f.to] || 0) + f.n * scale; }
+    let lastY = null; svg += `<g class="step" data-k="${k + 1}">`;
     for (const f of fl) {
       if (k === 0) { if (lastY != null && f.y !== lastY) outOff[f.from] = (outOff[f.from] || 0) + CGAP; lastY = f.y; }
       const h = f.n * scale, ya = nodeY[k][f.from] + (outOff[f.from] || 0), yb = nodeY[k + 1][f.to] + inPos.get(`${f.y}|${f.from}|${f.to}`); outOff[f.from] = (outOff[f.from] || 0) + h;
       const xa = colX(k) + NW, xb = colX(k + 1), xm = (xa + xb) / 2;
-      svg += `<path class="flow" data-y="${f.y}" d="M${xa},${ya.toFixed(1)} C${xm},${ya.toFixed(1)} ${xm},${yb.toFixed(1)} ${xb},${yb.toFixed(1)} v${h.toFixed(2)} C${xm},${(yb + h).toFixed(1)} ${xm},${(ya + h).toFixed(1)} ${xa},${(ya + h).toFixed(1)} z" fill="${colorOf(f.y, f.to)}"><title>${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${STATES[SI[f.from]][1].toLowerCase()} → ${STATES[SI[f.to]][1].toLowerCase()} (year ${k} → ${k + 1})</title></path>`;
+      svg += `<path class="flow" data-y="${f.y}" d="M${xa},${ya.toFixed(1)} C${xm},${ya.toFixed(1)} ${xm},${yb.toFixed(1)} ${xb},${yb.toFixed(1)} v${h.toFixed(2)} C${xm},${(yb + h).toFixed(1)} ${xm},${(ya + h).toFixed(1)} ${xa},${(ya + h).toFixed(1)} z" fill="${byId[k + 1][f.to].color}"><title>${tip(f, k, byId[k][f.from], byId[k + 1][f.to])}</title></path>`;
     }
+    svg += `</g>`;
   }
-  // nodes and labels
   for (let k = 0; k <= K; k++) {
-    svg += `<text class="hdr" x="${colX(k) + NW / 2}" y="${top - 12}" text-anchor="middle">${k === 0 ? "first year" : `+${k} yr${k > 1 ? "s" : ""}`}</text>`;
-    for (const [s, name, col] of STATES) {
-      const n = nodeN[k][s] || 0; if (!n || k === 0) continue; const y = nodeY[k][s], h = n * scale;
-      svg += `<rect x="${colX(k)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${col}"><title>${name}: ${fmt(n)}</title></rect>`;
-      if (k === K) svg += `<text class="n" x="${colX(k) + NW + 6}" y="${(y + Math.min(h / 2 + 4, 14)).toFixed(1)}">${name} <tspan class="sub">${fmt(n)} · ${Math.round(100 * n / paths.length)}%</tspan></text>`;
-      else if (h >= 14 && k > 0) svg += `<text class="sub" x="${colX(k) + NW + 4}" y="${(y + 11).toFixed(1)}">${fmt(n)}</text>`;
+    svg += `<g class="step" data-k="${k}">`;
+    if (cols[k].hdr != null) svg += `<text class="hdr" x="${colX(k) + NW / 2}" y="${top - 12}" text-anchor="middle">${cols[k].hdr}</text>`;
+    if (k === 0) { svg += `</g>`; continue; }
+    let lastLabel = -99;
+    for (const n of cols[k]) {
+      const c = nodeN[k][n.id] || 0; if (!c) continue; const y = nodeY[k][n.id], h = c * scale;
+      svg += `<rect x="${colX(k)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${n.color}"><title>${n.name}: ${fmt(c)}</title></rect>`;
+      if (k === K || labels === "all") { const ly = Math.max(y + Math.min(h / 2 + 4, 14), lastLabel + 14); lastLabel = ly; svg += `<text class="n" x="${colX(k) + NW + 6}" y="${ly.toFixed(1)}">${n.name} <tspan class="sub">${fmt(c)} · ${Math.round(100 * c / paths.length)}%</tspan></text>`; }
+      else if (h >= 14) svg += `<text class="sub" x="${colX(k) + NW + 4}" y="${(y + 11).toFixed(1)}">${fmt(c)}</text>`;
     }
+    svg += `</g>`;
   }
-  // the left edge: cohort segments of the first column, labeled
-  { let y = top; for (const yr of cohorts) { const n = paths.filter((p) => p.a.first === yr).length, h = n * scale; if (!n) continue;
-      svg += `<rect x="${colX(0)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${cohortColor(yr)}" data-y="${yr}" class="cohort"><title>${yr}: ${fmt(n)} new artists</title></rect>`;
+  { let y = top; svg += `<g class="step" data-k="0">`; for (const yr of cohorts) { const n = paths.filter((p) => p.y === yr).length, h = n * scale; if (!n) continue;
+      svg += `<rect x="${colX(0)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${COHORT}" data-y="${yr}" class="cohort"><title>${yr}: ${fmt(n)} new artists</title></rect>`;
       if (h >= 11 || cohorts.length <= 6) svg += `<text class="n" x="${colX(0) - 6}" y="${(y + Math.min(h / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${yr} <tspan class="sub">${fmt(n)}</tspan></text>`;
-      y += h + CGAP; } }
+      y += h + CGAP; } svg += `</g>`; }
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">${svg}</svg>`;
+  box.querySelectorAll("rect.cohort").forEach((r) => { r.style.cursor = "pointer"; r.addEventListener("mouseenter", () => { box.classList.add("dim"); box.querySelectorAll(`path[data-y="${r.dataset.y}"]`).forEach((p) => p.classList.add("lit")); }); r.addEventListener("mouseleave", () => { box.classList.remove("dim"); box.querySelectorAll("path.lit").forEach((p) => p.classList.remove("lit")); }); });
+  return nodeN;
+}
+
+/* the lifetime view: no time axis — each artist's whole story in three steps. A silent year is a complete calendar year
+   with no plays after the first year; "came back" means any play after one. */
+const GREEN = "#00a83f", GREEN_HI = "#00e054", GREEN_LO = "#2f7a4f", BLUE = "#3f88c5", BLUE_LO = "#5a7fa0", GRAY = "#3a4654";
+const LIFE_MID = [{ id: "steady", name: "Never a silent year", color: BLUE }, { id: "back", name: "Went silent, came back", color: BLUE_LO }, { id: "gone", name: "Went silent, stayed gone", color: GRAY }];
+const LIFE_END = [
+  { id: "fav_steady", name: "Favorite, never silent", color: GREEN }, { id: "not_steady", name: "Still played, not a favorite", color: BLUE },
+  { id: "fav_late", name: "Favorite only after coming back", color: GREEN_HI }, { id: "fav_back", name: "Favorite before the silence, came back", color: GREEN }, { id: "not_back", name: "Came back, not a favorite", color: BLUE_LO },
+  { id: "fav_gone", name: "Favorite, then gone", color: GREEN_LO }, { id: "not_gone", name: "Gone, not a favorite", color: GRAY }];
+function lifeOf(a, thr) {
+  let firstSilent = null; for (let y = a.first + 1; y <= NOW_Y - 1; y++) if (!a.perYear[y]) { firstSilent = y; break; }
+  const cameBack = firstSilent != null && Object.keys(a.perYear).some((y) => +y > firstSilent);
+  let favYear = null, cum = 0; for (let y = a.first; y <= NOW_Y; y++) { cum += a.perYear[y] || 0; if (cum >= thr) { favYear = y; break; } }
+  const mid = firstSilent == null ? "steady" : cameBack ? "back" : "gone";
+  const end = mid === "steady" ? (favYear != null ? "fav_steady" : "not_steady") : mid === "back" ? (favYear == null ? "not_back" : favYear > firstSilent ? "fav_late" : "fav_back") : (favYear != null ? "fav_gone" : "not_gone");
+  return [mid, end];
+}
+
+/* the early-or-late view, measured from each artist's own first play so that recent cohorts can take part.
+   Start: a favorite within the first W years, or not. Since then: did it drop out of rotation for a gap of S+ months,
+   did it grow into a favorite. Now: played in the last 12 months or not. A gap anywhere in the history counts, before or after
+   becoming a favorite, so a "came back" favorite may have fallen out before it was loved. */
+const NOW_M = 12;
+const EARLY_COLS = [
+  [{ id: "early", name: "Favorite within the window", color: GREEN }, { id: "not", name: "Not a favorite yet", color: BLUE }],
+  [{ id: "fav_steady", name: "Still a favorite, never a gap", color: GREEN }, { id: "fav_gap", name: "Favorite, dropped out for a gap", color: GREEN_LO },
+   { id: "grew", name: "Grew into a favorite", color: GREEN_HI }, { id: "not_rot", name: "In rotation, never a gap", color: BLUE }, { id: "not_gap", name: "Dropped out, never a favorite", color: GRAY }],
+  [{ id: "fav_never", name: "Favorite, never fell out", color: GREEN }, { id: "fav_back", name: "Favorite, came back into rotation", color: GREEN_HI }, { id: "fav_out", name: "Favorite, dropped out", color: GREEN_LO },
+   { id: "rot", name: "In rotation, never a favorite", color: BLUE }, { id: "out", name: "Dropped out, never a favorite", color: GRAY }]];
+function earlyOf(a, thr, winY, silM) {
+  const t = a.times, win = t[0] + winY * 365.25 * 86400, gap = silM * 30.44 * 86400;
+  const favAt = t.length >= thr ? t[thr - 1] : null, fav = favAt != null, early = fav && favAt <= win;
+  let hadGap = LAST - t.at(-1) >= gap; for (let i = 1; i < t.length && !hadGap; i++) if (t[i] - t[i - 1] >= gap) hadGap = true;
+  const now = LAST - t.at(-1) < NOW_M * 30.44 * 86400;
+  const mid = early ? (hadGap ? "fav_gap" : "fav_steady") : fav ? "grew" : hadGap ? "not_gap" : "not_rot";
+  const end = fav ? (now ? (hadGap ? "fav_back" : "fav_never") : "fav_out") : now ? "rot" : "out";
+  return [early ? "early" : "not", mid, end];
+}
+
+/* the favorites view: only the artists that crossed the line. How they arrived (quick, took a while, slow burn: months from the
+   first play to the play that crossed the line) and how they stayed (steady: no long gap since becoming a favorite and played in the
+   last 12 months; faded for a while: a long gap since, but played in the last 12 months; faded out: nothing in the last 12 months). */
+const FAV_ARRIVE = [{ id: "quick", name: "Quick favorite", color: GREEN_HI }, { id: "grew", name: "Took a while", color: GREEN }, { id: "slow", name: "Slow burn", color: GREEN_LO }];
+const FAV_FATE = [{ id: "steady", name: "Stayed, no long gap", color: GREEN }, { id: "while", name: "Faded for a while, came back", color: BLUE }, { id: "out", name: "Faded out", color: GRAY }];
+function favStoryOf(a, thr, quickM, slowM, gapM) {
+  const t = a.times, favAt = t[thr - 1], months = (favAt - t[0]) / (30.44 * 86400), gap = gapM * 30.44 * 86400;
+  const arrive = months <= quickM ? "quick" : months > slowM ? "slow" : "grew";
+  const now = LAST - t.at(-1) < NOW_M * 30.44 * 86400;
+  let hadGap = false; for (let i = thr; i < t.length; i++) if (t[i] - t[i - 1] >= gap) { hadGap = true; break; }
+  return [arrive, !now ? "out" : hadGap ? "while" : "steady"];
+}
+
+function render() {
+  const box = $("#flows"), cohorts = [...ui.cohorts].sort(); if (!cohorts.length) { box.innerHTML = `<div class="status">Pick at least one cohort.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; $("#entry").hidden = true; return; }
+  const arts = ARTISTS.filter((a) => ui.cohorts.has(a.first) && a.plays >= ui.scope);
+  $("#horizonGroup").hidden = ui.view !== "years"; $("#earlyGroup").hidden = ui.view !== "early"; $("#favGroup").hidden = ui.view !== "fav";
+  $("#story").classList.toggle("plain", ui.view !== "fav"); $("#note").hidden = ui.view === "fav"; $("#story").dataset.step = ui.view === "fav" ? 0 : 5;
+  const where = `first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}${ui.scope > 1 ? ` with ${ui.scope}+ plays` : ""}`;
+  if (ui.view === "fav") {
+    const favs = arts.filter((a) => a.plays >= ui.thr);
+    const paths = favs.map((a) => ({ y: a.first, st: ["pool", ...favStoryOf(a, ui.thr, ui.quickM, ui.slowM, ui.favGap)] }));
+    if (!paths.length) { box.innerHTML = `<div class="status">No favorites in this selection.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; }
+    else {
+      const cols = [[{ id: "pool", name: "Favorites", color: COHORT }], FAV_ARRIVE.slice(), FAV_FATE.slice()]; cols[0].hdr = "favorites by year of first play"; cols[1].hdr = `how they won you over`; cols[2].hdr = `whether they stayed`;
+      const nodeN = drawAlluvial(box, cols, paths, { cohorts, W: 840, H: 440, labels: "all", R: 220, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+      const a = (id) => nodeN[1][id] || 0, b = (id) => nodeN[2][id] || 0, pc = (n) => Math.round(100 * n / paths.length);
+      $("#legend").innerHTML = `<span>Arrival:</span><span><i style="background:${GREEN_HI}"></i>Quick favorite</span><span><i style="background:${GREEN}"></i>Took a while</span><span><i style="background:${GREEN_LO}"></i>Slow burn</span><span style="margin-left:10px">Since:</span><span><i style="background:${GREEN}"></i>Stayed</span><span><i style="background:${BLUE}"></i>Faded for a while, came back</span><span><i style="background:${GRAY}"></i>Faded out</span>`;
+      const all = ARTISTS.filter((x) => ui.cohorts.has(x.first)), tried = all.filter((x) => x.plays >= ui.scope);
+      $("#steps").innerHTML = [
+        [`Every artist you met`, `<b>${fmt(all.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}, stacked by the year of the first play. Most of them you heard once or twice.`],
+        [`The ones you gave a chance`, ui.scope > 1 ? `Only <b>${fmt(tried.length)}</b> reached ${ui.scope} plays — ${Math.round(100 * tried.length / all.length)}%. The rest passed through.` : `All of them count here, since the entry bar is set to every artist.`],
+        [`The favorites`, `<b>${fmt(paths.length)}</b> crossed the ${ui.thr}-play line: ${Math.round(100 * paths.length / Math.max(1, tried.length))}% of the ones you tried, ${(100 * paths.length / all.length).toFixed(1)}% of everyone you heard. That thin green sliver is what the rest of the page is about.`],
+        [`Zoom in`, `The same <b>${fmt(paths.length)}</b> favorites, now filling the frame, still stacked by the year you first heard them.`],
+        [`How they won you over`, `<b>${fmt(a("quick"))}</b> were quick favorites, crossing the line within ${ui.quickM} months (${pc(a("quick"))}%). <b>${fmt(a("grew"))}</b> took a while. <b>${fmt(a("slow"))}</b> were slow burns of more than ${ui.slowM} months (${pc(a("slow"))}%).`],
+        [`And whether they stayed`, `<b>${fmt(b("steady"))}</b> have stayed without a ${ui.favGap}-month gap and are still played (${pc(b("steady"))}%). <b>${fmt(b("while"))}</b> faded for a while and came back (${pc(b("while"))}%). <b>${fmt(b("out"))}</b> have faded out — nothing in the last ${NOW_M} months (${pc(b("out"))}%).`]
+      ].map(([k, t], i) => `<div class="step-text" data-i="${i}"><span class="k">${i + 1} · ${k}</span>${t}</div>`).join("");
+      $("#note").innerHTML = `<b>${fmt(paths.length)}</b> favorites among the artists ${where}. <b>${fmt(a("quick"))}</b> were quick favorites, crossing the ${ui.thr}-play line within ${ui.quickM} months of the first play (${pc(a("quick"))}%); <b>${fmt(a("grew"))}</b> took a while; <b>${fmt(a("slow"))}</b> were slow burns of more than ${ui.slowM} months (${pc(a("slow"))}%). Since then, <b>${fmt(b("steady"))}</b> have stayed without a ${ui.favGap}-month gap and are still played (${pc(b("steady"))}%), <b>${fmt(b("while"))}</b> faded for a while and came back (${pc(b("while"))}%), and <b>${fmt(b("out"))}</b> have faded out — nothing in the last ${NOW_M} months (${pc(b("out"))}%). Hover a cohort block to follow one year's favorites.`;
+    }
+  } else if (ui.view === "early") {
+    const minAge = ui.winY * 365.25 * 86400, old = arts.filter((a) => LAST - a.times[0] >= minAge);   // only artists whose window has closed
+    const paths = old.map((a) => ({ y: a.first, st: ["pool", ...earlyOf(a, ui.thr, ui.winY, ui.silM)] }));
+    const yrs = `${ui.winY} yr${ui.winY > 1 ? "s" : ""}`;
+    const cols = [[{ id: "pool", name: "New artists", color: COHORT }], ...EARLY_COLS.map((c) => c.map((n) => ({ ...n, name: n.name.replace("the window", yrs) })))];
+    cols[0].hdr = "new artists"; cols[1].hdr = `favorite within ${yrs}?`; cols[2].hdr = `since then (gap = ${ui.silM}+ months)`; cols[3].hdr = `now (last ${NOW_M} months)`;
+    const nodeN = drawAlluvial(box, cols, paths, { cohorts, labels: "all", R: 230, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+    const c1 = (id) => nodeN[1][id] || 0, m = (id) => nodeN[2][id] || 0, n = (id) => nodeN[3][id] || 0;
+    const favs = m("fav_steady") + m("fav_gap") + m("grew"), lateAfterGap = old.filter((a) => { const t = a.times, gap = ui.silM * 30.44 * 86400; if (t.length < ui.thr || t[ui.thr - 1] <= t[0] + minAge) return false; for (let i = 1; i < ui.thr; i++) if (t[i] - t[i - 1] >= gap) return true; return false; }).length;
+    $("#legend").innerHTML = `<span><i style="background:${GREEN}"></i>Favorite</span><span><i style="background:${GREEN_HI}"></i>Favorite that grew or came back</span><span><i style="background:${GREEN_LO}"></i>Favorite that dropped out</span><span><i style="background:${BLUE}"></i>In rotation, not a favorite</span><span><i style="background:${GRAY}"></i>Dropped out, not a favorite</span>`;
+    $("#note").innerHTML = `<b>${fmt(paths.length)}</b> artists ${where}${old.length < arts.length ? ` whose first ${yrs} are over (${fmt(arts.length - old.length)} newer ones wait)` : ""}. <b>${fmt(c1("early"))}</b> became favorites within ${yrs} (${Math.round(100 * c1("early") / paths.length)}%), <b>${fmt(m("grew"))}</b> grew into one later${lateAfterGap ? `, ${fmt(lateAfterGap)} of them after dropping out of rotation for ${ui.silM}+ months first` : ""}. Of all <b>${fmt(favs)}</b> favorites, <b>${fmt(n("fav_never"))}</b> have never had a ${ui.silM}-month gap, <b>${fmt(n("fav_back"))}</b> fell out and are back in rotation, <b>${fmt(n("fav_out"))}</b> are out now. The rest: <b>${fmt(n("rot"))}</b> in rotation without ever becoming favorites, <b>${fmt(n("out"))}</b> gone. Hover a cohort block to follow one year's artists.`;
+  } else if (ui.view === "years") {
+    const K = Math.max(1, Math.min(ui.horizon, NOW_Y - 1 - cohorts.at(-1)));   // only complete years
+    const paths = arts.map((a) => { const st = []; for (let k = 0; k <= K; k++) st.push(stateAt(a, k, ui.thr)); return { y: a.first, st }; });
+    const cols = []; for (let k = 0; k <= K; k++) { const c = STATES.map(([id, name, color]) => ({ id, name, color })); c.hdr = k === 0 ? "first year" : `+${k} yr${k > 1 ? "s" : ""}`; cols.push(c); }
+    const nodeN = drawAlluvial(box, cols, paths, { cohorts, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()} (year ${k} → ${k + 1})` });
+    const fav = nodeN[K].fav || 0, out = nodeN[K].out || 0, back = paths.filter((p) => p.st.includes("back")).length;
+    $("#legend").innerHTML = `<span><i style="background:${STATES[0][2]}"></i>Favorite</span><span><i style="background:${STATES[1][2]}"></i>Not a favorite, still played (in rotation, or back after a silent year)</span><span><i style="background:${STATES[3][2]}"></i>Faded</span>`;
+    $("#note").innerHTML = `<b>${fmt(paths.length)}</b> artists ${where}, followed for ${K} complete year${K > 1 ? "s" : ""}${K < ui.horizon ? ` (as many as the ${cohorts.at(-1)} cohort has completed)` : ""}. After ${K} years: <b>${fmt(fav)}</b> favorites (${Math.round(100 * fav / paths.length)}%), <b>${fmt(out)}</b> faded (${Math.round(100 * out / paths.length)}%); <b>${fmt(back)}</b> came back at least once after a silent year. Hover a ribbon for its numbers, a cohort block to follow one year's artists.`;
+  } else {
+    const paths = arts.map((a) => ({ y: a.first, st: ["pool", ...lifeOf(a, ui.thr)] }));
+    const cols = [[{ id: "pool", name: "New artists", color: COHORT }], LIFE_MID.slice(), LIFE_END.slice()]; cols[0].hdr = "new artists"; cols[1].hdr = "ever silent?"; cols[2].hdr = "and now";
+    const nodeN = drawAlluvial(box, cols, paths, { cohorts, labels: "all", R: 260, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+    const n = (id) => nodeN[2][id] || 0, m = (id) => nodeN[1][id] || 0, favs = n("fav_steady") + n("fav_late") + n("fav_back") + n("fav_gone");
+    const young = NOW_Y - 1 - cohorts.at(-1);
+    $("#legend").innerHTML = `<span><i style="background:${GREEN}"></i>Favorite</span><span><i style="background:${GREEN_HI}"></i>Favorite only after a comeback</span><span><i style="background:${GREEN_LO}"></i>Favorite, then gone</span><span><i style="background:${BLUE}"></i>Played, never silent</span><span><i style="background:${BLUE_LO}"></i>Came back</span><span><i style="background:${GRAY}"></i>Gone</span>`;
+    $("#note").innerHTML = `<b>${fmt(paths.length)}</b> artists ${where}, each one's whole story so far. <b>${fmt(m("gone") + m("back"))}</b> went silent for at least a full year (${Math.round(100 * (m("gone") + m("back")) / paths.length)}%), and <b>${fmt(m("back"))}</b> of those came back. <b>${fmt(favs)}</b> are favorites; <b>${fmt(n("fav_late"))}</b> of them only became one after being shunned for a year.${young < 2 ? ` The ${cohorts.at(-1)} cohort has ${young < 1 ? "no" : "only one"} complete year behind it, so it cannot have gone silent yet.` : ""} Hover a cohort block to follow one year's artists.`;
+  }
   // the entry chart: every new artist of the cohorts, and the sliver of them that got a real chance
-  const ebox = $("#entry");
+  const ebox = $("#entry"), W = ui.view === "fav" ? 840 : 1140, L = 86, NW = 12, GAP = 10;
   if (ui.scope > 1) {
     const all = ARTISTS.filter((a) => ui.cohorts.has(a.first)), tried = all.filter((a) => a.plays >= ui.scope);
-    const EH = 170, etop = 22, x0 = L, x1 = L + 300, escale = (EH - etop - 8 - Math.max(GAP, CGAP * (cohorts.length - 1))) / all.length;
-    let e = "", y = etop, yT = etop, yP = etop + tried.length * escale + GAP;
+    const third = ui.view === "fav", EH = third ? 440 : 170, etop = 22, x0 = L, x1 = L + (W < 1000 ? 220 : 300), x2 = L + (W < 1000 ? 450 : 640), escale = (EH - etop - 8 - Math.max(GAP, CGAP * (cohorts.length - 1))) / all.length, favN = tried.filter((a) => a.plays >= ui.thr).length;
+    let e = "", e0 = "", y = etop, yT = etop, yP = etop + tried.length * escale + GAP;
     for (const yr of cohorts) {
       const ca = all.filter((a) => a.first === yr), ct = ca.filter((a) => a.plays >= ui.scope), hA = ca.length * escale, hT = ct.length * escale, hP = hA - hT;
       const rib = (ya, yb, h, col, tip) => h > 0 ? `<path class="flow" d="M${x0 + NW},${ya.toFixed(1)} C${(x0 + x1) / 2},${ya.toFixed(1)} ${(x0 + x1) / 2},${yb.toFixed(1)} ${x1},${yb.toFixed(1)} v${h.toFixed(2)} C${(x0 + x1) / 2},${(yb + h).toFixed(1)} ${(x0 + x1) / 2},${(ya + h).toFixed(1)} ${x0 + NW},${(ya + h).toFixed(1)} z" fill="${col}"><title>${tip}</title></path>` : "";
-      e += rib(y, yT, hT, STATES[1][2], `${yr}: ${fmt(ct.length)} of ${fmt(ca.length)} new artists reached ${ui.scope} plays (${Math.round(100 * ct.length / ca.length)}%)`) + rib(y + hT, yP, hP, STATES[3][2], `${yr}: ${fmt(ca.length - ct.length)} of ${fmt(ca.length)} never reached ${ui.scope} plays`);
-      e += `<rect x="${x0}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, hA).toFixed(1)}" rx="2" fill="${cohortColor(yr)}"><title>${yr}: ${fmt(ca.length)} new artists</title></rect>`;
-      if (hA >= 11) e += `<text class="n" x="${x0 - 6}" y="${(y + Math.min(hA / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${yr} <tspan class="sub">${fmt(ca.length)}</tspan></text>`;
+      e += rib(y, yT, hT, BLUE, `${yr}: ${fmt(ct.length)} of ${fmt(ca.length)} new artists reached ${ui.scope} plays (${Math.round(100 * ct.length / ca.length)}%)`) + rib(y + hT, yP, hP, GRAY, `${yr}: ${fmt(ca.length - ct.length)} of ${fmt(ca.length)} never reached ${ui.scope} plays`);
+      e0 += `<rect x="${x0}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, hA).toFixed(1)}" rx="2" fill="${COHORT}"><title>${yr}: ${fmt(ca.length)} new artists</title></rect>`;
+      if (hA >= 11) e0 += `<text class="n" x="${x0 - 6}" y="${(y + Math.min(hA / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${yr} <tspan class="sub">${fmt(ca.length)}</tspan></text>`;
       y += hA + CGAP; yT += hT; yP += hP;
     }
-    e += `<rect x="${x1}" y="${etop}" width="${NW}" height="${Math.max(1, tried.length * escale).toFixed(1)}" rx="2" fill="${STATES[1][2]}"/><text class="n" x="${x1 + NW + 6}" y="${etop + 11}">Tried <tspan class="sub">${fmt(tried.length)} · ${Math.round(100 * tried.length / all.length)}% reached ${ui.scope} plays — these continue below</tspan></text>`;
-    e += `<rect x="${x1}" y="${(etop + tried.length * escale + GAP).toFixed(1)}" width="${NW}" height="${Math.max(1, (all.length - tried.length) * escale).toFixed(1)}" rx="2" fill="${STATES[3][2]}"/><text class="n" x="${x1 + NW + 6}" y="${(etop + tried.length * escale + GAP + Math.min((all.length - tried.length) * escale / 2 + 4, 14)).toFixed(1)}">Passed through <tspan class="sub">${fmt(all.length - tried.length)} · never reached ${ui.scope} plays</tspan></text>`;
-    e += `<text class="hdr" x="${x0 + NW / 2}" y="${etop - 10}" text-anchor="middle">new artists</text>`;
-    ebox.innerHTML = `<svg viewBox="0 0 ${W} ${EH}" preserveAspectRatio="xMinYMin meet">${e}</svg>`; ebox.hidden = false;
+    e += `<rect x="${x1}" y="${etop}" width="${NW}" height="${Math.max(1, tried.length * escale).toFixed(1)}" rx="2" fill="${BLUE}"/><text class="n" x="${x1 + NW + 6}" y="${etop + 11}">Tried <tspan class="sub">${fmt(tried.length)} · ${Math.round(100 * tried.length / all.length)}% reached ${ui.scope} plays${third ? "" : " — these continue below"}</tspan></text>`;
+    let e2 = "";
+    if (third) {   // tried → favorites / not, and the favorites are what the main chart follows
+      const hF = favN * escale, hN = (tried.length - favN) * escale, xm = (x1 + NW + x2) / 2, yN = etop + hF + GAP;
+      e2 += `<path class="flow" d="M${x1 + NW},${etop} C${xm},${etop} ${xm},${etop} ${x2},${etop} v${hF.toFixed(2)} C${xm},${(etop + hF).toFixed(1)} ${xm},${(etop + hF).toFixed(1)} ${x1 + NW},${(etop + hF).toFixed(1)} z" fill="${GREEN}"><title>${fmt(favN)} of ${fmt(tried.length)} tried artists became favorites</title></path>`;
+      e2 += `<path class="flow" d="M${x1 + NW},${(etop + hF).toFixed(1)} C${xm},${(etop + hF).toFixed(1)} ${xm},${yN.toFixed(1)} ${x2},${yN.toFixed(1)} v${hN.toFixed(2)} C${xm},${(yN + hN).toFixed(1)} ${xm},${(etop + hF + hN).toFixed(1)} ${x1 + NW},${(etop + hF + hN).toFixed(1)} z" fill="${GRAY}"><title>${fmt(tried.length - favN)} tried artists never reached ${ui.thr} plays</title></path>`;
+      e2 += `<rect class="favnode" x="${x2}" y="${etop}" width="${NW}" height="${Math.max(1.5, hF).toFixed(1)}" rx="2" fill="${GREEN}"/><text class="n" x="${x2 + NW + 6}" y="${etop + 11}">Favorites <tspan class="sub">${fmt(favN)} · ${Math.round(100 * favN / tried.length)}% of the tried, ${(100 * favN / all.length).toFixed(1)}% of all</tspan></text>`;
+      e2 += `<rect x="${x2}" y="${yN.toFixed(1)}" width="${NW}" height="${Math.max(1, hN).toFixed(1)}" rx="2" fill="${GRAY}"/><text class="n" x="${x2 + NW + 6}" y="${Math.max(yN + Math.min(hN / 2 + 4, 14), etop + 26).toFixed(1)}">Never favorites <tspan class="sub">${fmt(tried.length - favN)} · never reached ${ui.thr} plays</tspan></text>`;
+    }
+    e += `<rect x="${x1}" y="${(etop + tried.length * escale + GAP).toFixed(1)}" width="${NW}" height="${Math.max(1, (all.length - tried.length) * escale).toFixed(1)}" rx="2" fill="${GRAY}"/><text class="n" x="${x1 + NW + 6}" y="${(etop + tried.length * escale + GAP + Math.min((all.length - tried.length) * escale / 2 + 4, 14)).toFixed(1)}">Passed through <tspan class="sub">${fmt(all.length - tried.length)} · never reached ${ui.scope} plays</tspan></text>`;
+    e0 += `<text class="hdr" x="${x0 + NW / 2}" y="${etop - 10}" text-anchor="middle">new artists</text>`;
+    ebox.innerHTML = `<svg viewBox="0 0 ${W} ${EH}" preserveAspectRatio="xMinYMin meet"><g class="step" data-e="1">${e}</g><g class="step" data-e="2">${e2}</g><g class="step" data-e="0">${e0}</g></svg>`; ebox.hidden = false;
   } else { ebox.innerHTML = ""; ebox.hidden = true; }
-  box.querySelectorAll("rect.cohort").forEach((r) => { r.style.cursor = "pointer"; r.addEventListener("mouseenter", () => { box.classList.add("dim"); box.querySelectorAll(`path[data-y="${r.dataset.y}"]`).forEach((p) => p.classList.add("lit")); }); r.addEventListener("mouseleave", () => { box.classList.remove("dim"); box.querySelectorAll("path.lit").forEach((p) => p.classList.remove("lit")); }); });
-  const fav = nodeN[K].fav || 0, out = nodeN[K].out || 0, back = paths.filter((p) => p.st.includes("back")).length;
-  $("#legend").innerHTML = `<span><i style="background:${STATES[0][2]}"></i>Favorite</span><span><i style="background:${STATES[1][2]}"></i>Not a favorite, still played (in rotation, or back after a silent year)</span><span><i style="background:${STATES[3][2]}"></i>Faded</span>`;
-  $("#note").innerHTML = `<b>${fmt(paths.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}${ui.scope > 1 ? ` with ${ui.scope}+ plays` : ""}, followed for ${K} complete year${K > 1 ? "s" : ""}${K < ui.horizon ? ` (as many as the ${cohorts.at(-1)} cohort has completed)` : ""}. After ${K} years: <b>${fmt(fav)}</b> favorites (${Math.round(100 * fav / paths.length)}%), <b>${fmt(out)}</b> faded (${Math.round(100 * out / paths.length)}%); <b>${fmt(back)}</b> came back at least once after a silent year. Hover a ribbon for its numbers, a cohort block to follow one year's artists.`;
+}
+
+function watchSteps() {
+  const story = $("#story");
+  const io = new IntersectionObserver((entries) => { for (const en of entries) if (en.isIntersecting) { const i = +en.target.dataset.i; story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); } }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
+  const seen = new Set();
+  new MutationObserver(() => { story.querySelectorAll(".step-text").forEach((el) => { if (!seen.has(el)) { seen.add(el); io.observe(el); } }); }).observe($("#steps"), { childList: true });
+  story.querySelectorAll(".step-text").forEach((el) => { seen.add(el); io.observe(el); });
 }
 
 function wire() {
   const c = $("#cohorts"); c.innerHTML = YEARS.map((y) => `<button class="chip${ui.cohorts.has(y) ? " active" : ""}" data-y="${y}">${y}</button>`).join("");
   c.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => { const y = +b.dataset.y; ui.cohorts.has(y) ? ui.cohorts.delete(y) : ui.cohorts.add(y); b.classList.toggle("active"); render(); }));
-  for (const [id, key, num] of [["#horizon", "horizon", true], ["#thr", "thr", true], ["#scope", "scope", true]])
+  for (const [id, key, num] of [["#horizon", "horizon", true], ["#thr", "thr", true], ["#scope", "scope", true], ["#view", "view", false], ["#winY", "winY", true], ["#silM", "silM", true], ["#quickM", "quickM", true], ["#slowM", "slowM", true], ["#favGap", "favGap", true]])
     document.querySelectorAll(`${id} button`).forEach((b) => b.addEventListener("click", () => { ui[key] = num ? +b.dataset.v : b.dataset.v; document.querySelectorAll(`${id} button`).forEach((x) => x.classList.toggle("active", x === b)); render(); }));
 }
 (async () => {
   try {
     const src = new URLSearchParams(location.search).get("src") || "scrobbles.csv";
     const res = await fetch(src, { cache: "no-store" }); if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    build(parseCSV(await res.text())); wire(); render();
+    build(parseCSV(await res.text())); wire(); watchSteps(); render();
   } catch (e) { $("#flows").innerHTML = `<div class="status">Could not load the scrobbles: ${esc(e.message)}</div>`; }
 })();
 </script>
