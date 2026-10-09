@@ -54,7 +54,7 @@
   <div class="card">
     <div class="controls">
       <div class="group">Cohorts <span id="cohorts"></span></div>
-      <div class="group">Years <div class="seg" id="horizon"><button data-v="5">5</button><button data-v="8" class="active">8</button><button data-v="10">10</button><button data-v="15">15</button></div></div>
+      <div class="group">Years <div class="seg" id="horizon"><button data-v="5">5</button><button data-v="8" class="active">8</button><button data-v="10">10</button><button data-v="15">15</button><button data-v="99">max</button></div></div>
       <div class="group">Favorite <div class="seg" id="thr"><button data-v="20">20</button><button data-v="50" class="active">50</button><button data-v="100">100</button></div> plays</div>
       <div class="group">Artists <div class="seg" id="scope"><button data-v="10" class="active">10+ plays</button><button data-v="3">3+ plays</button><button data-v="1">all</button></div></div>
     </div>
@@ -94,7 +94,7 @@ function parseCSV(text) {
   return out;
 }
 
-const STATES = [["fav", "Favorite", "#00a83f"], ["rot", "In rotation", "#6b7a8a"], ["back", "Back again", "#6b7a8a"], ["out", "Faded", "#3a4654"]];   // green for favorites, a lighter gray for artists still being played, a dark one for the faded
+const STATES = [["fav", "Favorite", "#00a83f"], ["rot", "In rotation", "#3f88c5"], ["back", "Back again", "#3f88c5"], ["out", "Faded", "#3a4654"]];   // green for favorites, one blue for artists still being played whether steadily or sporadically, gray for the faded
 const COHORT = "#8a98a6", CGAP = 5;   // the first column: one gray block per cohort, with a small gap between years
 const SI = Object.fromEntries(STATES.map((s, i) => [s[0], i]));
 let ARTISTS = [], YEARS = [], NOW_Y = 0;
@@ -194,7 +194,7 @@ function render() {
   box.querySelectorAll("rect.cohort").forEach((r) => { r.style.cursor = "pointer"; r.addEventListener("mouseenter", () => { box.classList.add("dim"); box.querySelectorAll(`path[data-y="${r.dataset.y}"]`).forEach((p) => p.classList.add("lit")); }); r.addEventListener("mouseleave", () => { box.classList.remove("dim"); box.querySelectorAll("path.lit").forEach((p) => p.classList.remove("lit")); }); });
   const fav = nodeN[K].fav || 0, out = nodeN[K].out || 0, back = paths.filter((p) => p.st.includes("back")).length;
   $("#legend").innerHTML = `<span><i style="background:${STATES[0][2]}"></i>Favorite</span><span><i style="background:${STATES[1][2]}"></i>Not a favorite, still played (in rotation, or back after a silent year)</span><span><i style="background:${STATES[3][2]}"></i>Faded</span>`;
-  $("#note").innerHTML = `<b>${fmt(paths.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}${ui.scope > 1 ? ` with ${ui.scope}+ plays` : ""}, followed for ${K} complete year${K > 1 ? "s" : ""}${K < ui.horizon ? ` (the ${cohorts.at(-1)} cohort has not lived longer yet)` : ""}. After ${K} years: <b>${fmt(fav)}</b> favorites (${Math.round(100 * fav / paths.length)}%), <b>${fmt(out)}</b> faded (${Math.round(100 * out / paths.length)}%); <b>${fmt(back)}</b> came back at least once after a silent year. Hover a ribbon for its numbers, a cohort block to follow one year's artists.`;
+  $("#note").innerHTML = `<b>${fmt(paths.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}${ui.scope > 1 ? ` with ${ui.scope}+ plays` : ""}, followed for ${K} complete year${K > 1 ? "s" : ""}${K < ui.horizon ? ` (as many as the ${cohorts.at(-1)} cohort has completed)` : ""}. After ${K} years: <b>${fmt(fav)}</b> favorites (${Math.round(100 * fav / paths.length)}%), <b>${fmt(out)}</b> faded (${Math.round(100 * out / paths.length)}%); <b>${fmt(back)}</b> came back at least once after a silent year. Hover a ribbon for its numbers, a cohort block to follow one year's artists.`;
 }
 
 function wire() {
