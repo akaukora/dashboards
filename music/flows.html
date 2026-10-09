@@ -1,0 +1,215 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Where new artists go — Antti's music</title>
+<meta name="description" content="An alluvial diagram of Antti's Last.fm artists: each year's new artists as a stacked column, then year by year whether they became favorites, stayed in rotation, faded or came back.">
+<style>
+  :root {
+    --bg: #14181c; --card: #1e252d; --card-2: #2c3440; --line: #2c3440; --line-2: #384352;
+    --text: #e6edf3; --text-2: #9ab; --text-3: #678;
+    --green: #00e054; --green-mark: #00a83f; --orange: #ff8000;
+    --radius: 10px;
+    --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  }
+  * { box-sizing: border-box; }
+  html, body { margin: 0; background: var(--bg); color: var(--text); font-family: var(--font); font-size: 14px; line-height: 1.45; }
+  a { color: var(--text-2); text-decoration: none; } a:hover { color: var(--text); }
+  .wrap { max-width: 1180px; margin: 0 auto; padding: 28px 20px 48px; }
+  header { display: flex; flex-wrap: wrap; align-items: flex-end; justify-content: space-between; gap: 12px; margin-bottom: 16px; }
+  header h1 { font-size: 26px; margin: 0; letter-spacing: -0.01em; font-weight: 700; } header h1 span { color: var(--green); }
+  header .sub { color: var(--text-2); margin-top: 4px; font-size: 13px; }
+  .nav a { border: 1px solid var(--line-2); border-radius: 999px; padding: 6px 12px; font-size: 13px; }
+  .card { background: var(--card); border-radius: var(--radius); padding: 16px 18px; }
+  .controls { display: flex; flex-wrap: wrap; gap: 8px 18px; align-items: center; margin-bottom: 12px; font-size: 12px; color: var(--text-3); }
+  .controls .group { display: inline-flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+  .seg { display: inline-flex; border: 1px solid var(--line-2); border-radius: 999px; overflow: hidden; }
+  .seg button { all: unset; cursor: pointer; padding: 3px 10px; font: inherit; font-size: 12px; color: var(--text-2); } .seg button:hover { color: var(--text); }
+  .seg button.active { background: var(--card-2); color: var(--text); font-weight: 600; }
+  .chip { background: var(--card); border: 1px solid var(--line-2); color: var(--text-2); border-radius: 999px; padding: 3px 10px; font: inherit; font-size: 12px; cursor: pointer; }
+  .chip:hover { color: var(--text); border-color: var(--text-3); }
+  .chip.active { background: var(--green-mark); border-color: var(--green-mark); color: #fff; font-weight: 600; }
+  .note { color: var(--text-3); font-size: 12px; margin: 0 0 10px; line-height: 1.5; max-width: 980px; } .note b { color: var(--text-2); font-weight: 600; }
+  .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
+  .legend span { display: inline-flex; align-items: center; gap: 6px; } .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
+  .flows svg { display: block; width: 100%; height: auto; }
+  .flows text { font-size: 11px; fill: var(--text-2); } .flows text.n { fill: var(--text); font-weight: 600; } .flows text.sub { fill: var(--text-3); font-size: 10px; } .flows text.hdr { fill: var(--text-3); font-size: 11px; }
+  .flows path.flow { opacity: 0.45; } .flows path.flow:hover { opacity: 0.9; }
+  #entry { margin-bottom: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--line-2); }
+  .flows.dim path.flow { opacity: 0.12; } .flows.dim path.flow.lit { opacity: 0.85; }
+  .status { color: var(--text-3); font-size: 13px; padding: 20px 0; }
+  footer { color: var(--text-3); font-size: 12px; margin-top: 18px; }
+</style>
+</head>
+<body>
+<div class="wrap">
+  <header>
+    <div>
+      <h1>Where new <span>artists</span> go</h1>
+      <div class="sub">Each year's new artists as one column, then year by year: favorite, in rotation, faded, or back again.</div>
+    </div>
+    <div class="nav"><a href="index.html">← Music dashboard</a></div>
+  </header>
+  <div class="card">
+    <div class="controls">
+      <div class="group">Cohorts <span id="cohorts"></span></div>
+      <div class="group">Years <div class="seg" id="horizon"><button data-v="5">5</button><button data-v="8" class="active">8</button><button data-v="10">10</button><button data-v="15">15</button></div></div>
+      <div class="group">Favorite <div class="seg" id="thr"><button data-v="20">20</button><button data-v="50" class="active">50</button><button data-v="100">100</button></div> plays</div>
+      <div class="group">Artists <div class="seg" id="scope"><button data-v="10" class="active">10+ plays</button><button data-v="3">3+ plays</button><button data-v="1">all</button></div></div>
+    </div>
+    <div class="note" id="note"></div>
+    <div class="legend" id="legend"></div>
+    <div class="flows" id="entry" hidden></div>
+    <div class="flows" id="flows"><div class="status">Loading scrobbles…</div></div>
+  </div>
+  <footer>A state is judged at the end of each calendar year after the first play. <b>Favorite</b>: cumulative plays reached the line (and stays a favorite from then on). <b>In rotation</b>: played that year and the year before. <b>Back again</b>: played that year after a year of silence. <b>Faded</b>: not played that year. Only complete years are drawn, so the span is cut to what the youngest selected cohort has lived through. Data: <code>scrobbles.csv</code>, artist names as scrobbled.</footer>
+</div>
+<script>
+const $ = (s) => document.querySelector(s);
+const fmt = (n) => n.toLocaleString("en-GB");
+const esc = (s) => String(s ?? "").replace(/[&<>"']/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c]));
+function localDate(uts) {   // Helsinki wall-clock, same rule as the dashboard
+  const d = new Date(uts * 1000), y = d.getUTCFullYear();
+  const lastSun = (m) => { const x = new Date(Date.UTC(y, m + 1, 0, 1)); x.setUTCDate(x.getUTCDate() - x.getUTCDay()); return x.getTime(); };
+  const t = d.getTime(), dst = t >= lastSun(2) && t < lastSun(9);
+  return new Date(t + (dst ? 3 : 2) * 3600 * 1000);
+}
+function parseCSV(text) {
+  const out = [], lines = text.split("\n");
+  for (let line of lines) {
+    if (line.endsWith("\r")) line = line.slice(0, -1);
+    if (!line) continue;
+    if (!line.includes('"')) { out.push(line.split(",")); continue; }
+    const row = []; let field = "", q = false;
+    for (let i = 0; i < line.length; i++) {
+      const c = line[i];
+      if (q) { if (c === '"') { if (line[i + 1] === '"') { field += '"'; i++; } else q = false; } else field += c; }
+      else if (c === '"') q = true;
+      else if (c === ",") { row.push(field); field = ""; }
+      else field += c;
+    }
+    row.push(field); out.push(row);
+  }
+  return out;
+}
+
+const STATES = [["fav", "Favorite", "#00a83f"], ["rot", "In rotation", "#6b7a8a"], ["back", "Back again", "#6b7a8a"], ["out", "Faded", "#3a4654"]];   // green for favorites, a lighter gray for artists still being played, a dark one for the faded
+const COHORT = "#8a98a6", CGAP = 5;   // the first column: one gray block per cohort, with a small gap between years
+const SI = Object.fromEntries(STATES.map((s, i) => [s[0], i]));
+let ARTISTS = [], YEARS = [], NOW_Y = 0;
+const ui = { cohorts: new Set(), horizon: 8, thr: 50, scope: 10 };
+
+function build(rows) {
+  const hdr = rows[0].map((h) => h.trim().toLowerCase()), iU = hdr.indexOf("uts"), iA = hdr.indexOf("artist");
+  const by = new Map(); let last = 0;
+  for (let i = 1; i < rows.length; i++) {
+    const uts = +rows[i][iU]; if (!uts) continue; const name = rows[i][iA]; if (!name) continue;
+    const y = localDate(uts).getUTCFullYear(); last = Math.max(last, uts);
+    let a = by.get(name); if (!a) { a = { name, first: y, plays: 0, perYear: {} }; by.set(name, a); }
+    a.plays++; a.perYear[y] = (a.perYear[y] || 0) + 1; if (y < a.first) a.first = y;
+  }
+  ARTISTS = [...by.values()];
+  NOW_Y = localDate(last).getUTCFullYear();
+  const ys = new Set(ARTISTS.map((a) => a.first)); YEARS = [...ys].sort();
+  // default: four early cohorts with plenty of years behind them
+  for (const y of YEARS.slice(1, 5)) ui.cohorts.add(y);
+}
+
+/* the state of one artist at the end of relative year k (calendar year first + k) */
+function stateAt(a, k, thr) {
+  if (k === 0) return "rot";   // the first year everyone is simply new; the states start from the next year
+  const y = a.first + k; let cum = 0; for (let j = 0; j <= k; j++) cum += a.perYear[a.first + j] || 0;
+  if (cum >= thr) return "fav";
+  const p = a.perYear[y] || 0; if (!p) return "out";
+  if (k === 0 || (a.perYear[y - 1] || 0) > 0) return "rot";
+  return "back";
+}
+
+function render() {
+  const box = $("#flows"), cohorts = [...ui.cohorts].sort(); if (!cohorts.length) { box.innerHTML = `<div class="status">Pick at least one cohort.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; return; }
+  const K = Math.max(1, Math.min(ui.horizon, NOW_Y - 1 - cohorts.at(-1)));   // only complete years
+  const arts = ARTISTS.filter((a) => ui.cohorts.has(a.first) && a.plays >= ui.scope);
+  const paths = arts.map((a) => { const st = []; for (let k = 0; k <= K; k++) st.push(stateAt(a, k, ui.thr)); return { a, st }; });
+  const cohortColor = () => COHORT;
+  const colorOf = (y, s) => STATES[SI[s]][2];
+  // counts per column and node, flows per (cohort, from, to) between consecutive columns
+  const nodeN = []; for (let k = 0; k <= K; k++) { const n = {}; for (const p of paths) n[p.st[k]] = (n[p.st[k]] || 0) + 1; nodeN.push(n); }
+  const flows = []; for (let k = 0; k < K; k++) { const m = new Map(); for (const p of paths) { const key = `${p.a.first}|${p.st[k]}|${p.st[k + 1]}`; m.set(key, (m.get(key) || 0) + 1); } flows.push([...m].map(([key, n]) => { const [y, from, to] = key.split("|"); return { y: +y, from, to, n }; })); }
+  // layout
+  const W = 1140, H = 520, L = 86, R = 136, NW = 12, GAP = 10, top = 28, bottom = 8;
+  const colX = (k) => L + (W - L - R - NW) * k / K;
+  const usable = H - top - bottom - Math.max(GAP * (STATES.length - 1), CGAP * (cohorts.length - 1)), scale = usable / paths.length;
+  const nodeY = []; for (let k = 0; k <= K; k++) { let y = top; const ys = {}; for (const [s] of STATES) { ys[s] = y; y += (nodeN[k][s] || 0) * scale + ((nodeN[k][s] || 0) ? GAP : 0); } nodeY.push(ys); }
+  // slice ribbons out of nodes: at the left edge by cohort first (the stacked column), elsewhere by partner state first
+  let svg = "";
+  for (let k = 0; k < K; k++) {
+    const outOff = {}, inOff = {};
+    const fl = flows[k].slice().sort((p, q) => k === 0 ? (p.y - q.y || SI[p.to] - SI[q.to]) : (SI[p.to] - SI[q.to] || p.y - q.y));
+    const inc = flows[k].slice().sort((p, q) => SI[p.from] - SI[q.from] || p.y - q.y);
+    const inPos = new Map(); for (const f of inc) { const key = `${f.y}|${f.from}|${f.to}`; inPos.set(key, inOff[f.to] || 0); inOff[f.to] = (inOff[f.to] || 0) + f.n * scale; }
+    let lastY = null;
+    for (const f of fl) {
+      if (k === 0) { if (lastY != null && f.y !== lastY) outOff[f.from] = (outOff[f.from] || 0) + CGAP; lastY = f.y; }
+      const h = f.n * scale, ya = nodeY[k][f.from] + (outOff[f.from] || 0), yb = nodeY[k + 1][f.to] + inPos.get(`${f.y}|${f.from}|${f.to}`); outOff[f.from] = (outOff[f.from] || 0) + h;
+      const xa = colX(k) + NW, xb = colX(k + 1), xm = (xa + xb) / 2;
+      svg += `<path class="flow" data-y="${f.y}" d="M${xa},${ya.toFixed(1)} C${xm},${ya.toFixed(1)} ${xm},${yb.toFixed(1)} ${xb},${yb.toFixed(1)} v${h.toFixed(2)} C${xm},${(yb + h).toFixed(1)} ${xm},${(ya + h).toFixed(1)} ${xa},${(ya + h).toFixed(1)} z" fill="${colorOf(f.y, f.to)}"><title>${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${STATES[SI[f.from]][1].toLowerCase()} → ${STATES[SI[f.to]][1].toLowerCase()} (year ${k} → ${k + 1})</title></path>`;
+    }
+  }
+  // nodes and labels
+  for (let k = 0; k <= K; k++) {
+    svg += `<text class="hdr" x="${colX(k) + NW / 2}" y="${top - 12}" text-anchor="middle">${k === 0 ? "first year" : `+${k} yr${k > 1 ? "s" : ""}`}</text>`;
+    for (const [s, name, col] of STATES) {
+      const n = nodeN[k][s] || 0; if (!n || k === 0) continue; const y = nodeY[k][s], h = n * scale;
+      svg += `<rect x="${colX(k)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${col}"><title>${name}: ${fmt(n)}</title></rect>`;
+      if (k === K) svg += `<text class="n" x="${colX(k) + NW + 6}" y="${(y + Math.min(h / 2 + 4, 14)).toFixed(1)}">${name} <tspan class="sub">${fmt(n)} · ${Math.round(100 * n / paths.length)}%</tspan></text>`;
+      else if (h >= 14 && k > 0) svg += `<text class="sub" x="${colX(k) + NW + 4}" y="${(y + 11).toFixed(1)}">${fmt(n)}</text>`;
+    }
+  }
+  // the left edge: cohort segments of the first column, labeled
+  { let y = top; for (const yr of cohorts) { const n = paths.filter((p) => p.a.first === yr).length, h = n * scale; if (!n) continue;
+      svg += `<rect x="${colX(0)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${cohortColor(yr)}" data-y="${yr}" class="cohort"><title>${yr}: ${fmt(n)} new artists</title></rect>`;
+      if (h >= 11 || cohorts.length <= 6) svg += `<text class="n" x="${colX(0) - 6}" y="${(y + Math.min(h / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${yr} <tspan class="sub">${fmt(n)}</tspan></text>`;
+      y += h + CGAP; } }
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">${svg}</svg>`;
+  // the entry chart: every new artist of the cohorts, and the sliver of them that got a real chance
+  const ebox = $("#entry");
+  if (ui.scope > 1) {
+    const all = ARTISTS.filter((a) => ui.cohorts.has(a.first)), tried = all.filter((a) => a.plays >= ui.scope);
+    const EH = 170, etop = 22, x0 = L, x1 = L + 300, escale = (EH - etop - 8 - Math.max(GAP, CGAP * (cohorts.length - 1))) / all.length;
+    let e = "", y = etop, yT = etop, yP = etop + tried.length * escale + GAP;
+    for (const yr of cohorts) {
+      const ca = all.filter((a) => a.first === yr), ct = ca.filter((a) => a.plays >= ui.scope), hA = ca.length * escale, hT = ct.length * escale, hP = hA - hT;
+      const rib = (ya, yb, h, col, tip) => h > 0 ? `<path class="flow" d="M${x0 + NW},${ya.toFixed(1)} C${(x0 + x1) / 2},${ya.toFixed(1)} ${(x0 + x1) / 2},${yb.toFixed(1)} ${x1},${yb.toFixed(1)} v${h.toFixed(2)} C${(x0 + x1) / 2},${(yb + h).toFixed(1)} ${(x0 + x1) / 2},${(ya + h).toFixed(1)} ${x0 + NW},${(ya + h).toFixed(1)} z" fill="${col}"><title>${tip}</title></path>` : "";
+      e += rib(y, yT, hT, STATES[1][2], `${yr}: ${fmt(ct.length)} of ${fmt(ca.length)} new artists reached ${ui.scope} plays (${Math.round(100 * ct.length / ca.length)}%)`) + rib(y + hT, yP, hP, STATES[3][2], `${yr}: ${fmt(ca.length - ct.length)} of ${fmt(ca.length)} never reached ${ui.scope} plays`);
+      e += `<rect x="${x0}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, hA).toFixed(1)}" rx="2" fill="${cohortColor(yr)}"><title>${yr}: ${fmt(ca.length)} new artists</title></rect>`;
+      if (hA >= 11) e += `<text class="n" x="${x0 - 6}" y="${(y + Math.min(hA / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${yr} <tspan class="sub">${fmt(ca.length)}</tspan></text>`;
+      y += hA + CGAP; yT += hT; yP += hP;
+    }
+    e += `<rect x="${x1}" y="${etop}" width="${NW}" height="${Math.max(1, tried.length * escale).toFixed(1)}" rx="2" fill="${STATES[1][2]}"/><text class="n" x="${x1 + NW + 6}" y="${etop + 11}">Tried <tspan class="sub">${fmt(tried.length)} · ${Math.round(100 * tried.length / all.length)}% reached ${ui.scope} plays — these continue below</tspan></text>`;
+    e += `<rect x="${x1}" y="${(etop + tried.length * escale + GAP).toFixed(1)}" width="${NW}" height="${Math.max(1, (all.length - tried.length) * escale).toFixed(1)}" rx="2" fill="${STATES[3][2]}"/><text class="n" x="${x1 + NW + 6}" y="${(etop + tried.length * escale + GAP + Math.min((all.length - tried.length) * escale / 2 + 4, 14)).toFixed(1)}">Passed through <tspan class="sub">${fmt(all.length - tried.length)} · never reached ${ui.scope} plays</tspan></text>`;
+    e += `<text class="hdr" x="${x0 + NW / 2}" y="${etop - 10}" text-anchor="middle">new artists</text>`;
+    ebox.innerHTML = `<svg viewBox="0 0 ${W} ${EH}" preserveAspectRatio="xMinYMin meet">${e}</svg>`; ebox.hidden = false;
+  } else { ebox.innerHTML = ""; ebox.hidden = true; }
+  box.querySelectorAll("rect.cohort").forEach((r) => { r.style.cursor = "pointer"; r.addEventListener("mouseenter", () => { box.classList.add("dim"); box.querySelectorAll(`path[data-y="${r.dataset.y}"]`).forEach((p) => p.classList.add("lit")); }); r.addEventListener("mouseleave", () => { box.classList.remove("dim"); box.querySelectorAll("path.lit").forEach((p) => p.classList.remove("lit")); }); });
+  const fav = nodeN[K].fav || 0, out = nodeN[K].out || 0, back = paths.filter((p) => p.st.includes("back")).length;
+  $("#legend").innerHTML = `<span><i style="background:${STATES[0][2]}"></i>Favorite</span><span><i style="background:${STATES[1][2]}"></i>Not a favorite, still played (in rotation, or back after a silent year)</span><span><i style="background:${STATES[3][2]}"></i>Faded</span>`;
+  $("#note").innerHTML = `<b>${fmt(paths.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}${ui.scope > 1 ? ` with ${ui.scope}+ plays` : ""}, followed for ${K} complete year${K > 1 ? "s" : ""}${K < ui.horizon ? ` (the ${cohorts.at(-1)} cohort has not lived longer yet)` : ""}. After ${K} years: <b>${fmt(fav)}</b> favorites (${Math.round(100 * fav / paths.length)}%), <b>${fmt(out)}</b> faded (${Math.round(100 * out / paths.length)}%); <b>${fmt(back)}</b> came back at least once after a silent year. Hover a ribbon for its numbers, a cohort block to follow one year's artists.`;
+}
+
+function wire() {
+  const c = $("#cohorts"); c.innerHTML = YEARS.map((y) => `<button class="chip${ui.cohorts.has(y) ? " active" : ""}" data-y="${y}">${y}</button>`).join("");
+  c.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => { const y = +b.dataset.y; ui.cohorts.has(y) ? ui.cohorts.delete(y) : ui.cohorts.add(y); b.classList.toggle("active"); render(); }));
+  for (const [id, key, num] of [["#horizon", "horizon", true], ["#thr", "thr", true], ["#scope", "scope", true]])
+    document.querySelectorAll(`${id} button`).forEach((b) => b.addEventListener("click", () => { ui[key] = num ? +b.dataset.v : b.dataset.v; document.querySelectorAll(`${id} button`).forEach((x) => x.classList.toggle("active", x === b)); render(); }));
+}
+(async () => {
+  try {
+    const src = new URLSearchParams(location.search).get("src") || "scrobbles.csv";
+    const res = await fetch(src, { cache: "no-store" }); if (!res.ok) throw new Error(`HTTP ${res.status}`);
+    build(parseCSV(await res.text())); wire(); render();
+  } catch (e) { $("#flows").innerHTML = `<div class="status">Could not load the scrobbles: ${esc(e.message)}</div>`; }
+})();
+</script>
+</body>
+</html>
