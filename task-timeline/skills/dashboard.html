@@ -2405,16 +2405,24 @@
       refreshSortToggleUI();
       renderTasks();
     });
+    // Deadline ordering shared by board, list and timeline:
+    //  1) open (unchecked) tasks first, soonest deadline first, undated last
+    //  2) completed tasks after all open ones, most recent deadline first
+    function compareByDeadline(a, b) {
+      if (!!a.checked !== !!b.checked) return a.checked ? 1 : -1;
+      const aEnd = a.endDate ? a.endDate.getTime() : null;
+      const bEnd = b.endDate ? b.endDate.getTime() : null;
+      if (aEnd === null || bEnd === null) {
+        if (aEnd === bEnd) return 0;
+        return aEnd === null ? 1 : -1;
+      }
+      return a.checked ? bEnd - aEnd : aEnd - bEnd;
+    }
+
     // Returns a (maybe-sorted) copy of section tasks based on current taskSort
     function sortedSectionTasks(sectionId) {
       const arr = (tasks[sectionId] || []).slice();
-      if (taskSort === 'deadline') {
-        arr.sort((a, b) => {
-          const aEnd = a.endDate ? a.endDate.getTime() : Infinity;
-          const bEnd = b.endDate ? b.endDate.getTime() : Infinity;
-          return aEnd - bEnd;
-        });
-      }
+      if (taskSort === 'deadline') arr.sort(compareByDeadline);
       return arr;
     }
     const timelineView = document.getElementById('timelineView');
@@ -4150,6 +4158,12 @@
         if (taskSort === 'deadline') {
           const da = nextOpenDeadline(a), db = nextOpenDeadline(b);
           if (da !== db) return da < db ? -1 : 1;
+          if (da === Infinity) {
+            // Groups with only completed/undated tasks: most recently finished first
+            const latestEnd = (tag) => groups[tag].items.reduce((m, i) => i.task.endDate ? Math.max(m, i.task.endDate.getTime()) : m, -Infinity);
+            const la = latestEnd(a), lb = latestEnd(b);
+            if (la !== lb) return la > lb ? -1 : 1;
+          }
         }
         const ta = groups[a].type, tb = groups[b].type;
         const aProc = ta === 'process' ? 0 : 1;
@@ -4163,11 +4177,7 @@
         const g = groups[tag];
         // Sort within a category by deadline (end date), ascending. Tasks without an end
         // date sink to the bottom.
-        g.items.sort((a, b) => {
-          const aEnd = a.task.endDate ? a.task.endDate.getTime() : Infinity;
-          const bEnd = b.task.endDate ? b.task.endDate.getTime() : Infinity;
-          return aEnd - bEnd;
-        });
+        g.items.sort((a, b) => compareByDeadline(a.task, b.task));
 
         const expanded = isCategoryExpanded(tag);
         const isProcess = g.type === 'process';
