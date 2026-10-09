@@ -198,6 +198,7 @@ const KINDS = ["diary", "tool", "dashboard", "chart", "story", "data art"];
 const CARDS = [
  {
   "id": "films-watched",
+  "aspect": "0.75",
   "title": "Films",
   "url": "films-watched/",
   "made": "html",
@@ -206,7 +207,7 @@ const CARDS = [
   ],
   "kind": "diary",
   "blurb": "My Letterboxd diary since 2019: what I watched, when and where, ratings by year and decade, theater vs. home, film festivals, my reviews.",
-  "thumb": "thumbs/films-watched.webp",
+  "thumb": "thumbs/full/films-watched.webp",
   "refresh": "automated",
   "own": {
    "href": "letterboxd-viewer/",
@@ -218,6 +219,7 @@ const CARDS = [
  },
  {
   "id": "books-read",
+  "aspect": "0.75",
   "title": "Books",
   "url": "books-read/",
   "made": "html",
@@ -226,7 +228,7 @@ const CARDS = [
   ],
   "kind": "diary",
   "blurb": "My StoryGraph library: books finished per year and month, ratings, currently reading, recent reviews.",
-  "thumb": "thumbs/books-read.webp",
+  "thumb": "thumbs/full/books-read.webp",
   "refresh": "manual",
   "own": {
    "href": "storygraph-viewer/",
@@ -238,6 +240,7 @@ const CARDS = [
  },
  {
   "id": "music",
+  "aspect": "0.75",
   "title": "Music",
   "url": "music/",
   "made": "html",
@@ -246,7 +249,7 @@ const CARDS = [
   ],
   "kind": "diary",
   "blurb": "Twenty years of Last.fm scrobbles. Highlights the favorite artists and tracks you haven't heard for a long time, and the ones you've come back to + when each artist was last heard, how favorites were made, and listening trends.",
-  "thumb": "thumbs/music.webp",
+  "thumb": "thumbs/full/music.webp",
   "refresh": "automated",
   "own": {
    "href": "music-viewer/",
@@ -259,6 +262,7 @@ const CARDS = [
  },
  {
   "id": "duolingo",
+  "aspect": "0.794",
   "title": "Duolingo",
   "url": "duolingo/",
   "made": "html",
@@ -267,7 +271,7 @@ const CARDS = [
   ],
   "kind": "diary",
   "blurb": "Time, XP and lessons by week, month or year, reconstructed from Duolingo's weekly progress-report emails and the account data export.",
-  "thumb": "thumbs/duolingo.webp",
+  "thumb": "thumbs/full/duolingo.webp",
   "refresh": "automated",
   "added": "2026-09-07",
   "data": "Parsing progress-report emails",
@@ -275,6 +279,7 @@ const CARDS = [
  },
  {
   "id": "hiff2026",
+  "aspect": "0.75",
   "title": "HIFF 2026 planner",
   "url": "hiff2026/",
   "made": "html",
@@ -283,12 +288,13 @@ const CARDS = [
   ],
   "kind": "tool",
   "blurb": "Helsinki International Film Festival: pick films, pick times, see clashes and tight transfers between venues on a timetable grid, share a plan with friends, add screenings to calendar.",
-  "thumb": "thumbs/hiff2026.webp",
+  "thumb": "thumbs/full/hiff2026.webp",
   "added": "2026-09-08",
   "year": 2026
  },
  {
   "id": "tiff2026",
+  "aspect": "0.75",
   "title": "TIFF 2026 planner",
   "url": "tiff2026/",
   "made": "html",
@@ -297,12 +303,13 @@ const CARDS = [
   ],
   "kind": "tool",
   "blurb": "The same planner as HIFF for the Toronto International Film Festival program: films, times, clashes and tight transfers, a shareable schedule, add screenings to calendar.",
-  "thumb": "thumbs/tiff2026.webp",
+  "thumb": "thumbs/full/tiff2026.webp",
   "added": "2026-09-10",
   "year": 2026
  },
  {
   "id": "wc2026",
+  "aspect": "0.75",
   "title": "World Cup 2026 — how the pool was won",
   "url": "wc2026/",
   "made": "html",
@@ -311,13 +318,14 @@ const CARDS = [
   ],
   "kind": "story",
   "blurb": "The story of a prediction pool: the nine scoring parts broken down, and a round-by-round recap.",
-  "thumb": "thumbs/wc2026.webp",
+  "thumb": "thumbs/full/wc2026.webp",
   "added": "2026-07-28",
   "note": "I finished third, and I had given up hope in the quarterfinal stage, seeing that the winner and goal scorer choices ruled out a podium finish. A Rodrigo de Paul yellow lifted me to 3rd place.\n\nThis was an iterative process with Claude. I detailed my design wishes for clicking through the rounds, the way the round recaps are told and presented, how I wanted a bump chart aligned with a table on the right, and the round indicator buttons at the top. What remained from Claude's initial suggestion of a line chart was the background color pattern.",
   "year": 2026
  },
  {
   "id": "prediction-markets",
+  "aspect": "0.75",
   "title": "Prediction markets",
   "url": "prediction-markets/",
   "made": "html",
@@ -326,7 +334,7 @@ const CARDS = [
   ],
   "kind": "dashboard",
   "blurb": "Open positions and settled markets on Polymarket and Kalshi in one view.",
-  "thumb": "thumbs/prediction-markets.webp",
+  "thumb": "thumbs/full/prediction-markets.webp",
   "refresh": "automated",
   "added": "2026-09-18",
   "data": "Polymarket + Kalshi APIs",
