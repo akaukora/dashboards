@@ -85,7 +85,9 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .chart { position: relative; height: 240px; } .chart.clickable canvas { cursor: pointer; }
   /* timeline of favorites: one row per artist, first play → became a favorite → last play; scrolls inside the card */
   .dumb { height: 420px; overflow-y: auto; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
-  .dumb svg { display: block; width: 100%; height: auto; } .dumb .row { cursor: pointer; } .dumb .row:hover rect.bg, .dumb .row.on rect.bg { fill: var(--card-2); }
+  .dumb svg { display: block; width: 100%; height: auto; }
+  .funnel svg { display: block; width: 100%; height: auto; } .funnel text { font-size: 11px; fill: var(--text-2); } .funnel text.n { fill: var(--text); font-weight: 600; } .funnel text.sub { fill: var(--text-3); font-size: 10px; }
+  .funnel path.flow:hover { opacity: 0.85; } .dumb .row { cursor: pointer; } .dumb .row:hover rect.bg, .dumb .row.on rect.bg { fill: var(--card-2); }
   .dumb .axis text { font-size: 10px; fill: var(--text-3); } .dumb .row text { font-size: 11px; fill: var(--text-2); } .dumb .row.on text { fill: var(--text); font-weight: 600; }
   .alist.flist li { grid-template-columns: 22px minmax(0, 1fr) 56px; gap: 8px; }
   .legend { display: flex; flex-wrap: wrap; gap: 14px; row-gap: 4px; font-size: 12px; color: var(--text-2); margin: 6px 0 4px; }
@@ -276,10 +278,11 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   </section>
   <section class="grid" style="align-items:start">
     <div class="card">
-      <div class="head"><h2 id="cohortHead">Do new artists stick?</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><div class="seg" id="cohortN"><button type="button" data-m="1">1 yr</button><button type="button" data-m="2">2 yrs</button><button type="button" data-m="3">3 yrs</button></div><div class="seg" id="cohortMode"><button type="button" data-m="summary">Summary</button><button type="button" data-m="curves">Curves</button></div></div></div>
+      <div class="head"><h2 id="cohortHead">Do new artists stick?</h2><div style="display:flex;gap:8px;flex-wrap:wrap"><div class="seg" id="cohortN"><button type="button" data-m="1">1 yr</button><button type="button" data-m="2">2 yrs</button><button type="button" data-m="3">3 yrs</button></div><div class="seg" id="cohortMode"><button type="button" data-m="summary">Summary</button><button type="button" data-m="curves">Curves</button><button type="button" data-m="funnel">Funnel</button></div></div></div>
       <div class="note" id="noteCohort"></div>
       <div class="legend" id="cohortLegend"></div>
-      <div class="chart" style="height:300px"><canvas id="cCohort"></canvas></div>
+      <div class="chart" style="height:300px" id="cCohortWrap"><canvas id="cCohort"></canvas></div>
+      <div class="funnel" id="funnel" hidden></div>
     </div>
     <div class="card">
       <div class="head"><h2 id="flingHead">Flings and long-term favorites</h2><div class="seg" id="flingWin"><button type="button" data-m="1">1 mo</button><button type="button" data-m="3">3 mo</button><button type="button" data-m="6">6 mo</button></div></div>
@@ -530,7 +533,7 @@ function paintGroups() { for (const g of Object.keys(groups)) { $(`#g-${g}`).hid
 let wowMode = 7; try { wowMode = [30, 365].includes(+localStorage.getItem("musicWow")) ? +localStorage.getItem("musicWow") : 7; } catch (e) {}
 let growMode = "count"; try { growMode = ["lines", "time"].includes(localStorage.getItem("musicGrow")) ? localStorage.getItem("musicGrow") : "count"; } catch (e) {}
 let growX = "cal"; try { growX = localStorage.getItem("musicGrowX") === "rel" ? "rel" : "cal"; } catch (e) {}                 // growth lines: calendar time, or months since each artist's first play
-let cohortMode = "summary", cohortN = 2; try { cohortMode = localStorage.getItem("musicCohort") === "curves" ? "curves" : "summary"; cohortN = [1, 3].includes(+localStorage.getItem("musicCohortN")) ? +localStorage.getItem("musicCohortN") : 2; } catch (e) {}
+let cohortMode = "summary", cohortN = 2; try { cohortMode = ["curves", "funnel"].includes(localStorage.getItem("musicCohort")) ? localStorage.getItem("musicCohort") : "summary"; cohortN = [1, 3].includes(+localStorage.getItem("musicCohortN")) ? +localStorage.getItem("musicCohortN") : 2; } catch (e) {}
 let flingWin = 1; try { flingWin = [3, 6].includes(+localStorage.getItem("musicFling")) ? +localStorage.getItem("musicFling") : 1; } catch (e) {}
 const QUICK_COLOR = "#ff8000", SLOW_COLOR = "#2a9dd1";   // the fastest and the slowest artist to become a favorite
 let topMode = "sel", topWeeks = 6; try { const t = JSON.parse(localStorage.getItem("musicTop") || "{}"); if (t.mode) topMode = t.mode; if (t.weeks) topWeeks = t.weeks; } catch (e) {}
@@ -844,7 +847,8 @@ function render() {
      (every cohort judged by the same window), or the full curves: share that had become favorites after 0, 1, 2 … years */
   document.querySelectorAll("#cohortMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === cohortMode));
   document.querySelectorAll("#cohortN button").forEach((b) => b.classList.toggle("active", +b.dataset.m === cohortN));
-  {
+  $("#cohortN").hidden = cohortMode === "funnel"; $("#cCohortWrap").hidden = cohortMode === "funnel"; $("#funnel").hidden = cohortMode !== "funnel";
+  if (cohortMode === "funnel") drawFunnel(thr); else {
     const YR = 365.25 * 86400, nowY = localDate(NOW).getUTCFullYear();
     const cohort = {}; for (const a of A.values()) { const y = localDate(a.first).getUTCFullYear(); (cohort[y] = cohort[y] || []).push(a); }
     const years = YEARS.filter((y) => cohort[y]?.length).slice(1);   // the first year holds everything already loved before scrobbling began, so it is left out
@@ -984,6 +988,37 @@ function drawDumbbell(timed, thr) {
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="xMinYMin meet"><g class="axis">${axis}</g>${body}</svg>`;
   box.querySelectorAll(".row").forEach((g) => g.addEventListener("click", () => toggleFilter("artist", g.dataset.a)));
   const on = box.querySelector(".row.on"); if (on) on.scrollIntoView({ block: "center" });
+}
+/* Funnel (Sankey): of the artists you gave a real chance (10+ plays), how many became favorites, and how many of those you still play.
+   Artists under 10 plays are counted in the note but left out of the drawing — they would be one fat band and everything else a hairline. */
+function drawFunnel(thr) {
+  const box = $("#funnel"), TRIED = 10, QUIET = 12;
+  const all = [...A.values()].filter((a) => yearOn(localDate(a.first).getUTCFullYear()));
+  const tried = all.filter((a) => a.plays >= TRIED), fav = tried.filter((a) => a.plays >= thr), faded = tried.length - fav.length;
+  const still = fav.filter((a) => monthsBetween(a.last, NOW) < QUIET).length, quiet = fav.length - still;
+  const W = Math.max(480, box.clientWidth - 2), H = 300, R = 140, NW = 14, GAP = 18, pad = 10;
+  const x0 = 0, x1 = Math.round((W - R - NW) / 2), x2 = W - R - NW;
+  const scale = tried.length ? (H - 2 * pad - GAP) / tried.length : 0;
+  const h = (n) => Math.max(n ? 1.5 : 0, n * scale);
+  // nodes: [x, y, height, color, label, count, share-of]
+  const yTried = pad, yFav = pad, yFaded = pad + h(fav.length) + GAP, yStill = pad, yQuiet = pad + h(still) + (quiet && still ? GAP / 2 : 0);
+  const C = { tried: css("--line-2"), fav: css("--green-mark"), faded: "#4a5563", still: RECENCY[0][1], quiet: RECENCY[3][1] };
+  const pc = (n, d) => d ? `${Math.round(100 * n / d)}%` : "–";
+  const nodes = [
+    [x0, yTried, h(tried.length), C.tried, "Tried", tried.length, `${TRIED}+ plays`],
+    [x1, yFav, h(fav.length), C.fav, "Favorite", fav.length, `${pc(fav.length, tried.length)} of tried · ${thr}+ plays`],
+    [x1, yFaded, h(faded), C.faded, "Faded", faded, `${pc(faded, tried.length)} · never reached ${thr}`],
+    [x2, yStill, h(still), C.still, "Still playing", still, `${pc(still, fav.length)} · played this year`],
+    [x2, yQuiet, h(quiet), C.quiet, "Gone quiet", quiet, `${pc(quiet, fav.length)} · quiet ${QUIET}+ months`]];
+  const ribbon = (xa, ya, xb, yb, hh, color) => { if (hh <= 0) return ""; const xm = (xa + xb) / 2; return `<path class="flow" d="M${xa},${ya} C${xm},${ya} ${xm},${yb} ${xb},${yb} v${hh} C${xm},${yb + hh} ${xm},${ya + hh} ${xa},${ya + hh} z" fill="${color}" opacity="0.4"/>`; };
+  const flows = ribbon(x0 + NW, yTried, x1, yFav, h(fav.length), C.fav) + ribbon(x0 + NW, yTried + h(fav.length), x1, yFaded, h(faded), C.faded)
+    + ribbon(x1 + NW, yFav, x2, yStill, h(still), C.still) + ribbon(x1 + NW, yFav + h(still), x2, yQuiet, h(quiet), C.quiet);
+  const label = (x, y, hh, name, n, sub) => { const ty = Math.max(y + 12, Math.min(y + hh / 2 + 4, H - 14)); return `<text class="n" x="${x}" y="${ty - 6}">${esc(name)} <tspan class="sub">${fmt(n)}</tspan></text><text class="sub" x="${x}" y="${ty + 7}">${esc(sub)}</text>`; };
+  const body = nodes.map(([x, y, hh, color, name, n, sub]) => hh ? `<rect x="${x}" y="${y.toFixed(1)}" width="${NW}" height="${hh.toFixed(1)}" rx="2" fill="${color}"><title>${esc(name)}: ${fmt(n)} artists</title></rect>${label(x + NW + 6, y, hh, name, n, sub)}` : "").join("");
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" width="${W}" height="${H}" preserveAspectRatio="xMinYMin meet">${flows}${body}</svg>`;
+  const yrs = anyYear() ? ` first heard in ${F.year.slice().sort().join(", ")}` : "";
+  $("#cohortLegend").innerHTML = `<span><i style="background:${C.fav}"></i>Became a favorite</span><span><i style="background:${C.faded}"></i>Faded before ${thr} plays</span><span><i style="background:${C.still}"></i>Favorite, played in the last ${QUIET} months</span><span><i style="background:${C.quiet}"></i>Favorite, gone quiet</span>`;
+  note("#noteCohort", `Where the artists${yrs} went. **${fmt(all.length)}** artists in all; **${fmt(all.length - tried.length)}** never reached ${TRIED} plays and are left out of the drawing, since they would dwarf everything else. Of the **${fmt(tried.length)}** you gave a real chance, **${fmt(fav.length)}** became favorites, and **${fmt(still)}** of those you still play. Select years with the chips to see one cohort's funnel.`);
 }
 function realTimes(times, n) {
   if (n <= 1 || times.length < n) return n <= 1 ? times : [];
