@@ -34,7 +34,7 @@
   .legend { display: flex; flex-wrap: wrap; gap: 6px 14px; font-size: 12px; color: var(--text-2); margin-bottom: 8px; }
   .legend span { display: inline-flex; align-items: center; gap: 6px; } .legend i { width: 12px; height: 12px; border-radius: 3px; display: inline-block; }
   .flows svg { display: block; width: 100%; height: auto; }
-  .flows text { font-size: 11px; fill: var(--text-2); } .flows text.n { fill: var(--text); font-weight: 600; } .flows text.sub { fill: var(--text-3); font-size: 10px; } .flows text.hdr { fill: var(--text-3); font-size: 11px; }
+  .flows text { font-size: 11px; fill: var(--text-2); } .flows text .cnt { font-weight: 500; } .flows text.n { fill: var(--text); font-weight: 600; } .flows text.sub { fill: var(--text-3); font-size: 10px; } .flows text.hdr { fill: var(--text-3); font-size: 11px; }
   .flows path.flow { opacity: 0.45; } .flows path.flow:hover { opacity: 0.9; }
   #entry { margin-bottom: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--line-2); }
   /* the story: step texts scroll on the left while the charts stay put on the right and reveal one column per step */
@@ -116,7 +116,7 @@
       <ul class="alist" id="pickList"></ul>
     </div>
   </div>
-  <footer><b>Favorites</b>: only artists that crossed the line. Arrival is the time from the start of real listening (the first three plays within a year, so a stray early play doesn't count) to the play that crossed the line. Still played = at least one play in the last 12 months: steady (10+ plays in that time and never a gap of the chosen length since becoming a favorite), heavy spells (10+ plays after at least one such gap), a track here or there (under 10). Gone = nothing in the last 12 months: a fling when 60% of all plays sit inside one 6-month window, faded out otherwise. <b>Early or late</b>: measured from each artist's own first play, so recent cohorts take part as soon as their first years are over. A gap is S+ months between two plays, or from the last play to the latest scrobble, anywhere in the history — before or after becoming a favorite. "Now" means at least one play in the last 12 months. <b>Whole story</b>: a silent year is a complete calendar year with no plays after the first; "came back" means any play after one; a favorite is "only after coming back" when it crossed the line after its first silent year. Young cohorts have had less time to go silent or come back, so they lean toward "never silent". <b>Year by year</b>: a state at the end of each calendar year after the first play — favorite (cumulative plays reached the line, and it stays one), in rotation (played that year and the year before), back again (played after a silent year), faded (not played that year); only complete years are drawn, so the span is cut to what the youngest selected cohort has lived through. Data: <code>scrobbles.csv</code>, artist names as scrobbled.</footer>
+  <footer><b>Favorites</b>: only artists that crossed the line. Arrival is the time from the start of real listening (the first three plays within a year, so a stray early play doesn't count) to the play that crossed the line; quick ≤ the first number, slow burn > the second, "took a while" in between. Artists first scrobbled in 2006, the year the log began, were mostly known already, so they get their own arrival node instead of a timed one; their endings are judged like everyone else's. Still played = at least one play in the last 12 months: steady (10+ plays in that time and never a gap of the chosen length since becoming a favorite), comes back in bursts (10+ plays after at least one such gap), a track here or there (under 10). Gone = nothing in the last 12 months: a fling when 60% of all plays sit inside one 6-month window, faded out otherwise. <b>Early or late</b>: measured from each artist's own first play, so recent cohorts take part as soon as their first years are over. A gap is S+ months between two plays, or from the last play to the latest scrobble, anywhere in the history — before or after becoming a favorite. "Now" means at least one play in the last 12 months. <b>Whole story</b>: a silent year is a complete calendar year with no plays after the first; "came back" means any play after one; a favorite is "only after coming back" when it crossed the line after its first silent year. Young cohorts have had less time to go silent or come back, so they lean toward "never silent". <b>Year by year</b>: a state at the end of each calendar year after the first play — favorite (cumulative plays reached the line, and it stays one), in rotation (played that year and the year before), back again (played after a silent year), faded (not played that year); only complete years are drawn, so the span is cut to what the youngest selected cohort has lived through. Data: <code>scrobbles.csv</code>, artist names as scrobbled.</footer>
 </div>
 <script>
 const $ = (s) => document.querySelector(s);
@@ -166,7 +166,7 @@ function build(rows) {
   NOW_Y = localDate(last).getUTCFullYear(); LAST = last;
   const ys = new Set(ARTISTS.map((a) => a.first)); YEARS = [...ys].sort();
   // default: every cohort but the first (which also holds the pre-scrobbling library)
-  for (const y of YEARS.slice(1)) ui.cohorts.add(y);
+  for (const y of YEARS) ui.cohorts.add(y);
 }
 
 /* the state of one artist at the end of relative year k (calendar year first + k) */
@@ -181,7 +181,7 @@ function stateAt(a, k, thr) {
 
 /* one alluvial drawing for both views: cols[k] = the nodes of column k in top-to-bottom order; paths = one entry per artist
    with its cohort year and node id per column. The first column is drawn as a stack of cohort blocks. */
-function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW = 12, GAP = 10, top = 28, bottom = 8, cohorts, labels = "last", tip, onPick }) {
+function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW = 12, GAP = 10, top = 28, bottom = 8, cohorts, labels = "last", tip, onPick, poolColor = COHORT, labelOf = (yr) => yr }) {
   const geo = new Map();   // ribbon geometry by "k|cohort|from|to", for drawing one artist's thread later
   const K = cols.length - 1, order = cols.map((c) => Object.fromEntries(c.map((n, i) => [n.id, i]))), byId = cols.map((c) => Object.fromEntries(c.map((n) => [n.id, n])));
   const colX = (k) => L + (W - L - R - NW) * k / K;
@@ -221,8 +221,8 @@ function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW
     svg += `</g>`;
   }
   { let y = top; svg += `<g class="step" data-k="0">`; for (const yr of cohorts) { const n = paths.filter((p) => p.y === yr).length, h = n * scale; if (!n) continue;
-      svg += `<rect x="${colX(0)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${COHORT}" data-y="${yr}" class="cohort"><title>${yr}: ${fmt(n)} new artists</title></rect>`;
-      if (h >= 11 || cohorts.length <= 6) svg += `<text class="n" x="${colX(0) - 6}" y="${(y + Math.min(h / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${yr} <tspan class="sub">${fmt(n)}</tspan></text>`;
+      svg += `<rect x="${colX(0)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${poolColor}" data-y="${yr}" class="cohort"><title>${labelOf(yr)}: ${fmt(n)} artists</title></rect>`;
+      if (h >= 11 || cohorts.length <= 6) svg += `<text class="n" x="${colX(0) - 6}" y="${(y + Math.min(h / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${labelOf(yr)} <tspan class="cnt" style="fill:${poolColor}">· ${fmt(n)}</tspan></text>`;
       y += h + CGAP; } svg += `</g>`; }
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">${svg}<g class="thread"></g></svg>`;
   if (onPick) {
@@ -278,16 +278,17 @@ function earlyOf(a, thr, winY, silM) {
 
 /* the favorites view: only the artists that crossed the line. How they arrived (quick, took a while, slow burn: months from the
    first play to the play that crossed the line) and how they stayed. Still played in the last 12 months: steady (HEAVY+ plays in
-   that time, never a long gap), returns for heavy spells (HEAVY+ plays after at least one long gap), a track here or there (fewer).
+   that time, never a long gap), comes back in bursts (HEAVY+ plays after at least one long gap), a track here or there (fewer).
    Not played in the last 12 months: a fling (FLING_SHARE of all plays inside one FLING_M-month window) or faded out. */
 const HEAVY = 10, FLING_M = 6, FLING_SHARE = 0.6, ORANGE = "#ff8000";
-const FAV_ARRIVE = [{ id: "quick", name: "Quick favorite", color: GREEN_HI }, { id: "grew", name: "Took a while", color: GREEN }, { id: "slow", name: "Slow burn", color: GREEN_LO }];
-const FAV_FATE = [{ id: "steady", name: "Steady, never a long gap", color: GREEN }, { id: "spells", name: "Returns for heavy spells", color: GREEN_HI }, { id: "trickle", name: "A track here or there", color: BLUE }, { id: "fling", name: "Fling, then gone", color: ORANGE }, { id: "out", name: "Faded out", color: GRAY }];
+const PRE = "#3d6b4e";   // favorites already known when the log began: their arrival can't be timed
+const FAV_ARRIVE = [{ id: "quick", name: "Quick favorite", color: GREEN_HI }, { id: "grew", name: "Took a while", color: GREEN }, { id: "slow", name: "Slow burn", color: GREEN_LO }, { id: "pre", name: "Known before the log", color: PRE }];
+const FAV_FATE = [{ id: "steady", name: "Steady, never a long gap", color: GREEN }, { id: "spells", name: "Comes back in bursts", color: GREEN_HI }, { id: "trickle", name: "A track here or there", color: BLUE }, { id: "fling", name: "Fling, then gone", color: ORANGE }, { id: "out", name: "Faded out", color: GRAY }];
 function favStoryOf(a, thr, quickM, slowM, gapM) {
   const t = a.times, favAt = t[thr - 1], gap = gapM * 30.44 * 86400;
   let start = t[0]; for (let i = 0; i + 2 < t.length; i++) if (t[i + 2] - t[i] <= 365.25 * 86400) { start = t[i]; break; }   // a stray early play doesn't start the clock: listening begins at the first three plays within a year
   const months = (favAt - start) / (30.44 * 86400);
-  const arrive = months <= quickM ? "quick" : months > slowM ? "slow" : "grew";
+  const arrive = a.first === YEARS[0] ? "pre" : months <= quickM ? "quick" : months > slowM ? "slow" : "grew";
   const mo = 30.44 * 86400, now = LAST - t.at(-1) < NOW_M * mo;
   let hadGap = false; for (let i = thr; i < t.length; i++) if (t[i] - t[i - 1] >= gap) { hadGap = true; break; }
   let recent = 0; for (let i = t.length - 1; i >= 0 && LAST - t[i] < NOW_M * mo; i--) recent++;   // plays in the last 12 months
@@ -350,20 +351,20 @@ function render() {
     if (!paths.length) { box.innerHTML = `<div class="status">No favorites in this selection.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; }
     else {
       const cols = [[{ id: "pool", name: "Favorites", color: COHORT }], FAV_ARRIVE.slice(), FAV_FATE.slice()]; cols[0].hdr = "favorites by year of first play"; cols[1].hdr = `how they won you over`; cols[2].hdr = `whether they stayed`;
-      const { nodeN, geo } = drawAlluvial(box, cols, paths, { cohorts, W: 840, H: 440, labels: "all", R: 220, onPick: (f) => pickArtists(paths, cols, f, geo), tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+      const { nodeN, geo } = drawAlluvial(box, cols, paths, { cohorts, W: 840, H: 440, labels: "all", R: 220, onPick: (f) => pickArtists(paths, cols, f, geo), poolColor: GREEN, labelOf: (yr) => yr === YEARS[0] ? "≤" + yr : yr, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
       LAST_GEO = geo; $("#favNames").innerHTML = paths.map((p) => `<option value="${esc(p.a.name)}">`).join("");
       const a = (id) => nodeN[1][id] || 0, b = (id) => nodeN[2][id] || 0, pc = (n) => Math.round(100 * n / paths.length);
-      $("#legend").innerHTML = `<span>Arrival:</span><span><i style="background:${GREEN_HI}"></i>Quick favorite</span><span><i style="background:${GREEN}"></i>Took a while</span><span><i style="background:${GREEN_LO}"></i>Slow burn</span><span style="margin-left:10px">Since:</span><span><i style="background:${GREEN}"></i>Steady</span><span><i style="background:${GREEN_HI}"></i>Heavy spells</span><span><i style="background:${BLUE}"></i>A track here or there</span><span><i style="background:${ORANGE}"></i>Fling</span><span><i style="background:${GRAY}"></i>Faded out</span>`;
+      $("#legend").innerHTML = `<span>Arrival:</span><span><i style="background:${GREEN_HI}"></i>Quick favorite</span><span><i style="background:${GREEN}"></i>Took a while</span><span><i style="background:${GREEN_LO}"></i>Slow burn</span><span><i style="background:${PRE}"></i>Known before the log</span><span style="margin-left:10px">Since:</span><span><i style="background:${GREEN}"></i>Steady</span><span><i style="background:${GREEN_HI}"></i>Comes back in bursts</span><span><i style="background:${BLUE}"></i>A track here or there</span><span><i style="background:${ORANGE}"></i>Fling</span><span><i style="background:${GRAY}"></i>Faded out</span>`;
       const all = ARTISTS.filter((x) => ui.cohorts.has(x.first)), tried = all.filter((x) => x.plays >= ui.scope);
       $("#steps").innerHTML = [
         [`Every artist you met`, `<b>${fmt(all.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}, stacked by the year of the first play. Most of them you heard once or twice.`],
         [`The ones you gave a chance`, ui.scope > 1 ? `Only <b>${fmt(tried.length)}</b> reached ${ui.scope} plays — ${Math.round(100 * tried.length / all.length)}%. The rest passed through.` : `All of them count here, since the entry bar is set to every artist.`],
         [`The favorites`, `<b>${fmt(paths.length)}</b> crossed the ${ui.thr}-play line: ${Math.round(100 * paths.length / Math.max(1, tried.length))}% of the ones you tried, ${(100 * paths.length / all.length).toFixed(1)}% of everyone you heard. That thin green sliver is what the rest of the page is about.`],
         [`Zoom in`, `The same <b>${fmt(paths.length)}</b> favorites, now filling the frame, still stacked by the year you first heard them.`],
-        [`How they won you over`, `<b>${fmt(a("quick"))}</b> were quick favorites, crossing the line within ${ui.quickM} months (${pc(a("quick"))}%). <b>${fmt(a("grew"))}</b> took a while. <b>${fmt(a("slow"))}</b> were slow burns of more than ${ui.slowM} months (${pc(a("slow"))}%).`],
-        [`And whether they stayed`, `Still played this year: <b>${fmt(b("steady"))}</b> steadily, never a ${ui.favGap}-month gap (${pc(b("steady"))}%); <b>${fmt(b("spells"))}</b> come back for heavy spells after a gap (${pc(b("spells"))}%); <b>${fmt(b("trickle"))}</b> only a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> were flings that burned bright and vanished (${pc(b("fling"))}%), and <b>${fmt(b("out"))}</b> faded out more slowly (${pc(b("out"))}%).`]
+        [`How they won you over`, `<b>${fmt(a("quick"))}</b> were quick favorites, crossing the line within ${ui.quickM} months (${pc(a("quick"))}%). <b>${fmt(a("grew"))}</b> took a while. <b>${fmt(a("slow"))}</b> were slow burns of more than ${ui.slowM} months (${pc(a("slow"))}%).${a("pre") ? ` <b>${fmt(a("pre"))}</b> were already favorites when the log began in ${YEARS[0]}, so their arrival can't be timed.` : ""}`],
+        [`And whether they stayed`, `Still played this year: <b>${fmt(b("steady"))}</b> steadily, never a ${ui.favGap}-month gap (${pc(b("steady"))}%); <b>${fmt(b("spells"))}</b> come back in bursts after a gap (${pc(b("spells"))}%); <b>${fmt(b("trickle"))}</b> only a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> were flings that burned bright and vanished (${pc(b("fling"))}%), and <b>${fmt(b("out"))}</b> faded out more slowly (${pc(b("out"))}%).`]
       ].map(([k, t], i) => `<div class="step-text" data-i="${i}"><span class="k">${i + 1} · ${k}</span>${t}</div>`).join("");
-      $("#note").innerHTML = `<b>${fmt(paths.length)}</b> favorites among the artists ${where}. <b>${fmt(a("quick"))}</b> were quick favorites, crossing the ${ui.thr}-play line within ${ui.quickM} months of the first play (${pc(a("quick"))}%); <b>${fmt(a("grew"))}</b> took a while; <b>${fmt(a("slow"))}</b> were slow burns of more than ${ui.slowM} months (${pc(a("slow"))}%). Still played this year: <b>${fmt(b("steady"))}</b> steadily without a ${ui.favGap}-month gap (${pc(b("steady"))}%), <b>${fmt(b("spells"))}</b> in heavy spells after a gap (${pc(b("spells"))}%), <b>${fmt(b("trickle"))}</b> a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> flings (${pc(b("fling"))}%) and <b>${fmt(b("out"))}</b> faded out (${pc(b("out"))}%). Hover a cohort block to follow one year's favorites.`;
+      $("#note").innerHTML = `<b>${fmt(paths.length)}</b> favorites among the artists ${where}. <b>${fmt(a("quick"))}</b> were quick favorites, crossing the ${ui.thr}-play line within ${ui.quickM} months of the first play (${pc(a("quick"))}%); <b>${fmt(a("grew"))}</b> took a while; <b>${fmt(a("slow"))}</b> were slow burns of more than ${ui.slowM} months (${pc(a("slow"))}%)${a("pre") ? `; <b>${fmt(a("pre"))}</b> were already known when the log began in ${YEARS[0]}` : ""}. Still played this year: <b>${fmt(b("steady"))}</b> steadily without a ${ui.favGap}-month gap (${pc(b("steady"))}%), <b>${fmt(b("spells"))}</b> in bursts after a gap (${pc(b("spells"))}%), <b>${fmt(b("trickle"))}</b> a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> flings (${pc(b("fling"))}%) and <b>${fmt(b("out"))}</b> faded out (${pc(b("out"))}%). Hover a cohort block to follow one year's favorites.`;
     }
   } else if (ui.view === "early") {
     const minAge = ui.winY * 365.25 * 86400, old = arts.filter((a) => LAST - a.times[0] >= minAge);   // only artists whose window has closed
@@ -404,7 +405,7 @@ function render() {
       const rib = (ya, yb, h, col, tip) => h > 0 ? `<path class="flow" d="M${x0 + NW},${ya.toFixed(1)} C${(x0 + x1) / 2},${ya.toFixed(1)} ${(x0 + x1) / 2},${yb.toFixed(1)} ${x1},${yb.toFixed(1)} v${h.toFixed(2)} C${(x0 + x1) / 2},${(yb + h).toFixed(1)} ${(x0 + x1) / 2},${(ya + h).toFixed(1)} ${x0 + NW},${(ya + h).toFixed(1)} z" fill="${col}"><title>${tip}</title></path>` : "";
       e += rib(y, yT, hT, BLUE, `${yr}: ${fmt(ct.length)} of ${fmt(ca.length)} new artists reached ${ui.scope} plays (${Math.round(100 * ct.length / ca.length)}%)`) + rib(y + hT, yP, hP, GRAY, `${yr}: ${fmt(ca.length - ct.length)} of ${fmt(ca.length)} never reached ${ui.scope} plays`);
       e0 += `<rect x="${x0}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, hA).toFixed(1)}" rx="2" fill="${COHORT}"><title>${yr}: ${fmt(ca.length)} new artists</title></rect>`;
-      if (hA >= 11) e0 += `<text class="n" x="${x0 - 6}" y="${(y + Math.min(hA / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${yr} <tspan class="sub">${fmt(ca.length)}</tspan></text>`;
+      if (hA >= 11) e0 += `<text class="n" x="${x0 - 6}" y="${(y + Math.min(hA / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${yr === YEARS[0] ? "≤" + yr : yr} <tspan class="cnt" style="fill:${BLUE}">· ${fmt(ca.length)}</tspan></text>`;
       y += hA + CGAP; yT += hT; yP += hP;
     }
     e += `<rect x="${x1}" y="${etop}" width="${NW}" height="${Math.max(1, tried.length * escale).toFixed(1)}" rx="2" fill="${BLUE}"/><text class="n" x="${x1 + NW + 6}" y="${etop + 11}">Tried <tspan class="sub">${fmt(tried.length)} · ${Math.round(100 * tried.length / all.length)}% reached ${ui.scope} plays${third ? "" : " — these continue below"}</tspan></text>`;
