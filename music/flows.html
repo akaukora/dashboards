@@ -93,6 +93,9 @@
   }
   .flows.dim path.flow { opacity: 0.1; } .flows.dim path.flow.lit { opacity: 0.8; } .flows g.thread path { pointer-events: none; filter: drop-shadow(0 0 2px rgba(0,0,0,.8)); }
   .status { color: var(--text-3); font-size: 13px; padding: 20px 0; }
+  .after { margin-top: 14px; padding-top: 12px; border-top: 1px solid var(--line); display: flex; flex-direction: column; gap: 10px; } .after .legend { margin: 0; } .after .hint { color: var(--text-3); font-size: 12px; margin-left: 6px; }
+  .own { margin-top: 16px; } .own h2 { font-size: 16px; margin: 0 0 6px; } .own p { color: var(--text-2); font-size: 13px; line-height: 1.55; margin: 0 0 8px; max-width: 900px; } .own a { color: var(--text); text-decoration: underline dotted; }
+  .own code { font-size: 12px; } .own-row { display: flex; flex-wrap: wrap; gap: 8px 10px; align-items: center; margin-top: 10px; } #ownMsg { color: var(--text-2); font-size: 13px; } #backMine { display: none; } body.own #backMine { display: inline-block; }
   .stepnav { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 5; opacity: 0; pointer-events: none; transition: opacity .3s, bottom .3s; }
   .stepnav.show { opacity: 1; pointer-events: auto; } body.has-sel .stepnav { bottom: 96px; }
   .stepnav button { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: var(--card-2); border: 1px solid var(--line-2); color: var(--text); text-align: center; line-height: 40px; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
@@ -130,7 +133,6 @@
   </header>
   <div class="card">
     <div class="controls top">
-      <div class="group" id="findGroup"><input id="find" list="favNames" placeholder="Find a favorite…" autocomplete="off"><datalist id="favNames"></datalist></div>
       <details class="settings" id="settings"><summary>Settings</summary>
       <div class="controls">
       <div class="group">Cohorts <span id="cohorts"></span></div>
@@ -140,7 +142,6 @@
       </div></details>
     </div>
     <div class="note" id="note"></div>
-    <div class="legend" id="legend"></div>
     <div class="story" id="story" data-step="0">
       <div class="steps" id="steps"></div>
       <div class="stage"><div class="stage-in">
@@ -150,6 +151,10 @@
         <div class="morph" id="morph"></div>
       </div></div>
     </div>
+    <div class="after">
+      <div class="legend" id="legend"></div>
+      <div class="group" id="findGroup"><input id="find" list="favNames" placeholder="Find a favorite…" autocomplete="off"><datalist id="favNames"></datalist> <span class="hint">or tap a band above to list its artists</span></div>
+    </div>
     <div class="stepnav" aria-label="Story steps"><button type="button" id="stepPrev" aria-label="Previous step" disabled>↑</button><button type="button" id="stepNext" aria-label="Next step">↓</button></div>
     <div id="selbar" hidden></div>
     <div id="picked" hidden>
@@ -157,6 +162,14 @@
       <ul class="alist" id="pickList"></ul>
     </div>
   </div>
+  <section class="own card">
+    <h2>Try it with your own listening history</h2>
+    <p>Pick your export files and the page redraws with your data. Everything happens in your browser; nothing is uploaded.</p>
+    <p class="how"><b>Last.fm</b>: a CSV or JSON from an exporter such as <a href="https://lastfm.ghan.nl/export/" target="_blank" rel="noopener">lastfm.ghan.nl/export</a> or <a href="https://benjaminbenben.com/lastfm-to-csv/" target="_blank" rel="noopener">lastfm-to-csv</a>.
+      <b>Spotify</b>: request <i>Extended streaming history</i> under Account → Privacy settings; when it arrives, unzip it and pick the <code>Streaming_History_Audio_….json</code> files (all of them at once). <b>Apple Music</b>: <code>Apple Music Play Activity.csv</code> from Apple's data request.</p>
+    <div class="own-row"><button type="button" class="chip active" id="pickOwn">Choose files…</button><button type="button" class="chip" id="backMine">Back to Antti's history</button><span id="ownMsg"></span></div>
+    <input type="file" id="file" accept=".csv,.json,text/csv,application/json" multiple hidden>
+  </section>
   <footer><details><summary>How the categories are defined</summary>
     <p><b>Favorites</b>: the artists that reached my definition of favorite. Arrival is the time from the start of real listening (the first three plays within a year, so a stray early play doesn't count) to the play that crossed the line.</p>
     <p>Artists first scrobbled in 2006 were mostly known already, so they get their own arrival node instead of a timed one. Otherwise they would seem to have a lot of quick favorites.</p>
@@ -199,9 +212,12 @@ const ui = { cohorts: new Set(), thr: 50, scope: 10, quickM: 6, slowM: 24, favGa
 
 function build(rows) {
   const hdr = rows[0].map((h) => h.trim().toLowerCase()), iU = hdr.indexOf("uts"), iA = hdr.indexOf("artist");
+  const plays = []; for (let i = 1; i < rows.length; i++) { const uts = +rows[i][iU], artist = rows[i][iA]; if (uts && artist) plays.push({ uts, artist }); }
+  buildFromPlays(plays);
+}
+function buildFromPlays(plays) {
   const by = new Map(); let last = 0;
-  for (let i = 1; i < rows.length; i++) {
-    const uts = +rows[i][iU]; if (!uts) continue; const name = rows[i][iA]; if (!name) continue;
+  for (const { uts, artist: name } of plays) {
     const y = localDate(uts).getUTCFullYear(); last = Math.max(last, uts);
     let a = by.get(name); if (!a) { a = { name, first: y, plays: 0, perYear: {}, times: [] }; by.set(name, a); }
     a.plays++; a.perYear[y] = (a.perYear[y] || 0) + 1; if (y < a.first) a.first = y; a.times.push(uts);
@@ -209,7 +225,7 @@ function build(rows) {
   ARTISTS = [...by.values()]; for (const a of ARTISTS) a.times.sort((p, q) => p - q);
   NOW_Y = localDate(last).getUTCFullYear(); LAST = last;
   const ys = new Set(ARTISTS.map((a) => a.first)); YEARS = [...ys].sort();
-  for (const y of YEARS) ui.cohorts.add(y);   // every cohort; the first one also holds the pre-scrobbling library and gets its own arrival node
+  ui.cohorts = new Set(); for (const y of YEARS) ui.cohorts.add(y);   // every cohort; the first one also holds the pre-scrobbling library and gets its own arrival node
 }
 
 /* the alluvial drawing: cols[k] = the nodes of column k in top-to-bottom order; paths = one entry per artist
@@ -550,7 +566,10 @@ function setStep(i) {
   story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); setStageHeight(i);
 }
 function phoneScroll() {   // the current step is the first text still below the pinned chart; texts fade out as they slide under it
-  if (!NARROW()) return;
+  if (!NARROW()) {   // desktop: the last text whose top has passed the middle of the screen (also right after a jump, which the observer can miss)
+    const texts = [...document.querySelectorAll(".step-text")]; if (!texts.length) return; let k = 0;
+    texts.forEach((el, i) => { if (el.getBoundingClientRect().top < innerHeight * 0.55) k = i; }); setStep(k); return;
+  }
   const bottom = $(".stage-in").getBoundingClientRect().bottom, texts = [...document.querySelectorAll(".step-text")]; let gone = 0; $("#story").classList.toggle("scrolled", scrollY > 40 + ($(".card").offsetTop || 0));
   for (const el of texts) { const r = el.getBoundingClientRect(); const f = Math.max(0, Math.min(1, 1 + (r.top - bottom) / 48)); el.style.opacity = f; if (r.top < bottom - 30) gone++; }
   setStep(Math.min(texts.length - 1, gone));
@@ -566,6 +585,104 @@ function watchSteps() {
   story.querySelectorAll(".step-text").forEach((el) => { seen.add(el); io.observe(el); });
 }
 
+function paintCohorts() {
+  const c = $("#cohorts"); c.innerHTML = YEARS.map((y) => `<button class="chip${ui.cohorts.has(y) ? " active" : ""}" data-y="${y}">${y}</button>`).join("");
+  c.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => { const y = +b.dataset.y; ui.cohorts.has(y) ? ui.cohorts.delete(y) : ui.cohorts.add(y); b.classList.toggle("active"); render(); }));
+}
+/* ---------- your own history: the music viewer's parsers (Last.fm exports, Spotify extended history, Apple Music), read in the browser only ---------- */
+const MIN_MS = 30000;   // a Spotify / Apple play shorter than 30 s is a skip, not a listen (Last.fm scrobbles are already filtered by the service)
+function parseDateish(v) {   // → unix seconds, or null. Accepts unix seconds / milliseconds, ISO 8601, Last.fm's "06 Sep 2026, 14:23" (UTC), "2026-09-06 14:23" (UTC)
+  if (v == null) return null; const t = String(v).trim(); if (!t) return null;
+  if (/^\d{9,10}$/.test(t)) return +t; if (/^\d{12,13}$/.test(t)) return Math.floor(+t / 1000);
+  let m = /^(\d{1,2}) ([A-Za-z]{3}) (\d{4}),? (\d{1,2}):(\d{2})/.exec(t);
+  if (m) { const d = Date.parse(`${m[1]} ${m[2]} ${m[3]} ${m[4]}:${m[5]} UTC`); return isNaN(d) ? null : Math.floor(d / 1000); }
+  m = /^(\d{4})-(\d{2})-(\d{2})[ T](\d{2}):(\d{2})(?::(\d{2}))?$/.exec(t);
+  if (m) return Math.floor(Date.UTC(+m[1], +m[2] - 1, +m[3], +m[4], +m[5], +(m[6] || 0)) / 1000);
+  const d = Date.parse(t); return isNaN(d) || d < 1e11 ? null : Math.floor(d / 1000);   // ISO with zone, RFC 2822 …; d < 1e11 rejects bare numbers-as-years
+}
+function parseDelimited(text, delim) {   // RFC 4180-ish: quoted fields may hold the delimiter, quotes ("") and line breaks
+  if (text.charCodeAt(0) === 0xfeff) text = text.slice(1);
+  const rows = []; let row = [], field = "", q = false;
+  for (let i = 0; i < text.length; i++) {
+    const c = text[i];
+    if (q) { if (c === '"') { if (text[i + 1] === '"') { field += '"'; i++; } else q = false; } else field += c; }
+    else if (c === '"') q = true;
+    else if (c === delim) { row.push(field); field = ""; }
+    else if (c === "\n" || c === "\r") { if (c === "\r" && text[i + 1] === "\n") i++; row.push(field); field = ""; if (row.length > 1 || row[0] !== "") rows.push(row); row = []; }
+    else field += c;
+  }
+  row.push(field); if (row.length > 1 || row[0] !== "") rows.push(row);
+  return rows;
+}
+function sniffDelim(text) { const head = text.slice(0, 5000); const n = (ch) => (head.match(new RegExp("\\" + ch, "g")) || []).length; return n(";") > n(",") && n(";") > n("\t") ? ";" : n("\t") > n(",") ? "\t" : ","; }
+function playsFromRows(rows, cols, source, name) {   // cols: { a, t, al, d, ms, type } column indexes (-1 = absent)
+  const plays = []; let skipped = 0, noDate = 0;
+  for (const r of rows) {
+    const artist = (r[cols.a] || "").trim(), track = (r[cols.t] || "").trim(); if (!artist || !track) continue;
+    if (cols.type >= 0 && r[cols.type] && !/PLAY_END/i.test(r[cols.type])) continue;            // Apple logs several event kinds per play; PLAY_END carries the duration
+    const ms = cols.ms >= 0 ? +r[cols.ms] || 0 : 0; if (cols.ms >= 0 && (source !== "lastfm" || String(r[cols.ms] ?? "") !== "") && ms < MIN_MS) { skipped++; continue; }   // 0 ms = nothing was played
+    const uts = parseDateish(r[cols.d]); if (!uts) { noDate++; continue; }                        // Last.fm "now playing" rows have no date
+    plays.push({ uts, artist, track, album: cols.al >= 0 ? (r[cols.al] || "").trim() : "", ms });
+  }
+  return plays.length ? { source, plays, note: `${name}: ${fmt(plays.length)} plays${skipped ? `, ${fmt(skipped)} under 30 s left out` : ""}${noDate ? `, ${fmt(noDate)} rows without a date` : ""}` } : null;
+}
+function parseJsonHistory(text, name) {
+  let data; try { data = JSON.parse(text); } catch (e) { return null; }
+  if (data && !Array.isArray(data) && Array.isArray(data.scrobbles)) data = data.scrobbles;   // lastfmstats.com: { username, scrobbles: [{ track, artist, album, date (ms) }] }
+  if (!Array.isArray(data) || !data.length) return null;
+  const x = data.find((r) => r && typeof r === "object") || {};
+  const objs = (a, t, al, d, ms, source, label) => playsFromRows(data.map((r) => [r[a], r[t], al ? r[al] : "", typeof d === "function" ? d(r) : r[d], ms ? r[ms] : ""]), { a: 0, t: 1, al: 2, d: 3, ms: ms ? 4 : -1, type: -1 }, source, `${name} (${label})`);
+  if ("ts" in x && ("master_metadata_track_name" in x || "episode_name" in x || "spotify_track_uri" in x))        // Spotify extended streaming history
+    return objs("master_metadata_album_artist_name", "master_metadata_track_name", "master_metadata_album_album_name", "ts", "ms_played", "spotify", "Spotify extended history");
+  if ("endTime" in x && "artistName" in x)                                                                           // Spotify "Account data" StreamingHistory (last year only)
+    return objs("artistName", "trackName", null, "endTime", "msPlayed", "spotify", "Spotify streaming history");
+  if ("artist" in x && ("track" in x || "name" in x) && ("date" in x || "uts" in x))                                 // lastfmstats.com JSON, ghan.nl JSON, other Last.fm dumps
+    return objs("artist", "track" in x ? "track" : "name", "album" in x ? "album" : null, (r) => r.uts ?? (r.date && typeof r.date === "object" ? r.date.uts : r.date), null, "lastfm", "Last.fm export");
+  return null;
+}
+function parseCsvHistory(text, name) {
+  const rows = parseDelimited(text, sniffDelim(text)); if (rows.length < 2) return null;
+  const first = rows[0].map((h) => h.trim().toLowerCase().replace(/^﻿/, ""));
+  const pick = (...names) => { for (const n of names) { const i = first.findIndex((h) => h === n || h.startsWith(n + "#")); if (i >= 0) return i; } return -1; };
+  const hasHeader = first.some((h) => /^(artist|track|song|album|date|time|uts|name|ts)/.test(h)) && !first.some((h) => /^\d{9,13}$/.test(h)) && parseDateish(rows[0].find((v) => /\d{4}/.test(v)) || "") == null;
+  let cols, source, label;
+  if (hasHeader) {
+    if (pick("event start timestamp") >= 0 || pick("play duration milliseconds") >= 0) {                              // Apple Music Play Activity
+      cols = { a: pick("artist name"), t: pick("song name", "content name"), al: pick("album name"), d: pick("event start timestamp", "event end timestamp"), ms: pick("play duration milliseconds"), type: pick("event type") }; source = "apple"; label = "Apple Music play activity";
+    } else if (pick("master_metadata_track_name") >= 0) {                                                             // Spotify history converted to CSV
+      cols = { a: pick("master_metadata_album_artist_name"), t: pick("master_metadata_track_name"), al: pick("master_metadata_album_album_name"), d: pick("ts"), ms: pick("ms_played"), type: -1 }; source = "spotify"; label = "Spotify history";
+    } else {                                                                                                           // ghan.nl / lastfmstats.com CSV, this dashboard's own scrobbles.csv, anything with sensible headers
+      cols = { a: pick("artist", "artist name", "artist_name", "artistname"), t: pick("track", "track name", "track_name", "trackname", "song", "song name", "title", "name"),
+        al: pick("album", "album name", "album_name", "albumname"), d: pick("uts", "timestamp", "unix timestamp", "date", "datetime", "datetime_utc", "utc_time", "time", "played at", "played_at", "ts", "scrobble time", "listened_at"),
+        ms: pick("ms_played", "msplayed", "ms played"), type: -1 }; source = "lastfm"; label = "Last.fm export";
+    }
+    if (cols.a < 0 || cols.t < 0 || cols.d < 0) return null;
+    return playsFromRows(rows.slice(1), cols, source, `${name} (${label})`);
+  }
+  // headerless: lastfm-to-csv (benjaminbenben.com) writes artist, album, track, "06 Sep 2026, 14:23" — find the date column by content, the rest by order
+  const probe = rows.slice(0, 20); let d = -1;
+  for (let c = 0; c < rows[0].length && d < 0; c++) if (probe.filter((r) => parseDateish(r[c]) != null).length >= Math.min(3, probe.length) - 1) d = c;
+  if (d < 0 || rows[0].length < 3) return null;
+  const rest = rows[0].map((_, i) => i).filter((i) => i !== d);
+  return playsFromRows(rows, { a: rest[0], al: rest.length >= 3 ? rest[1] : -1, t: rest.length >= 3 ? rest[2] : rest[1], d, ms: -1, type: -1 }, "lastfm", `${name} (Last.fm to CSV)`);
+}
+function parseAny(text, name) { return (/^\s*[\[{]/.test(text.slice(0, 50).replace(/^﻿/, "")) ? parseJsonHistory(text, name) : parseCsvHistory(text, name)); }
+
+async function readOwn(list) {
+  const files = [...list].filter((f) => /\.(csv|json)$/i.test(f.name)), msg = $("#ownMsg");
+  if (!files.length) { msg.innerHTML = "No CSV or JSON files found. Unzip the export first, then pick the files themselves."; return; }
+  const parsed = [], bad = [];
+  for (const f of files) { const r = parseAny(await f.text(), f.name); if (r && r.plays.length) parsed.push({ ...r, name: f.name }); else bad.push(f.name); }
+  if (!parsed.length) { msg.innerHTML = `Couldn't read a listening history from ${bad.map((n) => `<code>${esc(n)}</code>`).join(", ")}.`; return; }
+  const seen = new Set(), plays = [];
+  for (const p of parsed.flatMap((x) => x.plays)) { const k = `${Math.floor(p.uts / 60)}|${p.artist.toLowerCase()}|${(p.track || "").toLowerCase()}`; if (!seen.has(k)) { seen.add(k); plays.push(p); } }
+  plays.sort((a, b) => a.uts - b.uts);
+  clearSel(); buildFromPlays(plays); paintCohorts(); render(); watchSteps();
+  document.body.classList.add("own");
+  msg.innerHTML = `Showing <b>your</b> history: ${fmt(plays.length)} plays from ${parsed.map((x) => `<code>${esc(x.name)}</code>`).join(", ")}${bad.length ? `; skipped ${bad.map((n) => `<code>${esc(n)}</code>`).join(", ")}` : ""}. Nothing leaves your browser.`;
+  $(".card").scrollIntoView({ behavior: "smooth" });
+}
+
 function wire() {
   $("#pickClear").addEventListener("click", clearSel);
   $("#selbar").addEventListener("click", (e) => { if (e.target.closest(".sel-x")) clearSel(); });
@@ -573,8 +690,12 @@ function wire() {
   $("#stepNext").addEventListener("click", () => goStep(+$("#story").dataset.step + 1));
   new IntersectionObserver((es) => { for (const e of es) $(".stepnav").classList.toggle("show", e.isIntersecting); }, { threshold: 0 }).observe($("#steps"));
   $("#find").addEventListener("change", () => { findArtist($("#find").value.trim()); });
-  const c = $("#cohorts"); c.innerHTML = YEARS.map((y) => `<button class="chip${ui.cohorts.has(y) ? " active" : ""}" data-y="${y}">${y}</button>`).join("");
-  c.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => { const y = +b.dataset.y; ui.cohorts.has(y) ? ui.cohorts.delete(y) : ui.cohorts.add(y); b.classList.toggle("active"); render(); }));
+  paintCohorts();
+  $("#file").addEventListener("change", (e) => { readOwn(e.target.files); e.target.value = ""; });
+  $("#pickOwn").addEventListener("click", () => $("#file").click());
+  $("#backMine").addEventListener("click", () => { location.href = location.pathname; });
+  document.addEventListener("dragover", (e) => e.preventDefault());
+  document.addEventListener("drop", (e) => { e.preventDefault(); if (e.dataTransfer.files.length) readOwn(e.dataTransfer.files); });
   for (const [id, key, num] of [["#thr", "thr", true], ["#scope", "scope", true], ["#quickM", "quickM", true], ["#slowM", "slowM", true], ["#favGap", "favGap", true]])
     document.querySelectorAll(`${id} button`).forEach((b) => b.addEventListener("click", () => { ui[key] = num ? +b.dataset.v : b.dataset.v; document.querySelectorAll(`${id} button`).forEach((x) => x.classList.toggle("active", x === b)); render(); }));
 }
@@ -586,5 +707,6 @@ function wire() {
   } catch (e) { $("#flows").innerHTML = `<div class="status">Could not load the scrobbles: ${esc(e.message)}</div>`; }
 })();
 </script>
+<script src="../gallery-link.js" defer></script>
 </body>
 </html>
