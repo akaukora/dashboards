@@ -60,7 +60,8 @@
   /* the morph: the favorites sliver of the funnel grows into the cohort stack of the main chart (one green block per cohort) */
   .morph { position: absolute; inset: 0; pointer-events: none; }
   .morph div { position: absolute; background: #00a83f; border-radius: 2px; transition: top .7s cubic-bezier(.4,0,.2,1), left .7s cubic-bezier(.4,0,.2,1), width .7s cubic-bezier(.4,0,.2,1), height .7s cubic-bezier(.4,0,.2,1), opacity .25s; }
-  .story.morphing #flows g.step[data-k="0"] { opacity: 0; }
+  .story.morphing #flows g.step[data-k="0"] { opacity: 0; } .story.morphing #entry .favnode, .story.morphing #entry .favlabel { opacity: 0 !important; } #entry .favlabel { transition: opacity .3s; }
+  .story.zoom-delay #entry svg { transition-delay: .4s; }   /* forward: the funnel shrinks only once the sliver has stepped away from it */
   #note { display: none; }
   @media (max-width: 900px) {   /* narrow screens: no scrolling story, everything drawn at once with the summary note instead of the steps */
     .story { display: block; } .story .stage-in { position: static; } .story .steps { display: none; }
@@ -349,7 +350,7 @@ function render() {
       const hF = favN * escale, hN = (tried.length - favN) * escale, xm = (x1 + NW + x2) / 2, yN = etop + hF + GAP;
       e2 += `<path class="flow" d="M${x1 + NW},${etop} C${xm},${etop} ${xm},${etop} ${x2},${etop} v${hF.toFixed(2)} C${xm},${(etop + hF).toFixed(1)} ${xm},${(etop + hF).toFixed(1)} ${x1 + NW},${(etop + hF).toFixed(1)} z" fill="${GREEN}"><title>${fmt(favN)} of ${fmt(tried.length)} tried artists became favorites</title></path>`;
       e2 += `<path class="flow" d="M${x1 + NW},${(etop + hF).toFixed(1)} C${xm},${(etop + hF).toFixed(1)} ${xm},${yN.toFixed(1)} ${x2},${yN.toFixed(1)} v${hN.toFixed(2)} C${xm},${(yN + hN).toFixed(1)} ${xm},${(etop + hF + hN).toFixed(1)} ${x1 + NW},${(etop + hF + hN).toFixed(1)} z" fill="${GRAY}"><title>${fmt(tried.length - favN)} tried artists never reached ${ui.thr} plays</title></path>`;
-      e2 += `<rect class="favnode" x="${x2}" y="${etop}" width="${NW}" height="${Math.max(1.5, hF).toFixed(1)}" rx="2" fill="${GREEN}"/><text class="n" x="${x2 + NW + 6}" y="${etop + 11}">Favorites <tspan class="sub">${fmt(favN)} · ${Math.round(100 * favN / tried.length)}% of the tried, ${(100 * favN / all.length).toFixed(1)}% of all</tspan></text>`;
+      e2 += `<rect class="favnode" x="${x2}" y="${etop}" width="${NW}" height="${Math.max(1.5, hF).toFixed(1)}" rx="2" fill="${GREEN}"/><text class="n favlabel" x="${x2 + NW + 6}" y="${etop + 11}">Favorites <tspan class="sub">${fmt(favN)} · ${Math.round(100 * favN / tried.length)}% of the tried, ${(100 * favN / all.length).toFixed(1)}% of all</tspan></text>`;
       e2 += `<rect x="${x2}" y="${yN.toFixed(1)}" width="${NW}" height="${Math.max(1, hN).toFixed(1)}" rx="2" fill="${GRAY}"/><text class="n" x="${x2 + NW + 6}" y="${Math.max(yN + Math.min(hN / 2 + 4, 14), etop + 26).toFixed(1)}">Never favorites <tspan class="sub">${fmt(tried.length - favN)} · never reached ${ui.thr} plays</tspan></text>`;
     }
     e += `<rect x="${x1}" y="${(etop + tried.length * escale + GAP).toFixed(1)}" width="${NW}" height="${Math.max(1, (all.length - tried.length) * escale).toFixed(1)}" rx="2" fill="${GRAY}"/><text class="n" x="${x1 + NW + 6}" y="${(etop + tried.length * escale + GAP + Math.min((all.length - tried.length) * escale / 2 + 4, 14)).toFixed(1)}">Passed through <tspan class="sub">${fmt(all.length - tried.length)} · never reached ${ui.scope} plays</tspan></text>`;
@@ -361,21 +362,28 @@ function render() {
 /* the zoom between steps 3 and 4: the funnel's favorites sliver splits into the cohort blocks of the main chart and grows
    into place (forward), or the blocks shrink back into the sliver (backward). Positions come from the svg attributes, so
    they are right whatever the charts' current opacity or scale. */
-let MORPH_T = null;
+let MORPH_T = [];
 function morph(forward) {
   const story = $("#story"), stage = $(".stage-in"), layer = $("#morph"), fav = $("#entry .favnode"), blocks = [...$("#flows").querySelectorAll("rect.cohort")];
-  if (!fav || !blocks.length || matchMedia("(max-width: 900px)").matches) { story.classList.remove("morphing"); return; }
-  const sc = stage.clientWidth / 840, flowsTop = 150, n = (el, a) => +el.getAttribute(a);
-  const A = { x: n(fav, "x") * sc, y: n(fav, "y") * sc, w: n(fav, "width") * sc, h: n(fav, "height") * sc };
+  if (!fav || !blocks.length || matchMedia("(max-width: 900px)").matches) { story.classList.remove("morphing", "zoom-delay"); return; }
+  const sc = stage.clientWidth / 840, flowsTop = 150, STEP = 36, n = (el, a) => +el.getAttribute(a);
+  const A = { x: n(fav, "x") * sc, y: n(fav, "y") * sc, w: n(fav, "width") * sc, h: n(fav, "height") * sc }, A2 = { ...A, x: A.x + STEP };   // the sliver, and the sliver stepped away from the funnel
   const B = blocks.map((b) => ({ x: n(b, "x") * sc, y: n(b, "y") * sc + flowsTop, w: n(b, "width") * sc, h: n(b, "height") * sc }));
-  const sum = B.reduce((t, r) => t + r.h, 0); let yy = A.y;
-  const slices = B.map((r) => { const h = A.h * r.h / sum, o = { x: A.x, y: yy, w: A.w, h }; yy += h; return o; });
-  const css = (el, r) => { el.style.left = r.x + "px"; el.style.top = r.y + "px"; el.style.width = r.w + "px"; el.style.height = Math.max(0.5, r.h) + "px"; };
-  clearTimeout(MORPH_T); layer.innerHTML = ""; story.classList.add("morphing");
-  const divs = B.map((r, i) => { const d = document.createElement("div"); css(d, forward ? slices[i] : r); layer.appendChild(d); return d; });
-  void layer.offsetWidth;   // commit the start positions before the transition
-  divs.forEach((d, i) => css(d, forward ? B[i] : slices[i]));
-  MORPH_T = setTimeout(() => { if (forward) story.classList.remove("morphing"); divs.forEach((d) => d.style.opacity = 0); setTimeout(() => { layer.innerHTML = ""; if (!forward) story.classList.remove("morphing"); }, 260); }, 720);
+  const sum = B.reduce((t, r) => t + r.h, 0); let yy = A2.y;
+  const slices = B.map((r) => { const h = A2.h * r.h / sum, o = { x: A2.x, y: yy, w: A2.w, h }; yy += h; return o; });
+  const css = (el, r, dur) => { el.style.transitionDuration = dur; el.style.left = r.x + "px"; el.style.top = r.y + "px"; el.style.width = r.w + "px"; el.style.height = Math.max(0.5, r.h) + "px"; };
+  const make = (rects, dur) => { layer.innerHTML = ""; const ds = rects.map((r) => { const d = document.createElement("div"); css(d, r, dur); layer.appendChild(d); return d; }); void layer.offsetWidth; return ds; };
+  const later = (ms, f) => MORPH_T.push(setTimeout(f, ms));
+  MORPH_T.forEach(clearTimeout); MORPH_T = []; story.classList.add("morphing"); story.classList.toggle("zoom-delay", forward);
+  if (forward) {   // 1: the sliver steps right while the rest of the funnel dims · 2: it splits into cohorts and grows into the stack while the funnel shrinks
+    const one = make([A], ".4s"); css(one[0], A2, ".4s");
+    later(420, () => { const ds = make(slices, ".7s"); ds.forEach((d, i) => css(d, B[i], ".7s")); });
+    later(1150, () => { story.classList.remove("morphing"); layer.querySelectorAll("div").forEach((d) => d.style.opacity = 0); later(260, () => { layer.innerHTML = ""; story.classList.remove("zoom-delay"); }); });
+  } else {   // the reverse: the stack collapses into the stepped-away sliver while the funnel grows back, then the sliver slides home
+    const ds = make(B, ".7s"); ds.forEach((d, i) => css(d, slices[i], ".7s"));
+    later(720, () => { const one = make([A2], ".4s"); css(one[0], A, ".4s"); });
+    later(1150, () => { story.classList.remove("morphing"); layer.innerHTML = ""; });
+  }
 }
 
 function watchSteps() {
