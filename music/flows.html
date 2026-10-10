@@ -39,13 +39,19 @@
   .flows path.flow { opacity: 0.45; } .flows path.flow:hover { opacity: 0.9; }
   #entry { margin-bottom: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--line-2); }
   /* the story: step texts scroll on the left while the charts stay put on the right and reveal one column per step */
-  .story { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 0 28px; align-items: stretch; }
+  .story { display: grid; grid-template-columns: 290px minmax(0, 1fr); gap: 0 28px; align-items: stretch; }
   .story .stage-in { position: sticky; top: 14px; height: 600px; }
   .story .steps { padding: 30vh 0 40vh; }
   .step-text { min-height: 42vh; padding: 0 0 12px; font-size: 14px; line-height: 1.55; color: var(--text-3); transition: color .3s; }
   .step-text b { color: var(--text-2); font-weight: 600; } .step-text.on { color: var(--text); } .step-text.on b { color: var(--green); } .step-text:not(.on) b { opacity: .55; }
   .step-text .k { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
-  .step-text .mobt, .scroll-hint { display: none; }
+  .scroll-hint { display: none; } .step-text .desk { display: none; }
+  .step-text { text-align: center; } .step-text:not(.on) .mobt { opacity: .35; } .step-text .mobt { transition: opacity .4s; }
+  .mobt .line { display: block; font-size: 15px; line-height: 1.45; color: var(--text-2); } .mobt .big { display: block; font-size: 30px; line-height: 1.15; font-weight: 700; color: var(--text); margin: 4px 0 6px; letter-spacing: -.01em; }
+  .mobt .figs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 10px; margin-top: 12px; } .mobt .fig { display: block; } .mobt .fig b { display: block; font-size: 28px; line-height: 1.1; font-weight: 700; }
+  .mobt .fig span { display: block; font-size: 14px; color: var(--text); } .mobt .fig i { display: block; font-style: normal; font-size: 12px; color: var(--text-3); }
+  .mobt .figs .fig:last-child:nth-child(odd) { grid-column: 1 / -1; }
+  .step-text b, .step-text.on b, .step-text:not(.on) b { opacity: 1; }
   .story svg g.step { transition: opacity .5s; }
   .story[data-step="0"] #entry [data-e="1"], .story[data-step="0"] #entry [data-e="2"], .story[data-step="1"] #entry [data-e="2"] { opacity: 0; }
   .story[data-step="0"] #flows, .story[data-step="1"] #flows, .story[data-step="2"] #flows { opacity: 0; }
@@ -72,12 +78,7 @@
     .story #entry, .story #flows { display: none; } .morph { display: none; } #legend { display: none; } #note { display: none; }
     .mob { display: block; } #mobile { position: relative; height: 100%; } .mchart { position: absolute; left: 0; right: 0; top: 0; transition: opacity .6s; }
     /* phone texts: centered, no step titles, the key figure large; each step about a screen apart so only one is in view */
-    .step-text { min-height: 72vh; padding: 14px 6px; text-align: center; color: var(--text-2); } .step-text .desk { display: none; } .step-text .mobt { display: block; }
-    .step-text b, .step-text.on b, .step-text:not(.on) b { opacity: 1; }
-    .mobt .line { display: block; font-size: 15px; line-height: 1.45; color: var(--text-2); } .mobt .big { display: block; font-size: 30px; line-height: 1.15; font-weight: 700; color: var(--text); margin: 4px 0 6px; letter-spacing: -.01em; }
-    .mobt .figs { display: grid; grid-template-columns: 1fr 1fr; gap: 14px 10px; margin-top: 12px; } .mobt .fig { display: block; } .mobt .fig b { display: block; font-size: 28px; line-height: 1.1; font-weight: 700; }
-    .mobt .fig span { display: block; font-size: 14px; color: var(--text); } .mobt .fig i { display: block; font-style: normal; font-size: 12px; color: var(--text-3); }
-    .mobt .figs .fig:last-child:nth-child(odd) { grid-column: 1 / -1; }
+    .step-text { min-height: 72vh; padding: 14px 6px; color: var(--text-2); } .step-text:not(.on) .mobt { opacity: 1; }
     .scroll-hint { display: block; position: fixed; left: 0; right: 0; bottom: 18px; text-align: center; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); transition: opacity .4s; z-index: 3; pointer-events: none; }
     .scroll-hint span { display: block; font-size: 18px; animation: hint 1.6s ease-in-out infinite; } .story.scrolled .scroll-hint { opacity: 0; }
     html { overflow-anchor: none; } .stepnav { right: 12px; bottom: 14px; } .stepnav button { width: 44px; height: 44px; line-height: 44px; }
