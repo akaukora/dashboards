@@ -64,8 +64,21 @@
     .story:not(.plain) #entry { border-bottom: 1px dashed var(--line-2); margin-bottom: 10px; }
     .story-mode #note { display: block; }
   }
-  .flows.dim path.flow { opacity: 0.12; } .flows.dim path.flow.lit { opacity: 0.85; }
+  .flows.dim path.flow { opacity: 0.1; } .flows.dim path.flow.lit { opacity: 0.8; } .flows g.thread path { pointer-events: none; filter: drop-shadow(0 0 2px rgba(0,0,0,.8)); }
   .status { color: var(--text-3); font-size: 13px; padding: 20px 0; }
+  #find { background: var(--bg); border: 1px solid var(--line-2); border-radius: 999px; color: var(--text); font: inherit; font-size: 12px; padding: 3px 10px; width: 180px; } #find:focus { outline: none; border-color: var(--text-3); }
+  #picked { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
+  .pick-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: 13px; color: var(--text-2); } .pick-head b { color: var(--text); }
+  .alist { margin: 0; padding: 0; list-style: none; }
+  .alist li { display: grid; grid-template-columns: 28px minmax(0, 1fr) 220px 70px; gap: 12px; align-items: center; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 13px; }
+  .alist li:last-child { border-bottom: 0; }
+  .alist .rank { color: var(--text-3); font-variant-numeric: tabular-nums; text-align: right; }
+  .alist .who { min-width: 0; } .alist .who button { all: unset; cursor: pointer; color: var(--text); font-weight: 600; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; display: block; max-width: 100%; } .alist .who button:hover { color: var(--green); }
+  .alist .who .sub { display: block; color: var(--text-3); font-size: 12px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+  .alist .yrs { height: 28px; } .alist .yrs svg { display: block; width: 100%; height: 100%; }
+  .alist .num { text-align: right; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 12px; } .alist .num b { color: var(--text); font-weight: 600; font-size: 13px; }
+  .alist li.on { background: var(--card-2); margin: 0 -8px; padding: 7px 8px; border-radius: 6px; }
+  @media (max-width: 640px) { .alist li { grid-template-columns: 22px minmax(0, 1fr) 70px; } .alist .yrs { display: none; } }
   footer { color: var(--text-3); font-size: 12px; margin-top: 18px; }
 </style>
 </head>
@@ -82,6 +95,7 @@
     <div class="controls">
       <div class="group">Cohorts <span id="cohorts"></span></div>
       <div class="group">View <div class="seg" id="view"><button data-v="fav" class="active">Favorites</button><button data-v="early">Early or late</button><button data-v="life">Whole story</button><button data-v="years">Year by year</button></div></div>
+      <div class="group" id="findGroup"><input id="find" list="favNames" placeholder="Find a favorite…" autocomplete="off"><datalist id="favNames"></datalist></div>
       <div class="group" id="favGroup">Quick = within <div class="seg" id="quickM"><button data-v="3">3</button><button data-v="6" class="active">6</button><button data-v="12">12</button></div> mo · slow burn = over <div class="seg" id="slowM"><button data-v="12">12</button><button data-v="24" class="active">24</button><button data-v="36">36</button></div> mo · faded = <div class="seg" id="favGap"><button data-v="6">6</button><button data-v="12" class="active">12</button><button data-v="24">24</button></div> mo gap</div>
       <div class="group" id="earlyGroup">Favorite within <div class="seg" id="winY"><button data-v="1" class="active">1</button><button data-v="2">2</button><button data-v="3">3</button></div> yrs · silence <div class="seg" id="silM"><button data-v="6">6</button><button data-v="12" class="active">12</button><button data-v="24">24</button></div> mo</div>
       <div class="group" id="horizonGroup">Years <div class="seg" id="horizon"><button data-v="5">5</button><button data-v="8" class="active">8</button><button data-v="10">10</button><button data-v="15">15</button><button data-v="99">max</button></div></div>
@@ -97,8 +111,12 @@
         <div class="flows" id="flows"><div class="status">Loading scrobbles…</div></div>
       </div></div>
     </div>
+    <div id="picked" hidden>
+      <div class="pick-head"><span id="pickTitle"></span><button type="button" class="chip" id="pickClear">Clear</button></div>
+      <ul class="alist" id="pickList"></ul>
+    </div>
   </div>
-  <footer><b>Favorites</b>: only artists that crossed the line. Arrival is the time from the first play to the play that crossed it. Stayed = no gap of the chosen length between plays since becoming a favorite, and a play in the last 12 months; faded for a while = such a gap, but a play in the last 12 months; faded out = nothing in the last 12 months. <b>Early or late</b>: measured from each artist's own first play, so recent cohorts take part as soon as their first years are over. A gap is S+ months between two plays, or from the last play to the latest scrobble, anywhere in the history — before or after becoming a favorite. "Now" means at least one play in the last 12 months. <b>Whole story</b>: a silent year is a complete calendar year with no plays after the first; "came back" means any play after one; a favorite is "only after coming back" when it crossed the line after its first silent year. Young cohorts have had less time to go silent or come back, so they lean toward "never silent". <b>Year by year</b>: a state at the end of each calendar year after the first play — favorite (cumulative plays reached the line, and it stays one), in rotation (played that year and the year before), back again (played after a silent year), faded (not played that year); only complete years are drawn, so the span is cut to what the youngest selected cohort has lived through. Data: <code>scrobbles.csv</code>, artist names as scrobbled.</footer>
+  <footer><b>Favorites</b>: only artists that crossed the line. Arrival is the time from the start of real listening (the first three plays within a year, so a stray early play doesn't count) to the play that crossed the line. Still played = at least one play in the last 12 months: steady (10+ plays in that time and never a gap of the chosen length since becoming a favorite), heavy spells (10+ plays after at least one such gap), a track here or there (under 10). Gone = nothing in the last 12 months: a fling when 60% of all plays sit inside one 6-month window, faded out otherwise. <b>Early or late</b>: measured from each artist's own first play, so recent cohorts take part as soon as their first years are over. A gap is S+ months between two plays, or from the last play to the latest scrobble, anywhere in the history — before or after becoming a favorite. "Now" means at least one play in the last 12 months. <b>Whole story</b>: a silent year is a complete calendar year with no plays after the first; "came back" means any play after one; a favorite is "only after coming back" when it crossed the line after its first silent year. Young cohorts have had less time to go silent or come back, so they lean toward "never silent". <b>Year by year</b>: a state at the end of each calendar year after the first play — favorite (cumulative plays reached the line, and it stays one), in rotation (played that year and the year before), back again (played after a silent year), faded (not played that year); only complete years are drawn, so the span is cut to what the youngest selected cohort has lived through. Data: <code>scrobbles.csv</code>, artist names as scrobbled.</footer>
 </div>
 <script>
 const $ = (s) => document.querySelector(s);
@@ -163,7 +181,8 @@ function stateAt(a, k, thr) {
 
 /* one alluvial drawing for both views: cols[k] = the nodes of column k in top-to-bottom order; paths = one entry per artist
    with its cohort year and node id per column. The first column is drawn as a stack of cohort blocks. */
-function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW = 12, GAP = 10, top = 28, bottom = 8, cohorts, labels = "last", tip }) {
+function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW = 12, GAP = 10, top = 28, bottom = 8, cohorts, labels = "last", tip, onPick }) {
+  const geo = new Map();   // ribbon geometry by "k|cohort|from|to", for drawing one artist's thread later
   const K = cols.length - 1, order = cols.map((c) => Object.fromEntries(c.map((n, i) => [n.id, i]))), byId = cols.map((c) => Object.fromEntries(c.map((n) => [n.id, n])));
   const colX = (k) => L + (W - L - R - NW) * k / K;
   const nodeN = cols.map((c, k) => { const n = {}; for (const p of paths) n[p.st[k]] = (n[p.st[k]] || 0) + 1; return n; });
@@ -183,7 +202,8 @@ function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW
       if (k === 0) { if (lastY != null && f.y !== lastY) outOff[f.from] = (outOff[f.from] || 0) + CGAP; lastY = f.y; }
       const h = f.n * scale, ya = nodeY[k][f.from] + (outOff[f.from] || 0), yb = nodeY[k + 1][f.to] + inPos.get(`${f.y}|${f.from}|${f.to}`); outOff[f.from] = (outOff[f.from] || 0) + h;
       const xa = colX(k) + NW, xb = colX(k + 1), xm = (xa + xb) / 2;
-      svg += `<path class="flow" data-y="${f.y}" d="M${xa},${ya.toFixed(1)} C${xm},${ya.toFixed(1)} ${xm},${yb.toFixed(1)} ${xb},${yb.toFixed(1)} v${h.toFixed(2)} C${xm},${(yb + h).toFixed(1)} ${xm},${(ya + h).toFixed(1)} ${xa},${(ya + h).toFixed(1)} z" fill="${byId[k + 1][f.to].color}"><title>${tip(f, k, byId[k][f.from], byId[k + 1][f.to])}</title></path>`;
+      geo.set(`${k}|${f.y}|${f.from}|${f.to}`, { xa, ya, xb, yb, h });
+      svg += `<path class="flow" data-y="${f.y}" data-k="${k}" data-from="${f.from}" data-to="${f.to}" d="M${xa},${ya.toFixed(1)} C${xm},${ya.toFixed(1)} ${xm},${yb.toFixed(1)} ${xb},${yb.toFixed(1)} v${h.toFixed(2)} C${xm},${(yb + h).toFixed(1)} ${xm},${(ya + h).toFixed(1)} ${xa},${(ya + h).toFixed(1)} z" fill="${byId[k + 1][f.to].color}"><title>${tip(f, k, byId[k][f.from], byId[k + 1][f.to])}</title></path>`;
     }
     svg += `</g>`;
   }
@@ -194,7 +214,7 @@ function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW
     let lastLabel = -99;
     for (const n of cols[k]) {
       const c = nodeN[k][n.id] || 0; if (!c) continue; const y = nodeY[k][n.id], h = c * scale;
-      svg += `<rect x="${colX(k)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${n.color}"><title>${n.name}: ${fmt(c)}</title></rect>`;
+      svg += `<rect class="node" data-k="${k}" data-id="${n.id}" x="${colX(k)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${n.color}"><title>${n.name}: ${fmt(c)}</title></rect>`;
       if (k === K || labels === "all") { const ly = Math.max(y + Math.min(h / 2 + 4, 14), lastLabel + 14); lastLabel = ly; svg += `<text class="n" x="${colX(k) + NW + 6}" y="${ly.toFixed(1)}">${n.name} <tspan class="sub">${fmt(c)} · ${Math.round(100 * c / paths.length)}%</tspan></text>`; }
       else if (h >= 14) svg += `<text class="sub" x="${colX(k) + NW + 4}" y="${(y + 11).toFixed(1)}">${fmt(c)}</text>`;
     }
@@ -204,9 +224,18 @@ function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW
       svg += `<rect x="${colX(0)}" y="${y.toFixed(1)}" width="${NW}" height="${Math.max(1, h).toFixed(1)}" rx="2" fill="${COHORT}" data-y="${yr}" class="cohort"><title>${yr}: ${fmt(n)} new artists</title></rect>`;
       if (h >= 11 || cohorts.length <= 6) svg += `<text class="n" x="${colX(0) - 6}" y="${(y + Math.min(h / 2 + 4, 12)).toFixed(1)}" text-anchor="end">${yr} <tspan class="sub">${fmt(n)}</tspan></text>`;
       y += h + CGAP; } svg += `</g>`; }
-  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">${svg}</svg>`;
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">${svg}<g class="thread"></g></svg>`;
+  if (onPick) {
+    box.querySelectorAll("rect.node, rect.cohort, path.flow").forEach((el) => { el.style.cursor = "pointer"; el.addEventListener("click", () => onPick(el.classList.contains("cohort") ? { y: +el.dataset.y } : el.classList.contains("node") ? { k: +el.dataset.k, id: el.dataset.id } : { y: +el.dataset.y, k: +el.dataset.k, from: el.dataset.from, to: el.dataset.to })); });
+  }
   box.querySelectorAll("rect.cohort").forEach((r) => { r.style.cursor = "pointer"; r.addEventListener("mouseenter", () => { box.classList.add("dim"); box.querySelectorAll(`path[data-y="${r.dataset.y}"]`).forEach((p) => p.classList.add("lit")); }); r.addEventListener("mouseleave", () => { box.classList.remove("dim"); box.querySelectorAll("path.lit").forEach((p) => p.classList.remove("lit")); }); });
-  return nodeN;
+  return { nodeN, geo };
+}
+/* one artist's path, drawn as a thin bright thread along the middle of each ribbon it belongs to */
+function drawThread(box, geo, p) {
+  const g = box.querySelector("g.thread"); if (!g) return; if (!p) { g.innerHTML = ""; return; } let d = "";
+  for (let k = 0; k + 1 < p.st.length; k++) { const r = geo.get(`${k}|${p.y}|${p.st[k]}|${p.st[k + 1]}`); if (!r) continue; const ya = r.ya + r.h / 2, yb = r.yb + r.h / 2, xm = (r.xa + r.xb) / 2; d += `M${r.xa},${ya.toFixed(1)} C${xm},${ya.toFixed(1)} ${xm},${yb.toFixed(1)} ${r.xb},${yb.toFixed(1)} `; }
+  g.innerHTML = d ? `<path d="${d}" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".95"/>` : "";
 }
 
 /* the lifetime view: no time axis — each artist's whole story in three steps. A silent year is a complete calendar year
@@ -248,33 +277,83 @@ function earlyOf(a, thr, winY, silM) {
 }
 
 /* the favorites view: only the artists that crossed the line. How they arrived (quick, took a while, slow burn: months from the
-   first play to the play that crossed the line) and how they stayed (steady: no long gap since becoming a favorite and played in the
-   last 12 months; faded for a while: a long gap since, but played in the last 12 months; faded out: nothing in the last 12 months). */
+   first play to the play that crossed the line) and how they stayed. Still played in the last 12 months: steady (HEAVY+ plays in
+   that time, never a long gap), returns for heavy spells (HEAVY+ plays after at least one long gap), a track here or there (fewer).
+   Not played in the last 12 months: a fling (FLING_SHARE of all plays inside one FLING_M-month window) or faded out. */
+const HEAVY = 10, FLING_M = 6, FLING_SHARE = 0.6, ORANGE = "#ff8000";
 const FAV_ARRIVE = [{ id: "quick", name: "Quick favorite", color: GREEN_HI }, { id: "grew", name: "Took a while", color: GREEN }, { id: "slow", name: "Slow burn", color: GREEN_LO }];
-const FAV_FATE = [{ id: "steady", name: "Stayed, no long gap", color: GREEN }, { id: "while", name: "Faded for a while, came back", color: BLUE }, { id: "out", name: "Faded out", color: GRAY }];
+const FAV_FATE = [{ id: "steady", name: "Steady, never a long gap", color: GREEN }, { id: "spells", name: "Returns for heavy spells", color: GREEN_HI }, { id: "trickle", name: "A track here or there", color: BLUE }, { id: "fling", name: "Fling, then gone", color: ORANGE }, { id: "out", name: "Faded out", color: GRAY }];
 function favStoryOf(a, thr, quickM, slowM, gapM) {
-  const t = a.times, favAt = t[thr - 1], months = (favAt - t[0]) / (30.44 * 86400), gap = gapM * 30.44 * 86400;
+  const t = a.times, favAt = t[thr - 1], gap = gapM * 30.44 * 86400;
+  let start = t[0]; for (let i = 0; i + 2 < t.length; i++) if (t[i + 2] - t[i] <= 365.25 * 86400) { start = t[i]; break; }   // a stray early play doesn't start the clock: listening begins at the first three plays within a year
+  const months = (favAt - start) / (30.44 * 86400);
   const arrive = months <= quickM ? "quick" : months > slowM ? "slow" : "grew";
-  const now = LAST - t.at(-1) < NOW_M * 30.44 * 86400;
+  const mo = 30.44 * 86400, now = LAST - t.at(-1) < NOW_M * mo;
   let hadGap = false; for (let i = thr; i < t.length; i++) if (t[i] - t[i - 1] >= gap) { hadGap = true; break; }
-  return [arrive, !now ? "out" : hadGap ? "while" : "steady"];
+  let recent = 0; for (let i = t.length - 1; i >= 0 && LAST - t[i] < NOW_M * mo; i--) recent++;   // plays in the last 12 months
+  let best = 0; for (let i = 0, j = 0; i < t.length; i++) { while (t[i] - t[j] > FLING_M * mo) j++; best = Math.max(best, i - j + 1); }   // most plays inside one window
+  const fling = best / t.length >= FLING_SHARE;
+  return [arrive, now ? (recent >= HEAVY ? (hadGap ? "spells" : "steady") : "trickle") : fling ? "fling" : "out"];
 }
+
+/* the list under the chart: the artists in a clicked node or ribbon, as rows with plays per year on a shared axis;
+   clicking a name draws that artist's thread through the chart. */
+let PATHS = [];
+const NODE_NAME = (cols, k, id) => (cols[k].find((n) => n.id === id) || {}).name || id;
+function yearBars(a, color, favYear, favAt) {
+  const y0 = YEARS[0], y1 = NOW_Y, n = y1 - y0 + 1, W = 220, H = 28, bw = W / n, max = Math.max(1, ...Object.values(a.perYear));
+  let s = ""; for (let y = y0; y <= y1; y++) { const v = a.perYear[y] || 0, h = v ? Math.max(2, (H - 4) * Math.sqrt(v / max)) : 0, x = (y - y0) * bw;
+    s += v ? `<rect x="${(x + 1).toFixed(1)}" y="${(H - h).toFixed(1)}" width="${Math.max(1, bw - 2).toFixed(1)}" height="${h.toFixed(1)}" rx="1" fill="${color}" opacity="${y === favYear ? 1 : 0.55}"><title>${y}: ${fmt(v)} play${v === 1 ? "" : "s"}${y === favYear ? " · crossed the line" : ""}</title></rect>` : `<rect x="${(x + 1).toFixed(1)}" y="${H - 1}" width="${Math.max(1, bw - 2).toFixed(1)}" height="1" fill="${GRAY}"/>`; }
+  if (favYear != null) { const x = (favYear - y0 + 0.5) * bw; s += `<path d="M${(x - 3).toFixed(1)},0 L${(x + 3).toFixed(1)},0 L${x.toFixed(1)},3 z" fill="${color}"/>`; }
+  return `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="none"><title>${y0}–${y1}</title>${s}</svg>`;
+}
+function storyLine(p) {
+  const a = p.a, t = a.times, mo = 30.44 * 86400, favAt = t[ui.thr - 1];
+  let start = t[0]; for (let i = 0; i + 2 < t.length; i++) if (t[i + 2] - t[i] <= 365.25 * 86400) { start = t[i]; break; }
+  const months = Math.round((favAt - start) / mo), lastM = (LAST - t.at(-1)) / mo;
+  let gapMax = 0; for (let i = ui.thr; i < t.length; i++) gapMax = Math.max(gapMax, t[i] - t[i - 1]); gapMax = Math.round(gapMax / mo);
+  let recent = 0; for (let i = t.length - 1; i >= 0 && LAST - t[i] < NOW_M * mo; i--) recent++;
+  return `first heard ${localDate(t[0]).getUTCFullYear()} · crossed ${ui.thr} after ${months} mo${gapMax >= ui.favGap ? ` · longest gap since ${gapMax} mo` : ""} · ${lastM < 1 ? "played this month" : lastM < 12 ? `${recent} plays in the last 12 mo` : `last played ${Math.round(lastM / 12) < 1 ? "a year ago" : Math.round(lastM / 12) + " yrs ago"}`}`;
+}
+function pickArtists(paths, cols, f, geo) {
+  const sel = paths.filter((p) => (f.y == null || p.y === f.y) && (f.k == null || f.id != null ? (f.k == null || p.st[f.k] === f.id) : (p.st[f.k] === f.from && p.st[f.k + 1] === f.to)));
+  const title = f.id != null ? NODE_NAME(cols, f.k, f.id) : f.from != null ? `${f.y} · ${NODE_NAME(cols, f.k, f.from).toLowerCase()} → ${NODE_NAME(cols, f.k + 1, f.to).toLowerCase()}` : `first heard in ${f.y}`;
+  showList(sel, cols, `<b>${title}</b> · ${fmt(sel.length)} favorite${sel.length === 1 ? "" : "s"}`, geo);
+  const box = $("#flows"); box.classList.add("dim"); box.querySelectorAll("path.flow").forEach((el) => el.classList.toggle("lit", sel.some((p) => p.y === +el.dataset.y && p.st[+el.dataset.k] === el.dataset.from && p.st[+el.dataset.k + 1] === el.dataset.to)));
+  drawThread(box, geo, null);
+}
+function showList(sel, cols, title, geo) {
+  const rows = sel.slice().sort((p, q) => q.a.plays - p.a.plays);
+  $("#pickTitle").innerHTML = `${title} <span style="color:var(--text-3)">· columns are plays per year, ${YEARS[0]}–${NOW_Y}, the marked year is when it crossed the line · click a name to trace its path</span>`; $("#picked").hidden = false;
+  $("#pickList").innerHTML = rows.map((p, i) => { const color = (cols[2].find((n) => n.id === p.st[2]) || {}).color || GREEN, favYear = localDate(p.a.times[ui.thr - 1]).getUTCFullYear();
+    return `<li data-i="${i}"><span class="rank">${i + 1}.</span><span class="who"><button type="button">${esc(p.a.name)}</button><span class="sub">${storyLine(p)}</span></span><span class="yrs">${yearBars(p.a, color, favYear)}</span><span class="num"><b>${fmt(p.a.plays)}</b> plays</span></li>`; }).join("");
+  $("#pickList").querySelectorAll("li").forEach((li) => li.querySelector("button").addEventListener("click", () => { const p = rows[+li.dataset.i]; $("#pickList").querySelectorAll("li").forEach((x) => x.classList.toggle("on", x === li)); drawThread($("#flows"), geo, p); const box = $("#flows"); box.classList.add("dim"); box.querySelectorAll("path.flow").forEach((el) => el.classList.toggle("lit", p.y === +el.dataset.y && p.st[+el.dataset.k] === el.dataset.from && p.st[+el.dataset.k + 1] === el.dataset.to)); $("#story").dataset.step = 5; }));
+}
+function findArtist(name) {
+  const p = PATHS.find((x) => x.a.name.toLowerCase() === name.toLowerCase()); if (!p) return;
+  const cols = [[{ id: "pool", name: "Favorites" }], FAV_ARRIVE, FAV_FATE];
+  showList([p], cols, `<b>${esc(p.a.name)}</b> · ${NODE_NAME(cols, 1, p.st[1]).toLowerCase()} → ${NODE_NAME(cols, 2, p.st[2]).toLowerCase()}`, LAST_GEO);
+  $("#pickList").querySelector("button").click();
+}
+let LAST_GEO = null;
 
 function render() {
   const box = $("#flows"), cohorts = [...ui.cohorts].sort(); if (!cohorts.length) { box.innerHTML = `<div class="status">Pick at least one cohort.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; $("#entry").hidden = true; return; }
   const arts = ARTISTS.filter((a) => ui.cohorts.has(a.first) && a.plays >= ui.scope);
-  $("#horizonGroup").hidden = ui.view !== "years"; $("#earlyGroup").hidden = ui.view !== "early"; $("#favGroup").hidden = ui.view !== "fav";
+  $("#horizonGroup").hidden = ui.view !== "years"; $("#earlyGroup").hidden = ui.view !== "early"; $("#favGroup").hidden = ui.view !== "fav"; $("#findGroup").hidden = ui.view !== "fav";
   $("#story").classList.toggle("plain", ui.view !== "fav"); document.body.classList.toggle("story-mode", ui.view === "fav"); $("#story").dataset.step = ui.view === "fav" ? 0 : 5;
   const where = `first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}${ui.scope > 1 ? ` with ${ui.scope}+ plays` : ""}`;
   if (ui.view === "fav") {
     const favs = arts.filter((a) => a.plays >= ui.thr);
-    const paths = favs.map((a) => ({ y: a.first, st: ["pool", ...favStoryOf(a, ui.thr, ui.quickM, ui.slowM, ui.favGap)] }));
+    const paths = favs.map((a) => ({ a, y: a.first, st: ["pool", ...favStoryOf(a, ui.thr, ui.quickM, ui.slowM, ui.favGap)] }));
+    PATHS = paths; $("#picked").hidden = true; $("#flows").classList.remove("dim");
     if (!paths.length) { box.innerHTML = `<div class="status">No favorites in this selection.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; }
     else {
       const cols = [[{ id: "pool", name: "Favorites", color: COHORT }], FAV_ARRIVE.slice(), FAV_FATE.slice()]; cols[0].hdr = "favorites by year of first play"; cols[1].hdr = `how they won you over`; cols[2].hdr = `whether they stayed`;
-      const nodeN = drawAlluvial(box, cols, paths, { cohorts, W: 840, H: 440, labels: "all", R: 220, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+      const { nodeN, geo } = drawAlluvial(box, cols, paths, { cohorts, W: 840, H: 440, labels: "all", R: 220, onPick: (f) => pickArtists(paths, cols, f, geo), tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+      LAST_GEO = geo; $("#favNames").innerHTML = paths.map((p) => `<option value="${esc(p.a.name)}">`).join("");
       const a = (id) => nodeN[1][id] || 0, b = (id) => nodeN[2][id] || 0, pc = (n) => Math.round(100 * n / paths.length);
-      $("#legend").innerHTML = `<span>Arrival:</span><span><i style="background:${GREEN_HI}"></i>Quick favorite</span><span><i style="background:${GREEN}"></i>Took a while</span><span><i style="background:${GREEN_LO}"></i>Slow burn</span><span style="margin-left:10px">Since:</span><span><i style="background:${GREEN}"></i>Stayed</span><span><i style="background:${BLUE}"></i>Faded for a while, came back</span><span><i style="background:${GRAY}"></i>Faded out</span>`;
+      $("#legend").innerHTML = `<span>Arrival:</span><span><i style="background:${GREEN_HI}"></i>Quick favorite</span><span><i style="background:${GREEN}"></i>Took a while</span><span><i style="background:${GREEN_LO}"></i>Slow burn</span><span style="margin-left:10px">Since:</span><span><i style="background:${GREEN}"></i>Steady</span><span><i style="background:${GREEN_HI}"></i>Heavy spells</span><span><i style="background:${BLUE}"></i>A track here or there</span><span><i style="background:${ORANGE}"></i>Fling</span><span><i style="background:${GRAY}"></i>Faded out</span>`;
       const all = ARTISTS.filter((x) => ui.cohorts.has(x.first)), tried = all.filter((x) => x.plays >= ui.scope);
       $("#steps").innerHTML = [
         [`Every artist you met`, `<b>${fmt(all.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}, stacked by the year of the first play. Most of them you heard once or twice.`],
@@ -282,9 +361,9 @@ function render() {
         [`The favorites`, `<b>${fmt(paths.length)}</b> crossed the ${ui.thr}-play line: ${Math.round(100 * paths.length / Math.max(1, tried.length))}% of the ones you tried, ${(100 * paths.length / all.length).toFixed(1)}% of everyone you heard. That thin green sliver is what the rest of the page is about.`],
         [`Zoom in`, `The same <b>${fmt(paths.length)}</b> favorites, now filling the frame, still stacked by the year you first heard them.`],
         [`How they won you over`, `<b>${fmt(a("quick"))}</b> were quick favorites, crossing the line within ${ui.quickM} months (${pc(a("quick"))}%). <b>${fmt(a("grew"))}</b> took a while. <b>${fmt(a("slow"))}</b> were slow burns of more than ${ui.slowM} months (${pc(a("slow"))}%).`],
-        [`And whether they stayed`, `<b>${fmt(b("steady"))}</b> have stayed without a ${ui.favGap}-month gap and are still played (${pc(b("steady"))}%). <b>${fmt(b("while"))}</b> faded for a while and came back (${pc(b("while"))}%). <b>${fmt(b("out"))}</b> have faded out — nothing in the last ${NOW_M} months (${pc(b("out"))}%).`]
+        [`And whether they stayed`, `Still played this year: <b>${fmt(b("steady"))}</b> steadily, never a ${ui.favGap}-month gap (${pc(b("steady"))}%); <b>${fmt(b("spells"))}</b> come back for heavy spells after a gap (${pc(b("spells"))}%); <b>${fmt(b("trickle"))}</b> only a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> were flings that burned bright and vanished (${pc(b("fling"))}%), and <b>${fmt(b("out"))}</b> faded out more slowly (${pc(b("out"))}%).`]
       ].map(([k, t], i) => `<div class="step-text" data-i="${i}"><span class="k">${i + 1} · ${k}</span>${t}</div>`).join("");
-      $("#note").innerHTML = `<b>${fmt(paths.length)}</b> favorites among the artists ${where}. <b>${fmt(a("quick"))}</b> were quick favorites, crossing the ${ui.thr}-play line within ${ui.quickM} months of the first play (${pc(a("quick"))}%); <b>${fmt(a("grew"))}</b> took a while; <b>${fmt(a("slow"))}</b> were slow burns of more than ${ui.slowM} months (${pc(a("slow"))}%). Since then, <b>${fmt(b("steady"))}</b> have stayed without a ${ui.favGap}-month gap and are still played (${pc(b("steady"))}%), <b>${fmt(b("while"))}</b> faded for a while and came back (${pc(b("while"))}%), and <b>${fmt(b("out"))}</b> have faded out — nothing in the last ${NOW_M} months (${pc(b("out"))}%). Hover a cohort block to follow one year's favorites.`;
+      $("#note").innerHTML = `<b>${fmt(paths.length)}</b> favorites among the artists ${where}. <b>${fmt(a("quick"))}</b> were quick favorites, crossing the ${ui.thr}-play line within ${ui.quickM} months of the first play (${pc(a("quick"))}%); <b>${fmt(a("grew"))}</b> took a while; <b>${fmt(a("slow"))}</b> were slow burns of more than ${ui.slowM} months (${pc(a("slow"))}%). Still played this year: <b>${fmt(b("steady"))}</b> steadily without a ${ui.favGap}-month gap (${pc(b("steady"))}%), <b>${fmt(b("spells"))}</b> in heavy spells after a gap (${pc(b("spells"))}%), <b>${fmt(b("trickle"))}</b> a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> flings (${pc(b("fling"))}%) and <b>${fmt(b("out"))}</b> faded out (${pc(b("out"))}%). Hover a cohort block to follow one year's favorites.`;
     }
   } else if (ui.view === "early") {
     const minAge = ui.winY * 365.25 * 86400, old = arts.filter((a) => LAST - a.times[0] >= minAge);   // only artists whose window has closed
@@ -292,7 +371,7 @@ function render() {
     const yrs = `${ui.winY} yr${ui.winY > 1 ? "s" : ""}`;
     const cols = [[{ id: "pool", name: "New artists", color: COHORT }], ...EARLY_COLS.map((c) => c.map((n) => ({ ...n, name: n.name.replace("the window", yrs) })))];
     cols[0].hdr = "new artists"; cols[1].hdr = `favorite within ${yrs}?`; cols[2].hdr = `since then (gap = ${ui.silM}+ months)`; cols[3].hdr = `now (last ${NOW_M} months)`;
-    const nodeN = drawAlluvial(box, cols, paths, { cohorts, labels: "all", R: 230, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+    const { nodeN } = drawAlluvial(box, cols, paths, { cohorts, labels: "all", R: 230, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
     const c1 = (id) => nodeN[1][id] || 0, m = (id) => nodeN[2][id] || 0, n = (id) => nodeN[3][id] || 0;
     const favs = m("fav_steady") + m("fav_gap") + m("grew"), lateAfterGap = old.filter((a) => { const t = a.times, gap = ui.silM * 30.44 * 86400; if (t.length < ui.thr || t[ui.thr - 1] <= t[0] + minAge) return false; for (let i = 1; i < ui.thr; i++) if (t[i] - t[i - 1] >= gap) return true; return false; }).length;
     $("#legend").innerHTML = `<span><i style="background:${GREEN}"></i>Favorite</span><span><i style="background:${GREEN_HI}"></i>Favorite that grew or came back</span><span><i style="background:${GREEN_LO}"></i>Favorite that dropped out</span><span><i style="background:${BLUE}"></i>In rotation, not a favorite</span><span><i style="background:${GRAY}"></i>Dropped out, not a favorite</span>`;
@@ -301,14 +380,14 @@ function render() {
     const K = Math.max(1, Math.min(ui.horizon, NOW_Y - 1 - cohorts.at(-1)));   // only complete years
     const paths = arts.map((a) => { const st = []; for (let k = 0; k <= K; k++) st.push(stateAt(a, k, ui.thr)); return { y: a.first, st }; });
     const cols = []; for (let k = 0; k <= K; k++) { const c = STATES.map(([id, name, color]) => ({ id, name, color })); c.hdr = k === 0 ? "first year" : `+${k} yr${k > 1 ? "s" : ""}`; cols.push(c); }
-    const nodeN = drawAlluvial(box, cols, paths, { cohorts, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()} (year ${k} → ${k + 1})` });
+    const { nodeN } = drawAlluvial(box, cols, paths, { cohorts, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()} (year ${k} → ${k + 1})` });
     const fav = nodeN[K].fav || 0, out = nodeN[K].out || 0, back = paths.filter((p) => p.st.includes("back")).length;
     $("#legend").innerHTML = `<span><i style="background:${STATES[0][2]}"></i>Favorite</span><span><i style="background:${STATES[1][2]}"></i>Not a favorite, still played (in rotation, or back after a silent year)</span><span><i style="background:${STATES[3][2]}"></i>Faded</span>`;
     $("#note").innerHTML = `<b>${fmt(paths.length)}</b> artists ${where}, followed for ${K} complete year${K > 1 ? "s" : ""}${K < ui.horizon ? ` (as many as the ${cohorts.at(-1)} cohort has completed)` : ""}. After ${K} years: <b>${fmt(fav)}</b> favorites (${Math.round(100 * fav / paths.length)}%), <b>${fmt(out)}</b> faded (${Math.round(100 * out / paths.length)}%); <b>${fmt(back)}</b> came back at least once after a silent year. Hover a ribbon for its numbers, a cohort block to follow one year's artists.`;
   } else {
     const paths = arts.map((a) => ({ y: a.first, st: ["pool", ...lifeOf(a, ui.thr)] }));
     const cols = [[{ id: "pool", name: "New artists", color: COHORT }], LIFE_MID.slice(), LIFE_END.slice()]; cols[0].hdr = "new artists"; cols[1].hdr = "ever silent?"; cols[2].hdr = "and now";
-    const nodeN = drawAlluvial(box, cols, paths, { cohorts, labels: "all", R: 260, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+    const { nodeN } = drawAlluvial(box, cols, paths, { cohorts, labels: "all", R: 260, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
     const n = (id) => nodeN[2][id] || 0, m = (id) => nodeN[1][id] || 0, favs = n("fav_steady") + n("fav_late") + n("fav_back") + n("fav_gone");
     const young = NOW_Y - 1 - cohorts.at(-1);
     $("#legend").innerHTML = `<span><i style="background:${GREEN}"></i>Favorite</span><span><i style="background:${GREEN_HI}"></i>Favorite only after a comeback</span><span><i style="background:${GREEN_LO}"></i>Favorite, then gone</span><span><i style="background:${BLUE}"></i>Played, never silent</span><span><i style="background:${BLUE_LO}"></i>Came back</span><span><i style="background:${GRAY}"></i>Gone</span>`;
@@ -352,6 +431,8 @@ function watchSteps() {
 }
 
 function wire() {
+  $("#pickClear").addEventListener("click", () => { $("#picked").hidden = true; const box = $("#flows"); box.classList.remove("dim"); box.querySelectorAll("path.lit").forEach((p) => p.classList.remove("lit")); const g = box.querySelector("g.thread"); if (g) g.innerHTML = ""; });
+  $("#find").addEventListener("change", () => { findArtist($("#find").value.trim()); });
   const c = $("#cohorts"); c.innerHTML = YEARS.map((y) => `<button class="chip${ui.cohorts.has(y) ? " active" : ""}" data-y="${y}">${y}</button>`).join("");
   c.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => { const y = +b.dataset.y; ui.cohorts.has(y) ? ui.cohorts.delete(y) : ui.cohorts.add(y); b.classList.toggle("active"); render(); }));
   for (const [id, key, num] of [["#horizon", "horizon", true], ["#thr", "thr", true], ["#scope", "scope", true], ["#view", "view", false], ["#winY", "winY", true], ["#silM", "silM", true], ["#quickM", "quickM", true], ["#slowM", "slowM", true], ["#favGap", "favGap", true]])
