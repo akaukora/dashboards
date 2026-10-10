@@ -57,7 +57,13 @@
   .story:not(.plain) #entry svg { transform-origin: 0 0; transition: transform .6s; }
   .story:not(.plain)[data-step="3"] #entry, .story:not(.plain)[data-step="4"] #entry, .story:not(.plain)[data-step="5"] #entry { height: 150px; }
   .story:not(.plain)[data-step="3"] #entry svg, .story:not(.plain)[data-step="4"] #entry svg, .story:not(.plain)[data-step="5"] #entry svg { transform: scale(.32); }
-  @media (max-width: 900px) { .story:not(.plain) { display: block; } .story:not(.plain) .stage-in { position: static; } .story:not(.plain) .steps { display: none; } }
+  .story-mode #note { display: none; }
+  @media (max-width: 900px) {   /* narrow screens: no scrolling story, everything drawn at once with the summary note instead of the steps */
+    .story:not(.plain) { display: block; } .story:not(.plain) .stage-in { position: static; } .story:not(.plain) .steps { display: none; }
+    .story:not(.plain) #entry, .story:not(.plain) #entry svg, .story:not(.plain) #flows, .story:not(.plain) g.step, .story:not(.plain) #entry .favnode { opacity: 1 !important; transform: none !important; height: auto !important; }
+    .story:not(.plain) #entry { border-bottom: 1px dashed var(--line-2); margin-bottom: 10px; }
+    .story-mode #note { display: block; }
+  }
   .flows.dim path.flow { opacity: 0.12; } .flows.dim path.flow.lit { opacity: 0.85; }
   .status { color: var(--text-3); font-size: 13px; padding: 20px 0; }
   footer { color: var(--text-3); font-size: 12px; margin-top: 18px; }
@@ -258,7 +264,7 @@ function render() {
   const box = $("#flows"), cohorts = [...ui.cohorts].sort(); if (!cohorts.length) { box.innerHTML = `<div class="status">Pick at least one cohort.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; $("#entry").hidden = true; return; }
   const arts = ARTISTS.filter((a) => ui.cohorts.has(a.first) && a.plays >= ui.scope);
   $("#horizonGroup").hidden = ui.view !== "years"; $("#earlyGroup").hidden = ui.view !== "early"; $("#favGroup").hidden = ui.view !== "fav";
-  $("#story").classList.toggle("plain", ui.view !== "fav"); $("#note").hidden = ui.view === "fav"; $("#story").dataset.step = ui.view === "fav" ? 0 : 5;
+  $("#story").classList.toggle("plain", ui.view !== "fav"); document.body.classList.toggle("story-mode", ui.view === "fav"); $("#story").dataset.step = ui.view === "fav" ? 0 : 5;
   const where = `first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}${ui.scope > 1 ? ` with ${ui.scope}+ plays` : ""}`;
   if (ui.view === "fav") {
     const favs = arts.filter((a) => a.plays >= ui.thr);
