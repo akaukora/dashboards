@@ -65,16 +65,20 @@
   #note { display: none; }
   .mob { display: none; }
   .flows text.small { font-size: 10px; } .flows text.small .cnt { font-weight: 600; } .flows .hdrbg { fill: var(--card); opacity: .9; } .flows text.hdr { fill: var(--text-2); }
-  @media (max-width: 900px) {   /* narrow screens: the flow turned on its side, the story text in two blocks above the charts, rows fading in as they scroll into view */
-    .story { display: block; } .story .stage-in { position: static; height: auto; } .story .steps { display: none; }
-    .story #entry, .story #flows { position: static; display: none; } .morph { display: none; } #legend { display: none; }
-    .story #entry, .story #entry svg, .story #flows, .story #entry .favnode { opacity: 1 !important; transform: none !important; height: auto !important; }
-    .story #entry { border-bottom: 1px dashed var(--line-2); margin: 0 0 18px; padding-bottom: 14px; }
-    .piece { margin: 4px 0 18px; } .piece g.step { opacity: 0; transition: opacity .6s; } .piece.seen g.step { opacity: 1; } .piece.seen g.step:nth-child(2), .piece.seen g.step:nth-child(3) { transition-delay: .3s; }
-    .mob-hr { border: 0; border-top: 1px dashed var(--line-2); margin: 6px 0 18px; } #mobLegend { margin-top: 6px; }
-    .mob { display: block; } .mob-text { font-size: 14px; line-height: 1.5; color: var(--text-2); margin: 0 0 12px; } .mob-text b { color: var(--text); } .mob-text .k { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 2px; }
-    .legend { font-size: 11px; gap: 4px 10px; } .legend .cnt { font-weight: 600; }
-    #note { display: none; }
+  @media (max-width: 900px) {   /* phones: the flow turned on its side and pinned in the top of the screen; the step texts scroll in the band below it and reveal the rows */
+    .story { display: flex; flex-direction: column; } .story .stage { display: contents; } .story .stage-in { order: 0; } .story .steps { order: 1; display: block; padding: 2vh 0 38vh; }
+    .story .stage-in { position: sticky; top: 0; height: 60vh; background: var(--card); z-index: 2; padding-top: 4px; box-shadow: 0 8px 12px -8px rgba(0,0,0,.6); }
+    .story #entry, .story #flows { display: none; } .morph { display: none; } #legend { display: none; } #note { display: none; }
+    .mob { display: block; } #mobile { position: relative; height: 100%; } .mchart { position: absolute; left: 0; right: 0; top: 0; transition: opacity .6s; }
+    .mchart svg { max-height: calc(60vh - 12px); }
+    .step-text { min-height: 36vh; padding: 0 0 10px; font-size: 15px; } .step-text.on b { color: var(--green); }
+    #mobLegend { margin: 0 0 10px; font-size: 11px; gap: 4px 10px; } #mobLegend .cnt { font-weight: 600; }
+    .story .mchart g.step { transition: opacity .6s; }
+    .story[data-step="3"] #mobFun, .story[data-step="4"] #mobFun, .story[data-step="5"] #mobFun { opacity: 0; pointer-events: none; }
+    .story[data-step="0"] #mobFav, .story[data-step="1"] #mobFav, .story[data-step="2"] #mobFav { opacity: 0; pointer-events: none; }
+    .story[data-step="0"] #mobFun g.step[data-k="1"], .story[data-step="0"] #mobFun g.step[data-k="2"], .story[data-step="1"] #mobFun g.step[data-k="2"] { opacity: 0; }
+    .story[data-step="3"] #mobFav g.step[data-k="1"], .story[data-step="3"] #mobFav g.step[data-k="2"], .story[data-step="4"] #mobFav g.step[data-k="2"] { opacity: 0; }
+    .story:not([data-step="3"]):not([data-step="4"]):not([data-step="5"]) #mobFav g.step[data-k="0"] { opacity: 0; }
   }
   .flows.dim path.flow { opacity: 0.1; } .flows.dim path.flow.lit { opacity: 0.8; } .flows g.thread path { pointer-events: none; filter: drop-shadow(0 0 2px rgba(0,0,0,.8)); }
   .status { color: var(--text-3); font-size: 13px; padding: 20px 0; }
@@ -454,39 +458,31 @@ function morph(forward) {
 }
 
 /* the phone story: text, a short two-row flow, text, the next two rows… Each piece repeats the row the previous one ended on. */
-let ROW_IO = null;
 function mobileStory(paths, cols, onPick) {
-  const host = $("#mobile"); host.innerHTML = ""; PIECES = [];
-  const steps = [...$("#steps").querySelectorAll(".step-text")].map((el) => el.outerHTML.replace('class="step-text"', 'class="mob-text"'));
-  const text = (i) => host.insertAdjacentHTML("beforeend", steps[i]);
-  const piece = (ecols, epaths, kOff, opts) => { const d = document.createElement("div"); d.className = "flows piece"; host.appendChild(d);
-    const sub = ecols.slice(kOff, kOff + 2).map((c) => { const cc = c.slice(); cc.hdr = c.hdr; return cc; });
-    const { nodeN, geo } = drawAlluvialV(d, sub, epaths.map((p) => ({ ...p, st: p.st.slice(kOff, kOff + 2) })), { ...opts, kOff, cohorts: [...ui.cohorts].sort() });
-    if (opts.onPick) PIECES.push({ box: d, geo }); return nodeN; };
-  const all = ARTISTS.filter((a) => ui.cohorts.has(a.first)), labelOf = (yr) => yr === YEARS[0] ? "≤" + yr : yr;
-  if (ui.scope > 1) {   // the funnel
+  const host = $("#mobile"); host.innerHTML = `<div class="flows mchart" id="mobFun"></div><div class="flows mchart" id="mobFav"></div>`; PIECES = [];
+  const cohorts = [...ui.cohorts].sort(), all = ARTISTS.filter((a) => ui.cohorts.has(a.first)), labelOf = (yr) => yr === YEARS[0] ? "≤" + yr : yr;
+  const w = Math.max(300, host.clientWidth || 340), sc = w / 380, roomV = (innerHeight * 0.6 - 16) / sc;   // fill the pinned stage: rows as far apart as the screen allows
+  const opts = { rowGap: Math.max(110, Math.min(220, Math.floor((roomV - 40 - 10 - 24) / 2))), top: 40, cohorts, labelOf };
+  if (ui.scope > 1) {   // the funnel, three rows
     const ep = all.map((a) => ({ y: a.first, st: ["pool", a.plays >= ui.scope ? "tried" : "passed", a.plays >= ui.thr ? "fav" : a.plays >= ui.scope ? "never" : "passed"] }));
     const ecols = [[{ id: "pool", name: "New artists", color: COHORT }], [{ id: "tried", name: "Tried", color: BLUE }, { id: "passed", name: "Passed through", color: GRAY }], [{ id: "fav", name: "Favorites", color: GREEN }, { id: "never", name: "Never favorites", color: "#55657a" }, { id: "passed", name: "Passed through", color: GRAY }]];
     ecols[0].hdr = "new artists by year of first play"; ecols[1].hdr = `reached ${ui.scope} plays?`; ecols[2].hdr = `reached ${ui.thr} plays?`;
-    const etip = (f, k, from, to) => `${f.y}: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}`;
-    text(0); piece(ecols, ep, 0, { labelOf, tip: etip }); text(1); piece(ecols, ep, 1, { labelOf, tip: etip }); text(2);
-  } else { text(0); text(1); text(2); }
-  host.insertAdjacentHTML("beforeend", `<hr class="mob-hr">`);
+    drawAlluvialV($("#mobFun"), ecols, ep, { ...opts, tip: (f, k, from, to) => `${f.y}: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+  } else $("#mobFun").innerHTML = "";
   const tipF = (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}`;
-  const pick = (f) => onPick(paths, cols, f, null);
-  text(3); piece(cols, paths, 0, { labelOf, tip: tipF, onPick: pick, poolColor: GREEN }); text(4); piece(cols, paths, 1, { labelOf, tip: tipF, onPick: pick, poolColor: GREEN }); text(5);
-  host.insertAdjacentHTML("beforeend", `<div class="legend" id="mobLegend">${$("#legend").innerHTML}</div>`);
-  if (ROW_IO) ROW_IO.disconnect(); ROW_IO = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) e.target.classList.add("seen"); }, { rootMargin: "0px 0px -12% 0px", threshold: 0.1 });
-  host.querySelectorAll(".piece").forEach((d) => ROW_IO.observe(d));
+  const { geo } = drawAlluvialV($("#mobFav"), cols, paths, { ...opts, tip: tipF, onPick: (f) => onPick(paths, cols, f, null), poolColor: GREEN });
+  PIECES = [{ box: $("#mobFav"), geo }];
+  $("#steps").insertAdjacentHTML("beforeend", `<div class="legend mob" id="mobLegend">${$("#legend").innerHTML}</div>`);
 }
-function watchRows() {   // re-render when the layout mode changes
-  let was = NARROW(); addEventListener("resize", () => { const now = NARROW(); if (now !== was) { was = now; render(); } });
+function watchRows() {   // re-render, and re-tune the step watcher, when the layout mode changes
+  let was = NARROW(); addEventListener("resize", () => { const now = NARROW(); if (now !== was) { was = now; watchSteps(); render(); } });
 }
+let STEP_IO = null, STEP_MO = null;
 function watchSteps() {
-  const story = $("#story");
-  const io = new IntersectionObserver((entries) => { for (const en of entries) if (en.isIntersecting) { const i = +en.target.dataset.i, prev = +story.dataset.step; if (i !== prev && ((prev <= 2 && i >= 3) || (prev >= 3 && i <= 2))) morph(i >= 3); story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); } }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
+  const story = $("#story"); if (STEP_IO) STEP_IO.disconnect(); if (STEP_MO) STEP_MO.disconnect();
+  const io = STEP_IO = new IntersectionObserver((entries) => { for (const en of entries) if (en.isIntersecting) { const i = +en.target.dataset.i, prev = +story.dataset.step; if (i !== prev && ((prev <= 2 && i >= 3) || (prev >= 3 && i <= 2))) morph(i >= 3); story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); } }, { rootMargin: NARROW() ? "-62% 0px -8% 0px" : "-45% 0px -45% 0px", threshold: 0 });   // on phones the chart is pinned in the top 60%, so a step counts when it is in the band below it
   const seen = new Set();
-  new MutationObserver(() => { story.querySelectorAll(".step-text").forEach((el) => { if (!seen.has(el)) { seen.add(el); io.observe(el); } }); }).observe($("#steps"), { childList: true });
+  STEP_MO = new MutationObserver(() => { story.querySelectorAll(".step-text").forEach((el) => { if (!seen.has(el)) { seen.add(el); io.observe(el); } }); }).observe($("#steps"), { childList: true });
   story.querySelectorAll(".step-text").forEach((el) => { seen.add(el); io.observe(el); });
 }
 
