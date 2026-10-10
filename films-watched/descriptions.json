@@ -444,6 +444,12 @@
    "tmdb_id": 489929,
    "year": 2018
   },
+  "digger-2026": {
+   "desc": "The most powerful man in the world embarks on a frantic mission to prove he is humanity's savior before the disaster he's unleashed destroys everything.",
+   "title": "Digger",
+   "tmdb_id": 1248832,
+   "year": 2026
+  },
   "dirty-harry": {
    "desc": "When a madman dubbed 'Scorpio' terrorizes San Francisco, hard-nosed cop, Harry Callahan – famous for his take-no-prisoners approach to law enforcement – is tasked with hunting down the psychopath.",
    "title": "Dirty Harry",
@@ -2499,5 +2505,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-10-04T05:15:13Z"
+ "updated": "2026-10-10T05:16:02Z"
 }
