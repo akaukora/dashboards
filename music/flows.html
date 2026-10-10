@@ -50,7 +50,7 @@
   .story[data-step="0"] #flows, .story[data-step="1"] #flows, .story[data-step="2"] #flows { opacity: 0; }
   .story[data-step="3"] #entry, .story[data-step="4"] #entry, .story[data-step="5"] #entry { opacity: .35; }
   .story[data-step="3"] #entry .favnode, .story[data-step="4"] #entry .favnode, .story[data-step="5"] #entry .favnode { opacity: 1; }
-  .story:not([data-step="3"]):not([data-step="4"]):not([data-step="5"]) #flows [data-k="0"], .story:not([data-step="4"]):not([data-step="5"]) #flows [data-k="1"], .story:not([data-step="5"]) #flows [data-k="2"] { opacity: 0; }
+  .story:not([data-step="3"]):not([data-step="4"]):not([data-step="5"]) #flows g.step[data-k="0"], .story:not([data-step="4"]):not([data-step="5"]) #flows g.step[data-k="1"], .story:not([data-step="5"]) #flows g.step[data-k="2"] { opacity: 0; }
   #entry, #flows { transition: opacity .5s; }
   /* in the story the funnel starts big, then shrinks to a thumbnail when the favorites take the frame */
   .story #entry { position: absolute; top: 0; left: 0; right: 0; overflow: visible; border-bottom: 0; padding: 0; margin: 0; }
@@ -63,12 +63,18 @@
   .story.morphing #flows g.step[data-k="0"] { opacity: 0; } .story.morphing #entry .favnode, .story.morphing #entry .favlabel { opacity: 0 !important; } #entry .favlabel { transition: opacity .3s; }
   .story.zoom-delay #entry svg { transition-delay: .4s; }   /* forward: the funnel shrinks only once the sliver has stepped away from it */
   #note { display: none; }
-  @media (max-width: 900px) {   /* narrow screens: no scrolling story, everything drawn at once with the summary note instead of the steps */
-    .story { display: block; } .story .stage-in { position: static; } .story .steps { display: none; }
-    .story .stage-in { height: auto; } .story #entry, .story #flows { position: static; } .morph { display: none; }
-    .story #entry, .story #entry svg, .story #flows, .story g.step, .story #entry .favnode { opacity: 1 !important; transform: none !important; height: auto !important; }
-    .story #entry { border-bottom: 1px dashed var(--line-2); margin-bottom: 10px; }
-    #note { display: block; }
+  .mob { display: none; }
+  .flows text.small { font-size: 10px; } .flows text.small .cnt { font-weight: 600; }
+  @media (max-width: 900px) {   /* narrow screens: the flow turned on its side, the story text in two blocks above the charts, rows fading in as they scroll into view */
+    .story { display: block; } .story .stage-in { position: static; height: auto; } .story .steps { display: none; }
+    .story #entry, .story #flows { position: static; } .morph { display: none; }
+    .story #entry, .story #entry svg, .story #flows, .story #entry .favnode { opacity: 1 !important; transform: none !important; height: auto !important; }
+    .story #entry { border-bottom: 1px dashed var(--line-2); margin: 0 0 18px; padding-bottom: 14px; }
+    .story g.step { opacity: 0 !important; transition: opacity .7s; } .story .seen g.step { opacity: 1 !important; }
+    .story .seen g.step[data-k="1"] { transition-delay: .25s; } .story .seen g.step[data-k="2"] { transition-delay: .5s; }
+    .mob { display: block; } .mob-text { font-size: 14px; line-height: 1.5; color: var(--text-2); margin: 0 0 12px; } .mob-text b { color: var(--text); } .mob-text .k { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 2px; }
+    .legend { font-size: 11px; gap: 4px 10px; } .legend .cnt { color: var(--text); font-weight: 600; } .elegend { margin: 6px 0 0; }
+    #note { display: none; }
   }
   .flows.dim path.flow { opacity: 0.1; } .flows.dim path.flow.lit { opacity: 0.8; } .flows g.thread path { pointer-events: none; filter: drop-shadow(0 0 2px rgba(0,0,0,.8)); }
   .status { color: var(--text-3); font-size: 13px; padding: 20px 0; }
@@ -84,7 +90,7 @@
   .alist .yrs { height: 28px; } .alist .yrs svg { display: block; width: 100%; height: 100%; }
   .alist .num { text-align: right; color: var(--text-2); font-variant-numeric: tabular-nums; white-space: nowrap; font-size: 12px; } .alist .num b { color: var(--text); font-weight: 600; font-size: 13px; }
   .alist li.on { background: var(--card-2); margin: 0 -8px; padding: 7px 8px; border-radius: 6px; }
-  @media (max-width: 640px) { .alist li { grid-template-columns: 22px minmax(0, 1fr) 70px; } .alist .yrs { display: none; } }
+  @media (max-width: 640px) { .alist li { grid-template-columns: 20px minmax(0, 1fr) 110px 54px; gap: 8px; } .alist .yrs { height: 22px; } .alist .num b { font-size: 12px; } .alist .num { font-size: 11px; } }
   footer { color: var(--text-3); font-size: 12px; margin-top: 18px; } footer summary { cursor: pointer; color: var(--text-2); } footer summary:hover { color: var(--text); } footer p { margin: 8px 0 0; max-width: 980px; line-height: 1.5; }
 </style>
 </head>
@@ -113,7 +119,9 @@
     <div class="story" id="story" data-step="0">
       <div class="steps" id="steps"></div>
       <div class="stage"><div class="stage-in">
+        <div class="mob" id="mobA"></div>
         <div class="flows" id="entry" hidden></div>
+        <div class="mob" id="mobB"></div>
         <div class="flows" id="flows"><div class="status">Loading scrobbles…</div></div>
         <div class="morph" id="morph"></div>
       </div></div>
@@ -230,10 +238,61 @@ function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW
   box.querySelectorAll("rect.cohort").forEach((r) => { r.style.cursor = "pointer"; r.addEventListener("mouseenter", () => { box.classList.add("dim"); box.querySelectorAll(`path[data-y="${r.dataset.y}"]`).forEach((p) => p.classList.add("lit")); }); r.addEventListener("mouseleave", () => { box.classList.remove("dim"); box.querySelectorAll("path.lit").forEach((p) => p.classList.remove("lit")); }); });
   return { nodeN, geo };
 }
+/* the same drawing turned on its side for narrow screens: columns become rows, flows fall downward. Node bars are
+   horizontal; wide nodes carry their name and count, narrow ones only the count; the first row is the cohort stack. */
+function drawAlluvialV(box, cols, paths, { W = 380, rowGap = 98, NH = 10, GAP = 6, top = 34, side = 6, cohorts, tip, onPick, poolColor = COHORT, labelOf = (yr) => yr }) {
+  const CGAP = 3, geo = new Map(), K = cols.length - 1, order = cols.map((c) => Object.fromEntries(c.map((n, i) => [n.id, i]))), byId = cols.map((c) => Object.fromEntries(c.map((n) => [n.id, n])));
+  const rowY = (k) => top + k * rowGap, H = rowY(K) + NH + 22;
+  const nodeN = cols.map((c, k) => { const n = {}; for (const p of paths) n[p.st[k]] = (n[p.st[k]] || 0) + 1; return n; });
+  const maxGaps = Math.max(...cols.map((c, k) => GAP * (Object.keys(nodeN[k]).length - 1)), CGAP * (cohorts.length - 1));
+  const scale = (W - 2 * side - maxGaps) / paths.length;
+  const nodeX = cols.map((c, k) => { let x = side; const xs = {}; for (const n of c) { xs[n.id] = x; if (nodeN[k][n.id]) x += nodeN[k][n.id] * scale + GAP; } return xs; });
+  let svg = "";
+  for (let k = 0; k < K; k++) {
+    const m = new Map(); for (const p of paths) { const key = `${p.y}|${p.st[k]}|${p.st[k + 1]}`; m.set(key, (m.get(key) || 0) + 1); }
+    const flows = [...m].map(([key, n]) => { const [y, from, to] = key.split("|"); return { y: +y, from, to, n }; });
+    const fl = flows.slice().sort((p, q) => k === 0 ? (p.y - q.y || order[k + 1][p.to] - order[k + 1][q.to]) : (order[k + 1][p.to] - order[k + 1][q.to] || p.y - q.y));
+    const inc = flows.slice().sort((p, q) => order[k][p.from] - order[k][q.from] || p.y - q.y);
+    const outOff = {}, inOff = {}, inPos = new Map();
+    for (const f of inc) { inPos.set(`${f.y}|${f.from}|${f.to}`, inOff[f.to] || 0); inOff[f.to] = (inOff[f.to] || 0) + f.n * scale; }
+    let lastY = null; svg += `<g class="step" data-k="${k + 1}">`;
+    for (const f of fl) {
+      if (k === 0) { if (lastY != null && f.y !== lastY) outOff[f.from] = (outOff[f.from] || 0) + CGAP; lastY = f.y; }
+      const w = f.n * scale, xa = nodeX[k][f.from] + (outOff[f.from] || 0), xb = nodeX[k + 1][f.to] + inPos.get(`${f.y}|${f.from}|${f.to}`); outOff[f.from] = (outOff[f.from] || 0) + w;
+      const ya = rowY(k) + NH, yb = rowY(k + 1), ym = (ya + yb) / 2;
+      geo.set(`${k}|${f.y}|${f.from}|${f.to}`, { v: true, xa, ya, xb, yb, w });
+      svg += `<path class="flow" data-y="${f.y}" data-k="${k}" data-from="${f.from}" data-to="${f.to}" d="M${xa.toFixed(1)},${ya} C${xa.toFixed(1)},${ym} ${xb.toFixed(1)},${ym} ${xb.toFixed(1)},${yb} h${w.toFixed(2)} C${(xb + w).toFixed(1)},${ym} ${(xa + w).toFixed(1)},${ym} ${(xa + w).toFixed(1)},${ya} z" fill="${byId[k + 1][f.to].color}"><title>${tip(f, k, byId[k][f.from], byId[k + 1][f.to])}</title></path>`;
+    }
+    svg += `</g>`;
+  }
+  for (let k = 0; k <= K; k++) {
+    svg += `<g class="step" data-k="${k}">`;
+    if (cols[k].hdr != null) svg += `<text class="hdr" x="${side}" y="${rowY(k) - 24}">${cols[k].hdr}</text>`;
+    if (k === 0) { svg += `</g>`; continue; }
+    for (const n of cols[k]) {
+      const c = nodeN[k][n.id] || 0; if (!c) continue; const x = nodeX[k][n.id], w = c * scale, y = rowY(k);
+      svg += `<rect class="node" data-k="${k}" data-id="${n.id}" x="${x.toFixed(1)}" y="${y}" width="${Math.max(1, w).toFixed(1)}" height="${NH}" rx="2" fill="${n.color}"><title>${n.name}: ${fmt(c)}</title></rect>`;
+      const label = w >= 130 ? `${n.name} <tspan class="cnt" style="fill:${n.color}">${fmt(c)}</tspan>` : w >= 24 ? `<tspan class="cnt" style="fill:${n.color}">${fmt(c)}</tspan>` : "";
+      if (label) svg += `<text class="n small" x="${(x + 1).toFixed(1)}" y="${y - 3}">${label}</text>`;
+    }
+    svg += `</g>`;
+  }
+  { let x = side; svg += `<g class="step" data-k="0">`; for (const yr of cohorts) { const n = paths.filter((p) => p.y === yr).length, w = n * scale; if (!n) continue;
+      svg += `<rect x="${x.toFixed(1)}" y="${rowY(0)}" width="${Math.max(1, w).toFixed(1)}" height="${NH}" rx="2" fill="${poolColor}" data-y="${yr}" class="cohort"><title>${labelOf(yr)}: ${fmt(n)} artists</title></rect>`;
+      if (w >= 30) svg += `<text class="n small" x="${(x + 1).toFixed(1)}" y="${rowY(0) - 3}">${labelOf(yr)}</text>`;
+      x += w + CGAP; } svg += `</g>`; }
+  box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">${svg}<g class="thread"></g></svg>`;
+  if (onPick) box.querySelectorAll("rect.node, rect.cohort, path.flow").forEach((el) => { el.style.cursor = "pointer"; el.addEventListener("click", () => onPick(el.classList.contains("cohort") ? { y: +el.dataset.y } : el.classList.contains("node") ? { k: +el.dataset.k, id: el.dataset.id } : { y: +el.dataset.y, k: +el.dataset.k, from: el.dataset.from, to: el.dataset.to })); });
+  return { nodeN, geo };
+}
+const NARROW = () => matchMedia("(max-width: 900px)").matches;
+
 /* one artist's path, drawn as a thin bright thread along the middle of each ribbon it belongs to */
 function drawThread(box, geo, p) {
   const g = box.querySelector("g.thread"); if (!g) return; if (!p) { g.innerHTML = ""; return; } let d = "";
-  for (let k = 0; k + 1 < p.st.length; k++) { const r = geo.get(`${k}|${p.y}|${p.st[k]}|${p.st[k + 1]}`); if (!r) continue; const ya = r.ya + r.h / 2, yb = r.yb + r.h / 2, xm = (r.xa + r.xb) / 2; d += `M${r.xa},${ya.toFixed(1)} C${xm},${ya.toFixed(1)} ${xm},${yb.toFixed(1)} ${r.xb},${yb.toFixed(1)} `; }
+  for (let k = 0; k + 1 < p.st.length; k++) { const r = geo.get(`${k}|${p.y}|${p.st[k]}|${p.st[k + 1]}`); if (!r) continue;
+    if (r.v) { const xa = r.xa + r.w / 2, xb = r.xb + r.w / 2, ym = (r.ya + r.yb) / 2; d += `M${xa.toFixed(1)},${r.ya} C${xa.toFixed(1)},${ym} ${xb.toFixed(1)},${ym} ${xb.toFixed(1)},${r.yb} `; }
+    else { const ya = r.ya + r.h / 2, yb = r.yb + r.h / 2, xm = (r.xa + r.xb) / 2; d += `M${r.xa},${ya.toFixed(1)} C${xm},${ya.toFixed(1)} ${xm},${yb.toFixed(1)} ${r.xb},${yb.toFixed(1)} `; } }
   g.innerHTML = d ? `<path d="${d}" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round" opacity=".95"/>` : "";
 }
 
@@ -314,10 +373,13 @@ function render() {
     if (!paths.length) { box.innerHTML = `<div class="status">No favorites in this selection.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; }
     else {
       const cols = [[{ id: "pool", name: "Favorites", color: COHORT }], FAV_ARRIVE.slice(), FAV_FATE.slice()]; cols[0].hdr = "favorites by year of first play"; cols[1].hdr = `how they won me over`; cols[2].hdr = `whether they stayed`;
-      const { nodeN, geo } = drawAlluvial(box, cols, paths, { cohorts, W: 840, H: 440, labels: "all", R: 220, onPick: (f) => pickArtists(paths, cols, f, geo), poolColor: GREEN, labelOf: (yr) => yr === YEARS[0] ? "≤" + yr : yr, tip: (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+      const tipF = (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}`, labelOf = (yr) => yr === YEARS[0] ? "≤" + yr : yr;
+      const { nodeN, geo } = NARROW() ? drawAlluvialV(box, cols, paths, { cohorts, onPick: (f) => pickArtists(paths, cols, f, geo), poolColor: GREEN, labelOf, tip: tipF })
+        : drawAlluvial(box, cols, paths, { cohorts, W: 840, H: 440, labels: "all", R: 220, onPick: (f) => pickArtists(paths, cols, f, geo), poolColor: GREEN, labelOf, tip: tipF });
       LAST_GEO = geo; $("#favNames").innerHTML = paths.map((p) => `<option value="${esc(p.a.name)}">`).join("");
       const a = (id) => nodeN[1][id] || 0, b = (id) => nodeN[2][id] || 0, pc = (n) => Math.round(100 * n / paths.length);
-      $("#legend").innerHTML = `<span>Arrival:</span><span><i style="background:${GREEN_HI}"></i>Quick favorite</span><span><i style="background:${GREEN}"></i>Took a while</span><span><i style="background:${GREEN_LO}"></i>Slow burn</span><span><i style="background:${PRE}"></i>Known before the log</span><span style="margin-left:10px">Since:</span><span><i style="background:${GREEN}"></i>Steady</span><span><i style="background:${GREEN_HI}"></i>Comes back in bursts</span><span><i style="background:${BLUE}"></i>A track here or there</span><span><i style="background:${ORANGE}"></i>Fling</span><span><i style="background:${GRAY}"></i>Faded out</span>`;
+      const cnt = (k, id) => NARROW() ? ` <span class="cnt">${fmt(nodeN[k][id] || 0)}</span>` : "";
+      $("#legend").innerHTML = `<span>Arrival:</span>` + FAV_ARRIVE.map((n) => `<span><i style="background:${n.color}"></i>${n.name}${cnt(1, n.id)}</span>`).join("") + `<span style="margin-left:10px">Since:</span>` + FAV_FATE.map((n) => `<span><i style="background:${n.color}"></i>${n.id === "fling" ? "Fling" : n.name === "Steady, never a long gap" ? "Steady" : n.name}${cnt(2, n.id)}</span>`).join("");
       const all = ARTISTS.filter((x) => ui.cohorts.has(x.first)), tried = all.filter((x) => x.plays >= ui.scope);
       $("#steps").innerHTML = [
         [`Every artist I met`, `<b>${fmt(all.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}, stacked by the year of the first play. Most of them heard once or twice.`],
@@ -327,12 +389,22 @@ function render() {
         [`How they won me over`, `<b>${fmt(a("quick"))}</b> were quick favorites, reaching fave status within ${ui.quickM} months (${pc(a("quick"))}%). <b>${fmt(a("grew"))}</b> took a while. <b>${fmt(a("slow"))}</b> were slow to win me over, in more than ${ui.slowM} months (${pc(a("slow"))}%).${a("pre") ? ` <b>${fmt(a("pre"))}</b> were already favorites when the log began in ${YEARS[0]}, so their arrival can't be timed.` : ""}`],
         [`And whether they stayed`, `Still played in the past year: <b>${fmt(b("steady"))}</b> of my constants, never a ${ui.favGap}-month gap (${pc(b("steady"))}%); <b>${fmt(b("spells"))}</b> come back in bursts after a silent period (${pc(b("spells"))}%); <b>${fmt(b("trickle"))}</b> with only a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> were quick flings (${pc(b("fling"))}%), and <b>${fmt(b("out"))}</b> faded out more slowly (${pc(b("out"))}%).`]
       ].map(([k, t], i) => `<div class="step-text" data-i="${i}"><span class="k">${i + 1} · ${k}</span>${t}</div>`).join("");
+      const steps = [...$("#steps").querySelectorAll(".step-text")].map((el) => el.outerHTML.replace('class="step-text"', 'class="mob-text"'));
+      $("#mobA").innerHTML = steps.slice(0, 3).join(""); $("#mobB").innerHTML = steps.slice(3).join("");
       $("#note").innerHTML = `<b>${fmt(paths.length)}</b> favorites among the artists ${where}. <b>${fmt(a("quick"))}</b> were quick favorites, getting ${ui.thr} plays within ${ui.quickM} months of the first play (${pc(a("quick"))}%); <b>${fmt(a("grew"))}</b> took a while; <b>${fmt(a("slow"))}</b> were slow to win me over, taking more than ${ui.slowM} months (${pc(a("slow"))}%)${a("pre") ? `; <b>${fmt(a("pre"))}</b> were already known to me when the log began in ${YEARS[0]}` : ""}. Still played this year: <b>${fmt(b("steady"))}</b> steadily without a ${ui.favGap}-month gap (${pc(b("steady"))}%), <b>${fmt(b("spells"))}</b> in bursts after a gap (${pc(b("spells"))}%), <b>${fmt(b("trickle"))}</b> a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> flings (${pc(b("fling"))}%) and <b>${fmt(b("out"))}</b> faded out (${pc(b("out"))}%). Click a cohort block to follow one year's favorites.`;
     }
   }
   // the entry chart: every new artist of the cohorts, and the sliver of them that got a real chance
   const ebox = $("#entry"), W = 840, L = 86, NW = 12, GAP = 10;
-  if (ui.scope > 1) {
+  if (ui.scope > 1 && NARROW()) {
+    const all = ARTISTS.filter((a) => ui.cohorts.has(a.first));
+    const ep = all.map((a) => ({ y: a.first, st: ["pool", a.plays >= ui.scope ? "tried" : "passed", a.plays >= ui.thr ? "fav" : a.plays >= ui.scope ? "never" : "passed"] }));
+    const ecols = [[{ id: "pool", name: "New artists", color: COHORT }], [{ id: "tried", name: "Tried", color: BLUE }, { id: "passed", name: "Passed through", color: GRAY }], [{ id: "fav", name: "Favorites", color: GREEN }, { id: "never", name: "Never favorites", color: "#55657a" }, { id: "passed", name: "Passed through", color: GRAY }]];
+    ecols[0].hdr = "new artists by year of first play"; ecols[1].hdr = `reached ${ui.scope} plays?`; ecols[2].hdr = `reached ${ui.thr} plays?`;
+    const { nodeN: en } = drawAlluvialV(ebox, ecols, ep, { cohorts, labelOf: (yr) => yr === YEARS[0] ? "≤" + yr : yr, tip: (f, k, from, to) => `${f.y}: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+    ebox.insertAdjacentHTML("beforeend", `<div class="legend elegend"><span><i style="background:${BLUE}"></i>Tried <span class="cnt">${fmt(en[1].tried || 0)}</span></span><span><i style="background:${GRAY}"></i>Passed through <span class="cnt">${fmt(en[1].passed || 0)}</span></span><span><i style="background:${GREEN}"></i>Favorites <span class="cnt">${fmt(en[2].fav || 0)}</span></span><span><i style="background:#55657a"></i>Never favorites <span class="cnt">${fmt(en[2].never || 0)}</span></span></div>`);
+    ebox.hidden = false;
+  } else if (ui.scope > 1) {
     const all = ARTISTS.filter((a) => ui.cohorts.has(a.first)), tried = all.filter((a) => a.plays >= ui.scope);
     const third = true, EH = 440, etop = 22, x0 = L, x1 = L + (W < 1000 ? 220 : 300), x2 = L + (W < 1000 ? 450 : 640), escale = (EH - etop - 8 - Math.max(GAP, CGAP * (cohorts.length - 1))) / all.length, favN = tried.filter((a) => a.plays >= ui.thr).length;
     let e = "", e0 = "", y = etop, yT = etop, yP = etop + tried.length * escale + GAP;
@@ -386,6 +458,11 @@ function morph(forward) {
   }
 }
 
+function watchRows() {   // narrow screens: each chart's rows fade in as it scrolls into view
+  const io = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) e.target.classList.add("seen"); }, { rootMargin: "0px 0px -15% 0px", threshold: 0.05 });
+  io.observe($("#entry")); io.observe($("#flows"));
+  let was = NARROW(); addEventListener("resize", () => { const now = NARROW(); if (now !== was) { was = now; $("#entry").classList.remove("seen"); $("#flows").classList.remove("seen"); render(); } });
+}
 function watchSteps() {
   const story = $("#story");
   const io = new IntersectionObserver((entries) => { for (const en of entries) if (en.isIntersecting) { const i = +en.target.dataset.i, prev = +story.dataset.step; if (i !== prev && ((prev <= 2 && i >= 3) || (prev >= 3 && i <= 2))) morph(i >= 3); story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); } }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
@@ -406,7 +483,7 @@ function wire() {
   try {
     const src = new URLSearchParams(location.search).get("src") || "scrobbles.csv";
     const res = await fetch(src, { cache: "no-store" }); if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    build(parseCSV(await res.text())); wire(); watchSteps(); render();
+    build(parseCSV(await res.text())); wire(); watchSteps(); watchRows(); render();
   } catch (e) { $("#flows").innerHTML = `<div class="status">Could not load the scrobbles: ${esc(e.message)}</div>`; }
 })();
 </script>
