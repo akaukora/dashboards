@@ -43,7 +43,7 @@
   .story .stage-in { position: sticky; top: 14px; height: 600px; }
   .story .steps { padding: 30vh 0 40vh; }
   .step-text { min-height: 42vh; padding: 0 0 12px; font-size: 14px; line-height: 1.55; color: var(--text-3); transition: color .3s; }
-  .step-text b { color: var(--text-2); font-weight: 600; } .step-text.on { color: var(--text); } .step-text.on b { color: var(--green); }
+  .step-text b { color: var(--text-2); font-weight: 600; } .step-text.on { color: var(--text); } .step-text.on b { color: var(--green); } .step-text:not(.on) b { opacity: .55; }
   .step-text .k { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 4px; }
   .story svg g.step { transition: opacity .5s; }
   .story[data-step="0"] #entry [data-e="1"], .story[data-step="0"] #entry [data-e="2"], .story[data-step="1"] #entry [data-e="2"] { opacity: 0; }
@@ -66,13 +66,12 @@
   .mob { display: none; }
   .flows text.small { font-size: 10px; } .flows text.small .cnt { font-weight: 600; } .flows .hdrbg { fill: var(--card); opacity: .9; } .flows text.hdr { fill: var(--text-2); }
   @media (max-width: 900px) {   /* phones: the flow turned on its side and pinned in the top of the screen; the step texts scroll in the band below it and reveal the rows */
-    .story { display: flex; flex-direction: column; } .story .stage { display: contents; } .story .stage-in { order: 0; } .story .steps { order: 1; display: block; padding: 2vh 0 38vh; }
-    .story .stage-in { position: sticky; top: 0; height: 60vh; background: var(--card); z-index: 2; padding-top: 4px; box-shadow: 0 8px 12px -8px rgba(0,0,0,.6); }
+    .story { display: flex; flex-direction: column; } .story .stage { display: contents; } .story .stage-in { order: 0; } .story .steps { order: 1; display: block; padding: 1vh 0 40vh; }
+    .story .stage-in { position: sticky; top: 0; height: 120px; background: linear-gradient(var(--card) 88%, rgba(30,37,45,0)); z-index: 2; padding-top: 4px; overflow: hidden; transition: height .6s cubic-bezier(.4,0,.2,1); }
     .story #entry, .story #flows { display: none; } .morph { display: none; } #legend { display: none; } #note { display: none; }
     .mob { display: block; } #mobile { position: relative; height: 100%; } .mchart { position: absolute; left: 0; right: 0; top: 0; transition: opacity .6s; }
-    .mchart svg { max-height: calc(60vh - 12px); }
-    .step-text { min-height: 36vh; padding: 0 0 10px; font-size: 15px; } .step-text.on b { color: var(--green); }
-    #mobLegend { margin: 0 0 10px; font-size: 11px; gap: 4px 10px; } #mobLegend .cnt { font-weight: 600; }
+    .step-text { min-height: 24vh; padding: 10px 0; font-size: 15px; transition: color .3s; } .step-text.on b { color: var(--green); }
+    #mobLegend { display: flex; margin: 0 0 10px; font-size: 11px; gap: 4px 10px; } #mobLegend .cnt { font-weight: 600; }
     .story .mchart g.step { transition: opacity .6s; }
     .story[data-step="3"] #mobFun, .story[data-step="4"] #mobFun, .story[data-step="5"] #mobFun { opacity: 0; pointer-events: none; }
     .story[data-step="0"] #mobFav, .story[data-step="1"] #mobFav, .story[data-step="2"] #mobFav { opacity: 0; pointer-events: none; }
@@ -286,7 +285,7 @@ function drawAlluvialV(box, cols, paths, { W = 380, rowGap = 98, NH = 10, GAP = 
       x += w + CGAP; } svg += `</g>`; }
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">${svg}<g class="thread"></g></svg>`;
   if (onPick) box.querySelectorAll("rect.node, rect.cohort, path.flow").forEach((el) => { el.style.cursor = "pointer"; el.addEventListener("click", () => onPick(el.classList.contains("cohort") ? { y: +el.dataset.y } : el.classList.contains("node") ? { k: +el.dataset.k, id: el.dataset.id } : { y: +el.dataset.y, k: +el.dataset.k, from: el.dataset.from, to: el.dataset.to })); });
-  return { nodeN, geo };
+  return { nodeN, geo, rows: Array.from({ length: K + 1 }, (_, k) => rowY(k) + NH), W, H };
 }
 const NARROW = () => matchMedia("(max-width: 900px)").matches;
 
@@ -388,15 +387,16 @@ function render() {
       const cnt = (k, id, color) => NARROW() ? ` <span class="cnt" style="color:${color}">${fmt(nodeN[k][id] || 0)}</span>` : "";
       $("#legend").innerHTML = `<span>Arrival:</span>` + FAV_ARRIVE.map((n) => `<span><i style="background:${n.color}"></i>${n.name}${cnt(1, n.id, n.color)}</span>`).join("") + `<span style="margin-left:10px">Since:</span>` + FAV_FATE.map((n) => `<span><i style="background:${n.color}"></i>${n.id === "fling" ? "Fling" : n.name === "Steady, never a long gap" ? "Steady" : n.name}${cnt(2, n.id, n.color)}</span>`).join("");
       const all = ARTISTS.filter((x) => ui.cohorts.has(x.first)), tried = all.filter((x) => x.plays >= ui.scope);
+      const B = (n, color) => `<b style="color:${color}">${fmt(n)}</b>`, FC = Object.fromEntries(FAV_FATE.map((n) => [n.id, n.color])), AC = Object.fromEntries(FAV_ARRIVE.map((n) => [n.id, n.color]));   // numbers in the color of the band they refer to
       $("#steps").innerHTML = [
         [`Every artist I met`, `<b>${fmt(all.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}, stacked by the year of the first play. Most of them heard once or twice.`],
-        [`The ones I gave a chance`, ui.scope > 1 ? `Only <b>${fmt(tried.length)}</b> reached ${ui.scope} plays (${Math.round(100 * tried.length / all.length)}%). The rest passed through.` : `All of them count here, since the entry bar is set to every artist.`],
-        [`The favorites`, `<b>${fmt(paths.length)}</b> crossed the ${ui.thr}-play line: ${Math.round(100 * paths.length / Math.max(1, tried.length))}% of the ones I tried, ${(100 * paths.length / all.length).toFixed(1)}% of everyone I heard. That thin green sliver we dig into in the rest of the page.`],
-        [`Zoom in`, `The thin green sliver of the <b>${fmt(paths.length)}</b> favorites, stacked by the year I first heard them.`],
-        [`How they won me over`, `<b>${fmt(a("quick"))}</b> were quick favorites, reaching fave status within ${ui.quickM} months (${pc(a("quick"))}%). <b>${fmt(a("grew"))}</b> took a while. <b>${fmt(a("slow"))}</b> were slow to win me over, in more than ${ui.slowM} months (${pc(a("slow"))}%).${a("pre") ? ` <b>${fmt(a("pre"))}</b> were already favorites when the log began in ${YEARS[0]}, so their arrival can't be timed.` : ""}`],
-        [`And whether they stayed`, `Still played in the past year: <b>${fmt(b("steady"))}</b> of my constants, never a ${ui.favGap}-month gap (${pc(b("steady"))}%); <b>${fmt(b("spells"))}</b> come back in bursts after a silent period (${pc(b("spells"))}%); <b>${fmt(b("trickle"))}</b> with only a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> were quick flings (${pc(b("fling"))}%), and <b>${fmt(b("out"))}</b> faded out more slowly (${pc(b("out"))}%).`]
+        [`The ones I gave a chance`, ui.scope > 1 ? `Only ${B(tried.length, BLUE)} reached ${ui.scope} plays (${Math.round(100 * tried.length / all.length)}%). The rest passed through.` : `All of them count here, since the entry bar is set to every artist.`],
+        [`The favorites`, `${B(paths.length, GREEN)} crossed the ${ui.thr}-play line: ${Math.round(100 * paths.length / Math.max(1, tried.length))}% of the ones I tried, ${(100 * paths.length / all.length).toFixed(1)}% of everyone I heard. That thin green sliver we dig into in the rest of the page.`],
+        [`Zoom in`, `The thin green sliver of the ${B(paths.length, GREEN)} favorites, stacked by the year I first heard them.`],
+        [`How they won me over`, `${B(a("quick"), AC.quick)} were quick favorites, reaching fave status within ${ui.quickM} months (${pc(a("quick"))}%). ${B(a("grew"), AC.grew)} took a while. ${B(a("slow"), AC.slow)} were slow to win me over, in more than ${ui.slowM} months (${pc(a("slow"))}%).${a("pre") ? ` ${B(a("pre"), AC.pre)} were already favorites when the log began in ${YEARS[0]}, so their arrival can't be timed.` : ""}`],
+        [`And whether they stayed`, `Still played in the past year: ${B(b("steady"), FC.steady)} of my constants, never a ${ui.favGap}-month gap (${pc(b("steady"))}%); ${B(b("spells"), FC.spells)} come back in bursts after a silent period (${pc(b("spells"))}%); ${B(b("trickle"), FC.trickle)} with only a track here or there (${pc(b("trickle"))}%). Gone: ${B(b("fling"), FC.fling)} were quick flings (${pc(b("fling"))}%), and ${B(b("out"), "#8a98a6")} faded out more slowly (${pc(b("out"))}%).`]
       ].map(([k, t], i) => `<div class="step-text" data-i="${i}"><span class="k">${i + 1} · ${k}</span>${t}</div>`).join("");
-      if (NARROW()) mobileStory(paths, cols, pickArtists);
+      if (NARROW()) { mobileStory(paths, cols, pickArtists); requestAnimationFrame(phoneScroll); }
       $("#note").innerHTML = `<b>${fmt(paths.length)}</b> favorites among the artists ${where}. <b>${fmt(a("quick"))}</b> were quick favorites, getting ${ui.thr} plays within ${ui.quickM} months of the first play (${pc(a("quick"))}%); <b>${fmt(a("grew"))}</b> took a while; <b>${fmt(a("slow"))}</b> were slow to win me over, taking more than ${ui.slowM} months (${pc(a("slow"))}%)${a("pre") ? `; <b>${fmt(a("pre"))}</b> were already known to me when the log began in ${YEARS[0]}` : ""}. Still played this year: <b>${fmt(b("steady"))}</b> steadily without a ${ui.favGap}-month gap (${pc(b("steady"))}%), <b>${fmt(b("spells"))}</b> in bursts after a gap (${pc(b("spells"))}%), <b>${fmt(b("trickle"))}</b> a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> flings (${pc(b("fling"))}%) and <b>${fmt(b("out"))}</b> faded out (${pc(b("out"))}%). Click a cohort block to follow one year's favorites.`;
     }
   }
@@ -458,29 +458,50 @@ function morph(forward) {
 }
 
 /* the phone story: text, a short two-row flow, text, the next two rows… Each piece repeats the row the previous one ended on. */
+/* the pinned stage grows row by row: its height is the bottom of the last revealed row */
+let MOB_ROWS = [[], []];
+function setStageHeight(step) {
+  if (!NARROW()) { $(".stage-in").style.height = ""; return; }
+  const rows = MOB_ROWS[step >= 3 ? 1 : 0], h = rows[step >= 3 ? step - 3 : step]; if (h) $(".stage-in").style.height = Math.round(h + 8) + "px";
+}
 function mobileStory(paths, cols, onPick) {
   const host = $("#mobile"); host.innerHTML = `<div class="flows mchart" id="mobFun"></div><div class="flows mchart" id="mobFav"></div>`; PIECES = [];
   const cohorts = [...ui.cohorts].sort(), all = ARTISTS.filter((a) => ui.cohorts.has(a.first)), labelOf = (yr) => yr === YEARS[0] ? "≤" + yr : yr;
-  const w = Math.max(300, host.clientWidth || 340), sc = w / 380, roomV = (innerHeight * 0.6 - 16) / sc;   // fill the pinned stage: rows as far apart as the screen allows
+  const w = Math.max(300, host.clientWidth || 340), sc = w / 380, roomV = (innerHeight * 0.58 - 16) / sc;   // the full three-row chart takes at most ~58% of the screen
   const opts = { rowGap: Math.max(110, Math.min(220, Math.floor((roomV - 40 - 10 - 24) / 2))), top: 40, cohorts, labelOf };
   if (ui.scope > 1) {   // the funnel, three rows
     const ep = all.map((a) => ({ y: a.first, st: ["pool", a.plays >= ui.scope ? "tried" : "passed", a.plays >= ui.thr ? "fav" : a.plays >= ui.scope ? "never" : "passed"] }));
     const ecols = [[{ id: "pool", name: "New artists", color: COHORT }], [{ id: "tried", name: "Tried", color: BLUE }, { id: "passed", name: "Passed through", color: GRAY }], [{ id: "fav", name: "Favorites", color: GREEN }, { id: "never", name: "Never favorites", color: "#55657a" }, { id: "passed", name: "Passed through", color: GRAY }]];
     ecols[0].hdr = "new artists by year of first play"; ecols[1].hdr = `reached ${ui.scope} plays?`; ecols[2].hdr = `reached ${ui.thr} plays?`;
-    drawAlluvialV($("#mobFun"), ecols, ep, { ...opts, tip: (f, k, from, to) => `${f.y}: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
-  } else $("#mobFun").innerHTML = "";
+    const r = drawAlluvialV($("#mobFun"), ecols, ep, { ...opts, tip: (f, k, from, to) => `${f.y}: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
+    MOB_ROWS[0] = r.rows.map((y) => y * sc + 10);
+  } else { $("#mobFun").innerHTML = ""; MOB_ROWS[0] = [60, 60, 60]; }
   const tipF = (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}`;
-  const { geo } = drawAlluvialV($("#mobFav"), cols, paths, { ...opts, tip: tipF, onPick: (f) => onPick(paths, cols, f, null), poolColor: GREEN });
-  PIECES = [{ box: $("#mobFav"), geo }];
+  const { geo, rows } = drawAlluvialV($("#mobFav"), cols, paths, { ...opts, tip: tipF, onPick: (f) => onPick(paths, cols, f, null), poolColor: GREEN });
+  MOB_ROWS[1] = rows.map((y) => y * sc + 10); PIECES = [{ box: $("#mobFav"), geo }]; setStageHeight(+$("#story").dataset.step || 0);
   $("#steps").insertAdjacentHTML("beforeend", `<div class="legend mob" id="mobLegend">${$("#legend").innerHTML}</div>`);
 }
 function watchRows() {   // re-render, and re-tune the step watcher, when the layout mode changes
   let was = NARROW(); addEventListener("resize", () => { const now = NARROW(); if (now !== was) { was = now; watchSteps(); render(); } });
 }
-let STEP_IO = null, STEP_MO = null;
+let STEP_IO = null, STEP_MO = null, SCROLL_ON = false;
+function setStep(i) {
+  const story = $("#story"), prev = +story.dataset.step; if (i === prev) return;
+  if (!NARROW() && ((prev <= 2 && i >= 3) || (prev >= 3 && i <= 2))) morph(i >= 3);
+  story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); setStageHeight(i);
+}
+function phoneScroll() {   // the current step is the first text still below the pinned chart; texts fade out as they slide under it
+  if (!NARROW()) return;
+  const bottom = $(".stage-in").getBoundingClientRect().bottom, texts = [...document.querySelectorAll(".step-text")]; let gone = 0;
+  for (const el of texts) { const r = el.getBoundingClientRect(); const f = Math.max(0, Math.min(1, 1 + (r.top - bottom) / 48)); el.style.opacity = f; if (r.top < bottom - 30) gone++; }
+  setStep(Math.min(texts.length - 1, gone));
+}
 function watchSteps() {
   const story = $("#story"); if (STEP_IO) STEP_IO.disconnect(); if (STEP_MO) STEP_MO.disconnect();
-  const io = STEP_IO = new IntersectionObserver((entries) => { for (const en of entries) if (en.isIntersecting) { const i = +en.target.dataset.i, prev = +story.dataset.step; if (i !== prev && ((prev <= 2 && i >= 3) || (prev >= 3 && i <= 2))) morph(i >= 3); story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); } }, { rootMargin: NARROW() ? "-62% 0px -8% 0px" : "-45% 0px -45% 0px", threshold: 0 });   // on phones the chart is pinned in the top 60%, so a step counts when it is in the band below it
+  if (!SCROLL_ON) { SCROLL_ON = true; let tick = false; addEventListener("scroll", () => { if (!tick) { tick = true; requestAnimationFrame(() => { tick = false; phoneScroll(); }); } }, { passive: true }); }
+  if (NARROW()) { document.querySelectorAll(".step-text").forEach((el) => el.style.opacity = ""); return; }
+  document.querySelectorAll(".step-text").forEach((el) => el.style.opacity = "");
+  const io = STEP_IO = new IntersectionObserver((entries) => { for (const en of entries) if (en.isIntersecting) setStep(+en.target.dataset.i); }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
   const seen = new Set();
   STEP_MO = new MutationObserver(() => { story.querySelectorAll(".step-text").forEach((el) => { if (!seen.has(el)) { seen.add(el); io.observe(el); } }); }).observe($("#steps"), { childList: true });
   story.querySelectorAll(".step-text").forEach((el) => { seen.add(el); io.observe(el); });
