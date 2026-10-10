@@ -64,16 +64,16 @@
   .story.zoom-delay #entry svg { transition-delay: .4s; }   /* forward: the funnel shrinks only once the sliver has stepped away from it */
   #note { display: none; }
   .mob { display: none; }
-  .flows text.small { font-size: 10px; } .flows text.small .cnt { font-weight: 600; }
+  .flows text.small { font-size: 10px; } .flows text.small .cnt { font-weight: 600; } .flows .hdrbg { fill: var(--card); opacity: .9; } .flows text.hdr { fill: var(--text-2); }
   @media (max-width: 900px) {   /* narrow screens: the flow turned on its side, the story text in two blocks above the charts, rows fading in as they scroll into view */
     .story { display: block; } .story .stage-in { position: static; height: auto; } .story .steps { display: none; }
-    .story #entry, .story #flows { position: static; } .morph { display: none; }
+    .story #entry, .story #flows { position: static; display: none; } .morph { display: none; } #legend { display: none; }
     .story #entry, .story #entry svg, .story #flows, .story #entry .favnode { opacity: 1 !important; transform: none !important; height: auto !important; }
     .story #entry { border-bottom: 1px dashed var(--line-2); margin: 0 0 18px; padding-bottom: 14px; }
-    .story g.step { opacity: 0 !important; transition: opacity .7s; } .story .seen g.step { opacity: 1 !important; }
-    .story .seen g.step[data-k="1"] { transition-delay: .25s; } .story .seen g.step[data-k="2"] { transition-delay: .5s; }
+    .piece { margin: 4px 0 18px; } .piece g.step { opacity: 0; transition: opacity .6s; } .piece.seen g.step { opacity: 1; } .piece.seen g.step:nth-child(2), .piece.seen g.step:nth-child(3) { transition-delay: .3s; }
+    .mob-hr { border: 0; border-top: 1px dashed var(--line-2); margin: 6px 0 18px; } #mobLegend { margin-top: 6px; }
     .mob { display: block; } .mob-text { font-size: 14px; line-height: 1.5; color: var(--text-2); margin: 0 0 12px; } .mob-text b { color: var(--text); } .mob-text .k { display: block; font-size: 11px; letter-spacing: .06em; text-transform: uppercase; color: var(--text-3); margin-bottom: 2px; }
-    .legend { font-size: 11px; gap: 4px 10px; } .legend .cnt { color: var(--text); font-weight: 600; } .elegend { margin: 6px 0 0; }
+    .legend { font-size: 11px; gap: 4px 10px; } .legend .cnt { font-weight: 600; }
     #note { display: none; }
   }
   .flows.dim path.flow { opacity: 0.1; } .flows.dim path.flow.lit { opacity: 0.8; } .flows g.thread path { pointer-events: none; filter: drop-shadow(0 0 2px rgba(0,0,0,.8)); }
@@ -119,9 +119,8 @@
     <div class="story" id="story" data-step="0">
       <div class="steps" id="steps"></div>
       <div class="stage"><div class="stage-in">
-        <div class="mob" id="mobA"></div>
+        <div class="mob" id="mobile"></div>
         <div class="flows" id="entry" hidden></div>
-        <div class="mob" id="mobB"></div>
         <div class="flows" id="flows"><div class="status">Loading scrobbles…</div></div>
         <div class="morph" id="morph"></div>
       </div></div>
@@ -240,8 +239,8 @@ function drawAlluvial(box, cols, paths, { W = 1140, H = 520, L = 86, R = 136, NW
 }
 /* the same drawing turned on its side for narrow screens: columns become rows, flows fall downward. Node bars are
    horizontal; wide nodes carry their name and count, narrow ones only the count; the first row is the cohort stack. */
-function drawAlluvialV(box, cols, paths, { W = 380, rowGap = 98, NH = 10, GAP = 6, top = 34, side = 6, cohorts, tip, onPick, poolColor = COHORT, labelOf = (yr) => yr }) {
-  const CGAP = 3, geo = new Map(), K = cols.length - 1, order = cols.map((c) => Object.fromEntries(c.map((n, i) => [n.id, i]))), byId = cols.map((c) => Object.fromEntries(c.map((n) => [n.id, n])));
+function drawAlluvialV(box, cols, paths, { W = 380, rowGap = 98, NH = 10, GAP = 6, top = 34, side = 6, cohorts, tip, onPick, poolColor = COHORT, labelOf = (yr) => yr, kOff = 0 }) {
+  const CGAP = 3, geo = new Map(), K = cols.length - 1, g0 = kOff, order = cols.map((c) => Object.fromEntries(c.map((n, i) => [n.id, i]))), byId = cols.map((c) => Object.fromEntries(c.map((n) => [n.id, n])));   // kOff: this drawing's first column is column kOff of the whole story
   const rowY = (k) => top + k * rowGap, H = rowY(K) + NH + 22;
   const nodeN = cols.map((c, k) => { const n = {}; for (const p of paths) n[p.st[k]] = (n[p.st[k]] || 0) + 1; return n; });
   const maxGaps = Math.max(...cols.map((c, k) => GAP * (Object.keys(nodeN[k]).length - 1)), CGAP * (cohorts.length - 1));
@@ -260,26 +259,26 @@ function drawAlluvialV(box, cols, paths, { W = 380, rowGap = 98, NH = 10, GAP = 
       if (k === 0) { if (lastY != null && f.y !== lastY) outOff[f.from] = (outOff[f.from] || 0) + CGAP; lastY = f.y; }
       const w = f.n * scale, xa = nodeX[k][f.from] + (outOff[f.from] || 0), xb = nodeX[k + 1][f.to] + inPos.get(`${f.y}|${f.from}|${f.to}`); outOff[f.from] = (outOff[f.from] || 0) + w;
       const ya = rowY(k) + NH, yb = rowY(k + 1), ym = (ya + yb) / 2;
-      geo.set(`${k}|${f.y}|${f.from}|${f.to}`, { v: true, xa, ya, xb, yb, w });
-      svg += `<path class="flow" data-y="${f.y}" data-k="${k}" data-from="${f.from}" data-to="${f.to}" d="M${xa.toFixed(1)},${ya} C${xa.toFixed(1)},${ym} ${xb.toFixed(1)},${ym} ${xb.toFixed(1)},${yb} h${w.toFixed(2)} C${(xb + w).toFixed(1)},${ym} ${(xa + w).toFixed(1)},${ym} ${(xa + w).toFixed(1)},${ya} z" fill="${byId[k + 1][f.to].color}"><title>${tip(f, k, byId[k][f.from], byId[k + 1][f.to])}</title></path>`;
+      geo.set(`${g0 + k}|${f.y}|${f.from}|${f.to}`, { v: true, xa, ya, xb, yb, w });
+      svg += `<path class="flow" data-y="${f.y}" data-k="${g0 + k}" data-from="${f.from}" data-to="${f.to}" d="M${xa.toFixed(1)},${ya} C${xa.toFixed(1)},${ym} ${xb.toFixed(1)},${ym} ${xb.toFixed(1)},${yb} h${w.toFixed(2)} C${(xb + w).toFixed(1)},${ym} ${(xa + w).toFixed(1)},${ym} ${(xa + w).toFixed(1)},${ya} z" fill="${byId[k + 1][f.to].color}"><title>${tip(f, g0 + k, byId[k][f.from], byId[k + 1][f.to])}</title></path>`;
     }
     svg += `</g>`;
   }
   for (let k = 0; k <= K; k++) {
-    svg += `<g class="step" data-k="${k}">`;
-    if (cols[k].hdr != null) svg += `<text class="hdr" x="${side}" y="${rowY(k) - 24}">${cols[k].hdr}</text>`;
-    if (k === 0) { svg += `</g>`; continue; }
+    svg += `<g class="step" data-k="${g0 + k}">`;
+    if (cols[k].hdr != null) svg += `<rect class="hdrbg" x="${side - 3}" y="${rowY(k) - 35}" width="${(cols[k].hdr.length * 6.4 + 6).toFixed(0)}" height="16" rx="3"/><text class="hdr" x="${side}" y="${rowY(k) - 23}">${cols[k].hdr}</text>`;
+    if (k === 0 && g0 === 0) { svg += `</g>`; continue; }
     for (const n of cols[k]) {
       const c = nodeN[k][n.id] || 0; if (!c) continue; const x = nodeX[k][n.id], w = c * scale, y = rowY(k);
-      svg += `<rect class="node" data-k="${k}" data-id="${n.id}" x="${x.toFixed(1)}" y="${y}" width="${Math.max(1, w).toFixed(1)}" height="${NH}" rx="2" fill="${n.color}"><title>${n.name}: ${fmt(c)}</title></rect>`;
-      const label = w >= 130 ? `${n.name} <tspan class="cnt" style="fill:${n.color}">${fmt(c)}</tspan>` : w >= 24 ? `<tspan class="cnt" style="fill:${n.color}">${fmt(c)}</tspan>` : "";
+      svg += `<rect class="node" data-k="${g0 + k}" data-id="${n.id}" x="${x.toFixed(1)}" y="${y}" width="${Math.max(1, w).toFixed(1)}" height="${NH}" rx="2" fill="${n.color}"><title>${n.name}: ${fmt(c)}</title></rect>`;
+      const label = w >= 130 ? `${n.name} <tspan class="cnt" style="fill:${n.color}">${fmt(c)}</tspan>` : w >= 18 ? `<tspan class="cnt" style="fill:${n.color}">${fmt(c)}</tspan>` : "";
       if (label) svg += `<text class="n small" x="${(x + 1).toFixed(1)}" y="${y - 3}">${label}</text>`;
     }
     svg += `</g>`;
   }
-  { let x = side; svg += `<g class="step" data-k="0">`; for (const yr of cohorts) { const n = paths.filter((p) => p.y === yr).length, w = n * scale; if (!n) continue;
+  if (g0 === 0) { let x = side; svg += `<g class="step" data-k="0">`; for (const yr of cohorts) { const n = paths.filter((p) => p.y === yr).length, w = n * scale; if (!n) continue;
       svg += `<rect x="${x.toFixed(1)}" y="${rowY(0)}" width="${Math.max(1, w).toFixed(1)}" height="${NH}" rx="2" fill="${poolColor}" data-y="${yr}" class="cohort"><title>${labelOf(yr)}: ${fmt(n)} artists</title></rect>`;
-      if (w >= 30) svg += `<text class="n small" x="${(x + 1).toFixed(1)}" y="${rowY(0) - 3}">${labelOf(yr)}</text>`;
+      if (w >= 30) svg += `<text class="n small" x="${(x + 1).toFixed(1)}" y="${rowY(0) - 3}">${labelOf(yr)}${w >= 64 ? ` <tspan class="cnt" style="fill:${poolColor}">${fmt(n)}</tspan>` : ""}</text>`;
       x += w + CGAP; } svg += `</g>`; }
   box.innerHTML = `<svg viewBox="0 0 ${W} ${H}" preserveAspectRatio="xMinYMin meet">${svg}<g class="thread"></g></svg>`;
   if (onPick) box.querySelectorAll("rect.node, rect.cohort, path.flow").forEach((el) => { el.style.cursor = "pointer"; el.addEventListener("click", () => onPick(el.classList.contains("cohort") ? { y: +el.dataset.y } : el.classList.contains("node") ? { k: +el.dataset.k, id: el.dataset.id } : { y: +el.dataset.y, k: +el.dataset.k, from: el.dataset.from, to: el.dataset.to })); });
@@ -288,7 +287,9 @@ function drawAlluvialV(box, cols, paths, { W = 380, rowGap = 98, NH = 10, GAP = 
 const NARROW = () => matchMedia("(max-width: 900px)").matches;
 
 /* one artist's path, drawn as a thin bright thread along the middle of each ribbon it belongs to */
-function drawThread(box, geo, p) {
+let PIECES = [];   // the drawings on screen: one on desktop, several short ones on phones; each with its ribbon geometry
+function drawThread(p) { for (const pc of PIECES) drawThreadIn(pc.box, pc.geo, p); }
+function drawThreadIn(box, geo, p) {
   const g = box.querySelector("g.thread"); if (!g) return; if (!p) { g.innerHTML = ""; return; } let d = "";
   for (let k = 0; k + 1 < p.st.length; k++) { const r = geo.get(`${k}|${p.y}|${p.st[k]}|${p.st[k + 1]}`); if (!r) continue;
     if (r.v) { const xa = r.xa + r.w / 2, xb = r.xb + r.w / 2, ym = (r.ya + r.yb) / 2; d += `M${xa.toFixed(1)},${r.ya} C${xa.toFixed(1)},${ym} ${xb.toFixed(1)},${ym} ${xb.toFixed(1)},${r.yb} `; }
@@ -343,15 +344,17 @@ function pickArtists(paths, cols, f, geo) {
   const sel = paths.filter((p) => (f.y == null || p.y === f.y) && (f.k == null || f.id != null ? (f.k == null || p.st[f.k] === f.id) : (p.st[f.k] === f.from && p.st[f.k + 1] === f.to)));
   const title = f.id != null ? NODE_NAME(cols, f.k, f.id) : f.from != null ? `${f.y} · ${NODE_NAME(cols, f.k, f.from).toLowerCase()} → ${NODE_NAME(cols, f.k + 1, f.to).toLowerCase()}` : `first heard in ${f.y}`;
   showList(sel, cols, `<b>${title}</b> · ${fmt(sel.length)} favorite${sel.length === 1 ? "" : "s"}`, geo);
-  const box = $("#flows"); box.classList.add("dim"); box.querySelectorAll("path.flow").forEach((el) => el.classList.toggle("lit", sel.some((p) => p.y === +el.dataset.y && p.st[+el.dataset.k] === el.dataset.from && p.st[+el.dataset.k + 1] === el.dataset.to)));
-  drawThread(box, geo, null);
+  litFlows((el) => sel.some((p) => p.y === +el.dataset.y && p.st[+el.dataset.k] === el.dataset.from && p.st[+el.dataset.k + 1] === el.dataset.to));
+  drawThread(null);
 }
+function litFlows(test) { for (const pc of PIECES) { pc.box.classList.add("dim"); pc.box.querySelectorAll("path.flow").forEach((el) => el.classList.toggle("lit", test(el))); } }
+function unlitFlows() { for (const pc of PIECES) { pc.box.classList.remove("dim"); pc.box.querySelectorAll("path.lit").forEach((el) => el.classList.remove("lit")); const g = pc.box.querySelector("g.thread"); if (g) g.innerHTML = ""; } }
 function showList(sel, cols, title, geo) {
   const rows = sel.slice().sort((p, q) => q.a.plays - p.a.plays);
   $("#pickTitle").innerHTML = `${title} <span style="color:var(--text-3)">· columns are plays per year, ${YEARS[0]}–${NOW_Y}, the marked year is when it crossed the line · click a name to trace its path</span>`; $("#picked").hidden = false;
   $("#pickList").innerHTML = rows.map((p, i) => { const color = (cols[2].find((n) => n.id === p.st[2]) || {}).color || GREEN, favYear = localDate(p.a.times[ui.thr - 1]).getUTCFullYear();
     return `<li data-i="${i}"><span class="rank">${i + 1}.</span><span class="who"><button type="button">${esc(p.a.name)}</button><span class="sub">${storyLine(p)}</span></span><span class="yrs">${yearBars(p.a, color, favYear)}</span><span class="num"><b>${fmt(p.a.plays)}</b> plays</span></li>`; }).join("");
-  $("#pickList").querySelectorAll("li").forEach((li) => li.querySelector("button").addEventListener("click", () => { const p = rows[+li.dataset.i]; $("#pickList").querySelectorAll("li").forEach((x) => x.classList.toggle("on", x === li)); drawThread($("#flows"), geo, p); const box = $("#flows"); box.classList.add("dim"); box.querySelectorAll("path.flow").forEach((el) => el.classList.toggle("lit", p.y === +el.dataset.y && p.st[+el.dataset.k] === el.dataset.from && p.st[+el.dataset.k + 1] === el.dataset.to)); $("#story").dataset.step = 5; }));
+  $("#pickList").querySelectorAll("li").forEach((li) => li.querySelector("button").addEventListener("click", () => { const p = rows[+li.dataset.i]; $("#pickList").querySelectorAll("li").forEach((x) => x.classList.toggle("on", x === li)); drawThread(p); litFlows((el) => p.y === +el.dataset.y && p.st[+el.dataset.k] === el.dataset.from && p.st[+el.dataset.k + 1] === el.dataset.to); $("#story").dataset.step = 5; }));
 }
 function findArtist(name) {
   const p = PATHS.find((x) => x.a.name.toLowerCase() === name.toLowerCase()); if (!p) return;
@@ -376,10 +379,10 @@ function render() {
       const tipF = (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}`, labelOf = (yr) => yr === YEARS[0] ? "≤" + yr : yr;
       const { nodeN, geo } = NARROW() ? drawAlluvialV(box, cols, paths, { cohorts, onPick: (f) => pickArtists(paths, cols, f, geo), poolColor: GREEN, labelOf, tip: tipF })
         : drawAlluvial(box, cols, paths, { cohorts, W: 840, H: 440, labels: "all", R: 220, onPick: (f) => pickArtists(paths, cols, f, geo), poolColor: GREEN, labelOf, tip: tipF });
-      LAST_GEO = geo; $("#favNames").innerHTML = paths.map((p) => `<option value="${esc(p.a.name)}">`).join("");
+      PIECES = NARROW() ? [] : [{ box, geo }]; LAST_GEO = geo; $("#favNames").innerHTML = paths.map((p) => `<option value="${esc(p.a.name)}">`).join("");
       const a = (id) => nodeN[1][id] || 0, b = (id) => nodeN[2][id] || 0, pc = (n) => Math.round(100 * n / paths.length);
-      const cnt = (k, id) => NARROW() ? ` <span class="cnt">${fmt(nodeN[k][id] || 0)}</span>` : "";
-      $("#legend").innerHTML = `<span>Arrival:</span>` + FAV_ARRIVE.map((n) => `<span><i style="background:${n.color}"></i>${n.name}${cnt(1, n.id)}</span>`).join("") + `<span style="margin-left:10px">Since:</span>` + FAV_FATE.map((n) => `<span><i style="background:${n.color}"></i>${n.id === "fling" ? "Fling" : n.name === "Steady, never a long gap" ? "Steady" : n.name}${cnt(2, n.id)}</span>`).join("");
+      const cnt = (k, id, color) => NARROW() ? ` <span class="cnt" style="color:${color}">${fmt(nodeN[k][id] || 0)}</span>` : "";
+      $("#legend").innerHTML = `<span>Arrival:</span>` + FAV_ARRIVE.map((n) => `<span><i style="background:${n.color}"></i>${n.name}${cnt(1, n.id, n.color)}</span>`).join("") + `<span style="margin-left:10px">Since:</span>` + FAV_FATE.map((n) => `<span><i style="background:${n.color}"></i>${n.id === "fling" ? "Fling" : n.name === "Steady, never a long gap" ? "Steady" : n.name}${cnt(2, n.id, n.color)}</span>`).join("");
       const all = ARTISTS.filter((x) => ui.cohorts.has(x.first)), tried = all.filter((x) => x.plays >= ui.scope);
       $("#steps").innerHTML = [
         [`Every artist I met`, `<b>${fmt(all.length)}</b> artists first heard in ${cohorts.length === 1 ? cohorts[0] : `${cohorts[0]}–${cohorts.at(-1)}`}, stacked by the year of the first play. Most of them heard once or twice.`],
@@ -389,22 +392,14 @@ function render() {
         [`How they won me over`, `<b>${fmt(a("quick"))}</b> were quick favorites, reaching fave status within ${ui.quickM} months (${pc(a("quick"))}%). <b>${fmt(a("grew"))}</b> took a while. <b>${fmt(a("slow"))}</b> were slow to win me over, in more than ${ui.slowM} months (${pc(a("slow"))}%).${a("pre") ? ` <b>${fmt(a("pre"))}</b> were already favorites when the log began in ${YEARS[0]}, so their arrival can't be timed.` : ""}`],
         [`And whether they stayed`, `Still played in the past year: <b>${fmt(b("steady"))}</b> of my constants, never a ${ui.favGap}-month gap (${pc(b("steady"))}%); <b>${fmt(b("spells"))}</b> come back in bursts after a silent period (${pc(b("spells"))}%); <b>${fmt(b("trickle"))}</b> with only a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> were quick flings (${pc(b("fling"))}%), and <b>${fmt(b("out"))}</b> faded out more slowly (${pc(b("out"))}%).`]
       ].map(([k, t], i) => `<div class="step-text" data-i="${i}"><span class="k">${i + 1} · ${k}</span>${t}</div>`).join("");
-      const steps = [...$("#steps").querySelectorAll(".step-text")].map((el) => el.outerHTML.replace('class="step-text"', 'class="mob-text"'));
-      $("#mobA").innerHTML = steps.slice(0, 3).join(""); $("#mobB").innerHTML = steps.slice(3).join("");
+      if (NARROW()) mobileStory(paths, cols, pickArtists);
       $("#note").innerHTML = `<b>${fmt(paths.length)}</b> favorites among the artists ${where}. <b>${fmt(a("quick"))}</b> were quick favorites, getting ${ui.thr} plays within ${ui.quickM} months of the first play (${pc(a("quick"))}%); <b>${fmt(a("grew"))}</b> took a while; <b>${fmt(a("slow"))}</b> were slow to win me over, taking more than ${ui.slowM} months (${pc(a("slow"))}%)${a("pre") ? `; <b>${fmt(a("pre"))}</b> were already known to me when the log began in ${YEARS[0]}` : ""}. Still played this year: <b>${fmt(b("steady"))}</b> steadily without a ${ui.favGap}-month gap (${pc(b("steady"))}%), <b>${fmt(b("spells"))}</b> in bursts after a gap (${pc(b("spells"))}%), <b>${fmt(b("trickle"))}</b> a track here or there (${pc(b("trickle"))}%). Gone: <b>${fmt(b("fling"))}</b> flings (${pc(b("fling"))}%) and <b>${fmt(b("out"))}</b> faded out (${pc(b("out"))}%). Click a cohort block to follow one year's favorites.`;
     }
   }
   // the entry chart: every new artist of the cohorts, and the sliver of them that got a real chance
   const ebox = $("#entry"), W = 840, L = 86, NW = 12, GAP = 10;
-  if (ui.scope > 1 && NARROW()) {
-    const all = ARTISTS.filter((a) => ui.cohorts.has(a.first));
-    const ep = all.map((a) => ({ y: a.first, st: ["pool", a.plays >= ui.scope ? "tried" : "passed", a.plays >= ui.thr ? "fav" : a.plays >= ui.scope ? "never" : "passed"] }));
-    const ecols = [[{ id: "pool", name: "New artists", color: COHORT }], [{ id: "tried", name: "Tried", color: BLUE }, { id: "passed", name: "Passed through", color: GRAY }], [{ id: "fav", name: "Favorites", color: GREEN }, { id: "never", name: "Never favorites", color: "#55657a" }, { id: "passed", name: "Passed through", color: GRAY }]];
-    ecols[0].hdr = "new artists by year of first play"; ecols[1].hdr = `reached ${ui.scope} plays?`; ecols[2].hdr = `reached ${ui.thr} plays?`;
-    const { nodeN: en } = drawAlluvialV(ebox, ecols, ep, { cohorts, labelOf: (yr) => yr === YEARS[0] ? "≤" + yr : yr, tip: (f, k, from, to) => `${f.y}: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}` });
-    ebox.insertAdjacentHTML("beforeend", `<div class="legend elegend"><span><i style="background:${BLUE}"></i>Tried <span class="cnt">${fmt(en[1].tried || 0)}</span></span><span><i style="background:${GRAY}"></i>Passed through <span class="cnt">${fmt(en[1].passed || 0)}</span></span><span><i style="background:${GREEN}"></i>Favorites <span class="cnt">${fmt(en[2].fav || 0)}</span></span><span><i style="background:#55657a"></i>Never favorites <span class="cnt">${fmt(en[2].never || 0)}</span></span></div>`);
-    ebox.hidden = false;
-  } else if (ui.scope > 1) {
+  if (NARROW()) { ebox.innerHTML = ""; ebox.hidden = true; }
+  else if (ui.scope > 1) {
     const all = ARTISTS.filter((a) => ui.cohorts.has(a.first)), tried = all.filter((a) => a.plays >= ui.scope);
     const third = true, EH = 440, etop = 22, x0 = L, x1 = L + (W < 1000 ? 220 : 300), x2 = L + (W < 1000 ? 450 : 640), escale = (EH - etop - 8 - Math.max(GAP, CGAP * (cohorts.length - 1))) / all.length, favN = tried.filter((a) => a.plays >= ui.thr).length;
     let e = "", e0 = "", y = etop, yT = etop, yP = etop + tried.length * escale + GAP;
@@ -458,10 +453,34 @@ function morph(forward) {
   }
 }
 
-function watchRows() {   // narrow screens: each chart's rows fade in as it scrolls into view
-  const io = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) e.target.classList.add("seen"); }, { rootMargin: "0px 0px -15% 0px", threshold: 0.05 });
-  io.observe($("#entry")); io.observe($("#flows"));
-  let was = NARROW(); addEventListener("resize", () => { const now = NARROW(); if (now !== was) { was = now; $("#entry").classList.remove("seen"); $("#flows").classList.remove("seen"); render(); } });
+/* the phone story: text, a short two-row flow, text, the next two rows… Each piece repeats the row the previous one ended on. */
+let ROW_IO = null;
+function mobileStory(paths, cols, onPick) {
+  const host = $("#mobile"); host.innerHTML = ""; PIECES = [];
+  const steps = [...$("#steps").querySelectorAll(".step-text")].map((el) => el.outerHTML.replace('class="step-text"', 'class="mob-text"'));
+  const text = (i) => host.insertAdjacentHTML("beforeend", steps[i]);
+  const piece = (ecols, epaths, kOff, opts) => { const d = document.createElement("div"); d.className = "flows piece"; host.appendChild(d);
+    const sub = ecols.slice(kOff, kOff + 2).map((c) => { const cc = c.slice(); cc.hdr = c.hdr; return cc; });
+    const { nodeN, geo } = drawAlluvialV(d, sub, epaths.map((p) => ({ ...p, st: p.st.slice(kOff, kOff + 2) })), { ...opts, kOff, cohorts: [...ui.cohorts].sort() });
+    if (opts.onPick) PIECES.push({ box: d, geo }); return nodeN; };
+  const all = ARTISTS.filter((a) => ui.cohorts.has(a.first)), labelOf = (yr) => yr === YEARS[0] ? "≤" + yr : yr;
+  if (ui.scope > 1) {   // the funnel
+    const ep = all.map((a) => ({ y: a.first, st: ["pool", a.plays >= ui.scope ? "tried" : "passed", a.plays >= ui.thr ? "fav" : a.plays >= ui.scope ? "never" : "passed"] }));
+    const ecols = [[{ id: "pool", name: "New artists", color: COHORT }], [{ id: "tried", name: "Tried", color: BLUE }, { id: "passed", name: "Passed through", color: GRAY }], [{ id: "fav", name: "Favorites", color: GREEN }, { id: "never", name: "Never favorites", color: "#55657a" }, { id: "passed", name: "Passed through", color: GRAY }]];
+    ecols[0].hdr = "new artists by year of first play"; ecols[1].hdr = `reached ${ui.scope} plays?`; ecols[2].hdr = `reached ${ui.thr} plays?`;
+    const etip = (f, k, from, to) => `${f.y}: ${fmt(f.n)} artist${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}`;
+    text(0); piece(ecols, ep, 0, { labelOf, tip: etip }); text(1); piece(ecols, ep, 1, { labelOf, tip: etip }); text(2);
+  } else { text(0); text(1); text(2); }
+  host.insertAdjacentHTML("beforeend", `<hr class="mob-hr">`);
+  const tipF = (f, k, from, to) => `${f.y} cohort: ${fmt(f.n)} favorite${f.n === 1 ? "" : "s"} · ${from.name.toLowerCase()} → ${to.name.toLowerCase()}`;
+  const pick = (f) => onPick(paths, cols, f, null);
+  text(3); piece(cols, paths, 0, { labelOf, tip: tipF, onPick: pick, poolColor: GREEN }); text(4); piece(cols, paths, 1, { labelOf, tip: tipF, onPick: pick, poolColor: GREEN }); text(5);
+  host.insertAdjacentHTML("beforeend", `<div class="legend" id="mobLegend">${$("#legend").innerHTML}</div>`);
+  if (ROW_IO) ROW_IO.disconnect(); ROW_IO = new IntersectionObserver((es) => { for (const e of es) if (e.isIntersecting) e.target.classList.add("seen"); }, { rootMargin: "0px 0px -12% 0px", threshold: 0.1 });
+  host.querySelectorAll(".piece").forEach((d) => ROW_IO.observe(d));
+}
+function watchRows() {   // re-render when the layout mode changes
+  let was = NARROW(); addEventListener("resize", () => { const now = NARROW(); if (now !== was) { was = now; render(); } });
 }
 function watchSteps() {
   const story = $("#story");
@@ -472,7 +491,7 @@ function watchSteps() {
 }
 
 function wire() {
-  $("#pickClear").addEventListener("click", () => { $("#picked").hidden = true; const box = $("#flows"); box.classList.remove("dim"); box.querySelectorAll("path.lit").forEach((p) => p.classList.remove("lit")); const g = box.querySelector("g.thread"); if (g) g.innerHTML = ""; });
+  $("#pickClear").addEventListener("click", () => { $("#picked").hidden = true; unlitFlows(); });
   $("#find").addEventListener("change", () => { findArtist($("#find").value.trim()); });
   const c = $("#cohorts"); c.innerHTML = YEARS.map((y) => `<button class="chip${ui.cohorts.has(y) ? " active" : ""}" data-y="${y}">${y}</button>`).join("");
   c.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => { const y = +b.dataset.y; ui.cohorts.has(y) ? ui.cohorts.delete(y) : ui.cohorts.add(y); b.classList.toggle("active"); render(); }));
