@@ -80,6 +80,7 @@
     .mobt .figs .fig:last-child:nth-child(odd) { grid-column: 1 / -1; }
     .scroll-hint { display: block; position: fixed; left: 0; right: 0; bottom: 18px; text-align: center; font-size: 12px; letter-spacing: .08em; text-transform: uppercase; color: var(--text-3); transition: opacity .4s; z-index: 3; pointer-events: none; }
     .scroll-hint span { display: block; font-size: 18px; animation: hint 1.6s ease-in-out infinite; } .story.scrolled .scroll-hint { opacity: 0; }
+    html { overflow-anchor: none; } .stepnav { right: 12px; bottom: 14px; } .stepnav button { width: 44px; height: 44px; line-height: 44px; }
     @keyframes hint { 0%, 100% { transform: translateY(0); } 50% { transform: translateY(6px); } }
     #mobLegend { display: flex; margin: 0 0 10px; font-size: 11px; gap: 4px 10px; } #mobLegend .cnt { font-weight: 600; }
     .story .mchart g.step { transition: opacity .6s; }
@@ -91,6 +92,16 @@
   }
   .flows.dim path.flow { opacity: 0.1; } .flows.dim path.flow.lit { opacity: 0.8; } .flows g.thread path { pointer-events: none; filter: drop-shadow(0 0 2px rgba(0,0,0,.8)); }
   .status { color: var(--text-3); font-size: 13px; padding: 20px 0; }
+  .stepnav { position: fixed; right: 18px; bottom: 18px; display: flex; flex-direction: column; gap: 8px; z-index: 5; opacity: 0; pointer-events: none; transition: opacity .3s, bottom .3s; }
+  .stepnav.show { opacity: 1; pointer-events: auto; } body.has-sel .stepnav { bottom: 96px; }
+  .stepnav button { all: unset; cursor: pointer; width: 40px; height: 40px; border-radius: 50%; background: var(--card-2); border: 1px solid var(--line-2); color: var(--text); text-align: center; line-height: 40px; font-size: 18px; box-shadow: 0 4px 10px rgba(0,0,0,.35); }
+  .stepnav button:hover { border-color: var(--text-3); } .stepnav button:disabled { opacity: .3; cursor: default; }
+  #selbar { position: fixed; left: 0; right: 0; bottom: 12px; z-index: 6; display: flex; justify-content: center; padding: 0 12px; pointer-events: none; }
+  #selbar[hidden] { display: none; }
+  .sel-in { pointer-events: auto; position: relative; max-width: 620px; width: 100%; background: var(--card-2); border: 1px solid var(--line-2); border-radius: 12px; padding: 9px 40px 9px 14px; box-shadow: 0 6px 18px rgba(0,0,0,.45); font-size: 13px; color: var(--text-2); }
+  .sel-t { color: var(--text); font-weight: 600; margin-bottom: 2px; } .sel-t b { color: var(--text); }
+  .sel-r { display: flex; flex-wrap: wrap; gap: 2px 12px; line-height: 1.5; } .sel-r i { font-style: normal; color: var(--text-3); width: 62px; } .sel-r b { font-weight: 700; }
+  .sel-x { all: unset; cursor: pointer; position: absolute; top: 6px; right: 8px; width: 26px; height: 26px; line-height: 24px; text-align: center; font-size: 20px; color: var(--text-2); border-radius: 50%; } .sel-x:hover { background: var(--line-2); color: var(--text); }
   #find { background: var(--bg); border: 1px solid var(--line-2); border-radius: 999px; color: var(--text); font: inherit; font-size: 12px; padding: 3px 10px; width: 180px; } #find:focus { outline: none; border-color: var(--text-3); }
   #picked { margin-top: 18px; border-top: 1px solid var(--line); padding-top: 12px; }
   .pick-head { display: flex; align-items: center; justify-content: space-between; gap: 12px; margin-bottom: 6px; font-size: 13px; color: var(--text-2); } .pick-head b { color: var(--text); }
@@ -138,6 +149,8 @@
         <div class="morph" id="morph"></div>
       </div></div>
     </div>
+    <div class="stepnav" aria-label="Story steps"><button type="button" id="stepPrev" aria-label="Previous step" disabled>↑</button><button type="button" id="stepNext" aria-label="Next step">↓</button></div>
+    <div id="selbar" hidden></div>
     <div id="picked" hidden>
       <div class="pick-head"><span id="pickTitle"></span><button type="button" class="chip" id="pickClear">Clear</button></div>
       <ul class="alist" id="pickList"></ul>
@@ -355,10 +368,21 @@ function storyLine(p) {
   let recent = 0; for (let i = t.length - 1; i >= 0 && LAST - t[i] < NOW_M * mo; i--) recent++;
   return `first heard ${localDate(t[0]).getUTCFullYear()} · crossed ${ui.thr} after ${months} mo${gapMax >= ui.favGap ? ` · longest gap since ${gapMax} mo` : ""} · ${lastM < 1 ? "played this month" : lastM < 12 ? `${recent} plays in the last 12 mo` : `last played ${Math.round(lastM / 12) < 1 ? "a year ago" : Math.round(lastM / 12) + " yrs ago"}`}`;
 }
+/* the selection bar: what was clicked, and how it splits over the other columns, numbers in the bands' colors */
+const SHORT = { quick: "quick", grew: "took a while", slow: "slow burn", pre: "known before", steady: "steady", spells: "bursts", trickle: "track here or there", fling: "flings", out: "faded out" };
+const TXT_COLOR = { out: "#8a98a6", pre: "#5f9a74", slow: "#4fa06c" };   // the darkest bands, lightened for text
+function showSel(sel, title, f) {
+  const part = (k, nodes) => nodes.map((n) => { const c = sel.filter((p) => p.st[k] === n.id).length; return c ? `<span><b style="color:${TXT_COLOR[n.id] || n.color}">${fmt(c)}</b> ${SHORT[n.id]}</span>` : ""; }).join("");
+  const rows = f.single ? "" : (f.k === 1 && f.id ? "" : `<div class="sel-r"><i>won over</i>${part(1, FAV_ARRIVE)}</div>`) + (f.k === 2 && f.id ? "" : f.from != null ? "" : `<div class="sel-r"><i>stayed</i>${part(2, FAV_FATE)}</div>`);
+  $("#selbar").innerHTML = `<div class="sel-in"><button type="button" class="sel-x" aria-label="Clear selection">×</button><div class="sel-t">${title}${f.single ? "" : ` · <b>${fmt(sel.length)}</b> favorite${sel.length === 1 ? "" : "s"}`}</div>${rows}</div>`;
+  $("#selbar").hidden = false; document.body.classList.add("has-sel");
+}
+function clearSel() { $("#picked").hidden = true; $("#selbar").hidden = true; document.body.classList.remove("has-sel"); unlitFlows(); }
 function pickArtists(paths, cols, f, geo) {
   const sel = paths.filter((p) => (f.y == null || p.y === f.y) && (f.k == null || f.id != null ? (f.k == null || p.st[f.k] === f.id) : (p.st[f.k] === f.from && p.st[f.k + 1] === f.to)));
   const title = f.id != null ? NODE_NAME(cols, f.k, f.id) : f.from != null ? `${f.y} · ${NODE_NAME(cols, f.k, f.from).toLowerCase()} → ${NODE_NAME(cols, f.k + 1, f.to).toLowerCase()}` : `first heard in ${f.y}`;
   showList(sel, cols, `<b>${title}</b> · ${fmt(sel.length)} favorite${sel.length === 1 ? "" : "s"}`, geo);
+  showSel(sel, title, f);
   litFlows((el) => sel.some((p) => p.y === +el.dataset.y && p.st[+el.dataset.k] === el.dataset.from && p.st[+el.dataset.k + 1] === el.dataset.to));
   drawThread(null);
 }
@@ -369,7 +393,8 @@ function showList(sel, cols, title, geo) {
   $("#pickTitle").innerHTML = `${title} <span style="color:var(--text-3)">· columns are plays per year, ${YEARS[0]}–${NOW_Y}, the marked year is when it crossed the line · click a name to trace its path</span>`; $("#picked").hidden = false;
   $("#pickList").innerHTML = rows.map((p, i) => { const color = (cols[2].find((n) => n.id === p.st[2]) || {}).color || GREEN, favYear = localDate(p.a.times[ui.thr - 1]).getUTCFullYear();
     return `<li data-i="${i}"><span class="rank">${i + 1}.</span><span class="who"><button type="button">${esc(p.a.name)}</button><span class="sub">${storyLine(p)}</span></span><span class="yrs">${yearBars(p.a, color, favYear)}</span><span class="num"><b>${fmt(p.a.plays)}</b> plays</span></li>`; }).join("");
-  $("#pickList").querySelectorAll("li").forEach((li) => li.querySelector("button").addEventListener("click", () => { const p = rows[+li.dataset.i]; $("#pickList").querySelectorAll("li").forEach((x) => x.classList.toggle("on", x === li)); drawThread(p); litFlows((el) => p.y === +el.dataset.y && p.st[+el.dataset.k] === el.dataset.from && p.st[+el.dataset.k + 1] === el.dataset.to); $("#story").dataset.step = 5; }));
+  $("#pickList").querySelectorAll("li").forEach((li) => li.querySelector("button").addEventListener("click", () => { const p = rows[+li.dataset.i]; $("#pickList").querySelectorAll("li").forEach((x) => x.classList.toggle("on", x === li)); drawThread(p); litFlows((el) => p.y === +el.dataset.y && p.st[+el.dataset.k] === el.dataset.from && p.st[+el.dataset.k + 1] === el.dataset.to); if (!NARROW()) $("#story").dataset.step = 5;
+    showSel([p], `${esc(p.a.name)}: <span style="color:${TXT_COLOR[p.st[1]] || (FAV_ARRIVE.find((n) => n.id === p.st[1]) || {}).color}">${SHORT[p.st[1]]}</span> → <span style="color:${TXT_COLOR[p.st[2]] || (FAV_FATE.find((n) => n.id === p.st[2]) || {}).color}">${SHORT[p.st[2]]}</span>`, { single: true }); }));
 }
 function findArtist(name) {
   const p = PATHS.find((x) => x.a.name.toLowerCase() === name.toLowerCase()); if (!p) return;
@@ -387,7 +412,7 @@ function render() {
   {
     const favs = arts.filter((a) => a.plays >= ui.thr);
     const paths = favs.map((a) => ({ a, y: a.first, st: ["pool", ...favStoryOf(a, ui.thr, ui.quickM, ui.slowM, ui.favGap)] }));
-    PATHS = paths; $("#picked").hidden = true; $("#flows").classList.remove("dim");
+    PATHS = paths; $("#picked").hidden = true; $("#selbar").hidden = true; document.body.classList.remove("has-sel"); $("#flows").classList.remove("dim");
     if (!paths.length) { box.innerHTML = `<div class="status">No favorites in this selection.</div>`; $("#note").textContent = ""; $("#legend").innerHTML = ""; }
     else {
       const cols = [[{ id: "pool", name: "Favorites", color: COHORT }], FAV_ARRIVE.slice(), FAV_FATE.slice()]; cols[0].hdr = "favorites by year of first play"; cols[1].hdr = `how they won me over`; cols[2].hdr = `whether they stayed`;
@@ -507,9 +532,18 @@ function watchRows() {   // re-render, and re-tune the step watcher, when the la
   let was = NARROW(); addEventListener("resize", () => { const now = NARROW(); if (now !== was) { was = now; watchSteps(); render(); } });
 }
 let STEP_IO = null, STEP_MO = null, SCROLL_ON = false;
+/* previous / next: scroll so the step's text sits just below the pinned chart (phones) or mid-screen (desktop) */
+function goStep(j) {
+  const texts = [...document.querySelectorAll(".step-text")]; j = Math.max(0, Math.min(texts.length - 1, j));
+  const r = texts[j].getBoundingClientRect(); let y;
+  if (NARROW()) y = j === 0 ? $(".card").getBoundingClientRect().top + scrollY - 8 : scrollY + r.top - $(".stage-in").offsetHeight - 24;
+  else y = scrollY + r.top + r.height / 2 - innerHeight / 2;
+  scrollTo({ top: Math.max(0, y), behavior: "smooth" });
+}
 function setStep(i) {
   const story = $("#story"), prev = +story.dataset.step;
   story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); story.classList.toggle("scrolled", i > 0 || scrollY > 40);
+  const last = story.querySelectorAll(".step-text").length - 1; $("#stepPrev").disabled = i <= 0; $("#stepNext").disabled = i >= last;
   if (i === prev) return;
   if (!NARROW() && ((prev <= 2 && i >= 3) || (prev >= 3 && i <= 2))) morph(i >= 3);
   story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); setStageHeight(i);
@@ -532,7 +566,11 @@ function watchSteps() {
 }
 
 function wire() {
-  $("#pickClear").addEventListener("click", () => { $("#picked").hidden = true; unlitFlows(); });
+  $("#pickClear").addEventListener("click", clearSel);
+  $("#selbar").addEventListener("click", (e) => { if (e.target.closest(".sel-x")) clearSel(); });
+  $("#stepPrev").addEventListener("click", () => goStep(+$("#story").dataset.step - 1));
+  $("#stepNext").addEventListener("click", () => goStep(+$("#story").dataset.step + 1));
+  new IntersectionObserver((es) => { for (const e of es) $(".stepnav").classList.toggle("show", e.isIntersecting); }, { threshold: 0 }).observe($("#steps"));
   $("#find").addEventListener("change", () => { findArtist($("#find").value.trim()); });
   const c = $("#cohorts"); c.innerHTML = YEARS.map((y) => `<button class="chip${ui.cohorts.has(y) ? " active" : ""}" data-y="${y}">${y}</button>`).join("");
   c.querySelectorAll(".chip").forEach((b) => b.addEventListener("click", () => { const y = +b.dataset.y; ui.cohorts.has(y) ? ui.cohorts.delete(y) : ui.cohorts.add(y); b.classList.toggle("active"); render(); }));
