@@ -40,7 +40,7 @@
   #entry { margin-bottom: 6px; padding-bottom: 10px; border-bottom: 1px dashed var(--line-2); }
   /* the story: step texts scroll on the left while the charts stay put on the right and reveal one column per step */
   .story { display: grid; grid-template-columns: 250px minmax(0, 1fr); gap: 0 28px; align-items: stretch; }
-  .story .stage-in { position: sticky; top: 14px; }
+  .story .stage-in { position: sticky; top: 14px; height: 600px; }
   .story .steps { padding: 30vh 0 40vh; }
   .step-text { min-height: 42vh; padding: 0 0 12px; font-size: 14px; line-height: 1.55; color: var(--text-3); transition: color .3s; }
   .step-text b { color: var(--text-2); font-weight: 600; } .step-text.on { color: var(--text); } .step-text.on b { color: var(--green); }
@@ -50,16 +50,21 @@
   .story[data-step="0"] #flows, .story[data-step="1"] #flows, .story[data-step="2"] #flows { opacity: 0; }
   .story[data-step="3"] #entry, .story[data-step="4"] #entry, .story[data-step="5"] #entry { opacity: .35; }
   .story[data-step="3"] #entry .favnode, .story[data-step="4"] #entry .favnode, .story[data-step="5"] #entry .favnode { opacity: 1; }
-  .story[data-step="3"] #flows [data-k="1"], .story[data-step="3"] #flows [data-k="2"], .story[data-step="4"] #flows [data-k="2"] { opacity: 0; }
+  .story:not([data-step="3"]):not([data-step="4"]):not([data-step="5"]) #flows [data-k="0"], .story:not([data-step="4"]):not([data-step="5"]) #flows [data-k="1"], .story:not([data-step="5"]) #flows [data-k="2"] { opacity: 0; }
   #entry, #flows { transition: opacity .5s; }
   /* in the story the funnel starts big, then shrinks to a thumbnail when the favorites take the frame */
-  .story #entry { height: 440px; overflow: visible; transition: height .6s, opacity .5s; border-bottom: 0; }
-  .story #entry svg { transform-origin: 0 0; transition: transform .6s; }
-  .story[data-step="3"] #entry, .story[data-step="4"] #entry, .story[data-step="5"] #entry { height: 150px; }
+  .story #entry { position: absolute; top: 0; left: 0; right: 0; overflow: visible; border-bottom: 0; padding: 0; margin: 0; }
+  .story #flows { position: absolute; top: 150px; left: 0; right: 0; }
+  .story #entry svg { transform-origin: 0 0; transition: transform .7s; }
   .story[data-step="3"] #entry svg, .story[data-step="4"] #entry svg, .story[data-step="5"] #entry svg { transform: scale(.32); }
+  /* the morph: the favorites sliver of the funnel grows into the cohort stack of the main chart (one green block per cohort) */
+  .morph { position: absolute; inset: 0; pointer-events: none; }
+  .morph div { position: absolute; background: #00a83f; border-radius: 2px; transition: top .7s cubic-bezier(.4,0,.2,1), left .7s cubic-bezier(.4,0,.2,1), width .7s cubic-bezier(.4,0,.2,1), height .7s cubic-bezier(.4,0,.2,1), opacity .25s; }
+  .story.morphing #flows g.step[data-k="0"] { opacity: 0; }
   #note { display: none; }
   @media (max-width: 900px) {   /* narrow screens: no scrolling story, everything drawn at once with the summary note instead of the steps */
     .story { display: block; } .story .stage-in { position: static; } .story .steps { display: none; }
+    .story .stage-in { height: auto; } .story #entry, .story #flows { position: static; } .morph { display: none; }
     .story #entry, .story #entry svg, .story #flows, .story g.step, .story #entry .favnode { opacity: 1 !important; transform: none !important; height: auto !important; }
     .story #entry { border-bottom: 1px dashed var(--line-2); margin-bottom: 10px; }
     #note { display: block; }
@@ -109,6 +114,7 @@
       <div class="stage"><div class="stage-in">
         <div class="flows" id="entry" hidden></div>
         <div class="flows" id="flows"><div class="status">Loading scrobbles…</div></div>
+        <div class="morph" id="morph"></div>
       </div></div>
     </div>
     <div id="picked" hidden>
@@ -352,9 +358,29 @@ function render() {
   } else { ebox.innerHTML = ""; ebox.hidden = true; }
 }
 
+/* the zoom between steps 3 and 4: the funnel's favorites sliver splits into the cohort blocks of the main chart and grows
+   into place (forward), or the blocks shrink back into the sliver (backward). Positions come from the svg attributes, so
+   they are right whatever the charts' current opacity or scale. */
+let MORPH_T = null;
+function morph(forward) {
+  const story = $("#story"), stage = $(".stage-in"), layer = $("#morph"), fav = $("#entry .favnode"), blocks = [...$("#flows").querySelectorAll("rect.cohort")];
+  if (!fav || !blocks.length || matchMedia("(max-width: 900px)").matches) { story.classList.remove("morphing"); return; }
+  const sc = stage.clientWidth / 840, flowsTop = 150, n = (el, a) => +el.getAttribute(a);
+  const A = { x: n(fav, "x") * sc, y: n(fav, "y") * sc, w: n(fav, "width") * sc, h: n(fav, "height") * sc };
+  const B = blocks.map((b) => ({ x: n(b, "x") * sc, y: n(b, "y") * sc + flowsTop, w: n(b, "width") * sc, h: n(b, "height") * sc }));
+  const sum = B.reduce((t, r) => t + r.h, 0); let yy = A.y;
+  const slices = B.map((r) => { const h = A.h * r.h / sum, o = { x: A.x, y: yy, w: A.w, h }; yy += h; return o; });
+  const css = (el, r) => { el.style.left = r.x + "px"; el.style.top = r.y + "px"; el.style.width = r.w + "px"; el.style.height = Math.max(0.5, r.h) + "px"; };
+  clearTimeout(MORPH_T); layer.innerHTML = ""; story.classList.add("morphing");
+  const divs = B.map((r, i) => { const d = document.createElement("div"); css(d, forward ? slices[i] : r); layer.appendChild(d); return d; });
+  void layer.offsetWidth;   // commit the start positions before the transition
+  divs.forEach((d, i) => css(d, forward ? B[i] : slices[i]));
+  MORPH_T = setTimeout(() => { if (forward) story.classList.remove("morphing"); divs.forEach((d) => d.style.opacity = 0); setTimeout(() => { layer.innerHTML = ""; if (!forward) story.classList.remove("morphing"); }, 260); }, 720);
+}
+
 function watchSteps() {
   const story = $("#story");
-  const io = new IntersectionObserver((entries) => { for (const en of entries) if (en.isIntersecting) { const i = +en.target.dataset.i; story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); } }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
+  const io = new IntersectionObserver((entries) => { for (const en of entries) if (en.isIntersecting) { const i = +en.target.dataset.i, prev = +story.dataset.step; if (i !== prev && ((prev <= 2 && i >= 3) || (prev >= 3 && i <= 2))) morph(i >= 3); story.dataset.step = i; story.querySelectorAll(".step-text").forEach((el) => el.classList.toggle("on", +el.dataset.i === i)); } }, { rootMargin: "-45% 0px -45% 0px", threshold: 0 });
   const seen = new Set();
   new MutationObserver(() => { story.querySelectorAll(".step-text").forEach((el) => { if (!seen.has(el)) { seen.add(el); io.observe(el); } }); }).observe($("#steps"), { childList: true });
   story.querySelectorAll(".step-text").forEach((el) => { seen.add(el); io.observe(el); });
