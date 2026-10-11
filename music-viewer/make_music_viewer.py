@@ -20,6 +20,9 @@ def cut(start, end):
     global s
     a = s.index(start); b = s.index(end, a); s = s[:a] + s[b:]
 
+# ---------------- the story page link: Antti's page has its own drop-in import, so point there
+rep('<a class="storylink" href="flows.html"><b>Where new artists go</b> — a scrolling story of how my favorites won me over, and whether they stayed →</a>',
+    '<a class="storylink" href="../music/flows.html#own"><b>Where new artists go</b> — the same files as a scrolling story: how your favorites won you over, and whether they stayed →</a>')
 # ---------------- head / header / nav / intro
 rep("<title>Antti's Last.fm diary</title>", "<title>Music diary viewer</title>")
 rep('<meta name="description" content="Dashboard of Antti\'s Last.fm scrobbles — forgotten favorites, listening by year, month and hour — read from scrobbles.csv in the same repository.">',

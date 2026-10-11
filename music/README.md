@@ -1,18 +1,8 @@
-> The READMEs in this repository were written by an AI assistant from Antti's instructions — see [About these READMEs](../README.md#about-these-readmes).
-
 # Music — Last.fm scrobbles
 
 A dashboard of the Last.fm listening history plus the pipeline that keeps its data fresh. Live
 at `https://akaukora.github.io/dashboards/music/` once this folder is in the `dashboards`
 repository as `music/`.
-
-## In brief
-
-- **What:** a dashboard of twenty years of Last.fm listening — forgotten favorites, when each artist was last heard, how favorites were made, listening by year, month and hour.
-- **Live at:** `https://akaukora.github.io/dashboards/music/`
-- **Data:** `scrobbles.csv` (one row per play), refreshed daily by `.github/workflows/update-lastfm.yml` running `fetch_lastfm.py` against the Last.fm API; `spotify_backfill.csv` fills the years the scrobbler missed.
-- **Your own data:** use the drop-in viewer at `../music-viewer/` — no setup. To run this pipeline yourself, set `LASTFM_USER` and the `LASTFM_API_KEY` secret and let the workflow run.
-- **Rules worth knowing:** what counts as a favorite, how Spotify plays are matched to scrobbles, UTC → Helsinki time, de-duplication — all under *Files* and *Notes* below.
 
 ## Files
 
@@ -117,14 +107,12 @@ number of equally-played artists it corresponds to; new artists out of all artis
 favorites out of all favorites, gray for the forgotten share.
 
 The page is organized in three collapsible groups. **Rediscover** holds the favorites list and the
-bubble chart. **Discover** holds *New artists per year* (its tooltip also says how many of that
+bubble chart. **Discover** opens with a link to [Where new artists go](flows.html), the scrolling story of how
+favorites were won and whether they stayed, and holds *New artists per year* (its tooltip also says how many of that
 year's new artists are favorites today); **Favorites discovered per year** — of today's favorites,
 how many were heard for the first time each year (blue) and how many crossed the play threshold that
-year (green), with the running total; its *Growth lines* mode is the earlier view — one
-cumulative-plays line per favorite artist over the whole history on a log scale, the selected
-artist highlighted in green against the muted rest, with the favorite threshold drawn as a dashed
-line so you can see when an artist crossed from occasional listen to favorite (Taylor Swift: first
-heard 2008, crossed 50 plays in 2019); and **Newest favorites** — today's favorites (artists or
+year (green), with the running total; its *Timeline* mode draws one row per favorite, from the
+first play to the day it crossed the threshold and on to the last play; and **Newest favorites** — today's favorites (artists or
 tracks, following the Artist/Track switch) by the date you first heard them, newest first, each row
 showing the first play and how long it took to reach the threshold. With a year filter it becomes
 "favorites first heard in 2016", i.e. that year's discoveries that stuck; with an artist selected
