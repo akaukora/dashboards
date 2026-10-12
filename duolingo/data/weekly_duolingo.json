@@ -1037,5 +1037,15 @@
     "sent_date": "2026-10-03",
     "subject": "Weekly French results are in. Nice work 🎉",
     "streak": 701
+  },
+  {
+    "week_start": "2026-10-02",
+    "week_end": "2026-10-08",
+    "minutes": 161,
+    "xp": 898,
+    "lessons": 25,
+    "sent_date": "2026-10-09",
+    "subject": "You’re crushing French ✨",
+    "streak": 708
   }
 ]
