@@ -378,6 +378,12 @@
    "tmdb_id": 588182,
    "year": 2021
   },
+  "coyote-vs-acme": {
+   "desc": "After Acme products fail him one too many times in his dogged pursuit of the Roadrunner, Wile E. Coyote decides to hire a billboard lawyer to sue the Acme Corporation.",
+   "title": "Coyote vs. Acme",
+   "tmdb_id": 1204680,
+   "year": 2026
+  },
   "dallas-buyers-club": {
    "desc": "Loosely based on the true-life tale of Ron Woodroof, a drug-taking, women-loving, homophobic man who in 1986 was diagnosed with HIV/AIDS and given thirty days to live.",
    "title": "Dallas Buyers Club",
@@ -2505,5 +2511,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-10-10T05:16:02Z"
+ "updated": "2026-10-14T04:20:38Z"
 }
