@@ -2028,6 +2028,12 @@
    "tmdb_id": 22358,
    "year": 2006
   },
+  "the-kidnapping-of-a-president": {
+   "desc": "In October 1930, a group of officers belonging to the Finnish army's top leadership decided, after a night of drinking, to kidnap Finland's retired first president, Ståhlberg. The Finnish people were divided in the aftermath of the civil war, and the political atmosphere was turbulent and tense. However, the kidnapping went wrong right from the start when the incompetent henchmen recruited for the job were forced to take the president's stubborn wife, Ester Ståhlberg, with them.",
+   "title": "The Kidnapping of a President",
+   "tmdb_id": 1412214,
+   "year": 2026
+  },
   "the-king-of-comedy": {
    "desc": "Aspiring comic Rupert Pupkin attempts to achieve success in show business by stalking his idol, a late night talk-show host who craves his own privacy.",
    "title": "The King of Comedy",
@@ -2511,5 +2517,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-10-14T04:20:38Z"
+ "updated": "2026-10-15T04:04:01Z"
 }
