@@ -2208,6 +2208,12 @@
    "tmdb_id": 656690,
    "year": 2020
   },
+  "the-social-reckoning": {
+   "desc": "Frances Haugen, a young Facebook engineer, enlists the help of Jeff Horwitz, a Wall Street Journal reporter, to go on a dangerous journey that ends up blowing the whistle on the social network's most guarded secrets.",
+   "title": "The Social Reckoning",
+   "tmdb_id": 1281331,
+   "year": 2026
+  },
   "the-souvenir": {
    "desc": "A shy but ambitious film student falls into an intense, emotionally fraught relationship with a charismatic but untrustworthy older man.",
    "title": "The Souvenir",
@@ -2517,5 +2523,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-10-15T04:04:01Z"
+ "updated": "2026-10-21T04:06:27Z"
 }
