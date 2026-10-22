@@ -1662,6 +1662,12 @@
    "tmdb_id": 569094,
    "year": 2023
   },
+  "spider-man-brand-new-day": {
+   "desc": "Fighting crime full-time as Spider-Man in a world that doesn't remember him—and the pressure of seeing his old friends move on without him—sparks a change in Peter Parker he may not have the power to control. But that transformation might also be the only thing that can stop a shocking new threat to the city and those he loves - a powerful villain no one can even see.",
+   "title": "Spider-Man: Brand New Day",
+   "tmdb_id": 969681,
+   "year": 2026
+  },
   "spider-man-far-from-home": {
    "desc": "Peter Parker and his friends go on a summer trip to Europe. However, they will hardly be able to rest - Peter will have to agree to help Nick Fury uncover the mystery of creatures that cause natural disasters and destruction throughout the continent.",
    "title": "Spider-Man: Far From Home",
@@ -2523,5 +2529,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-10-21T04:06:27Z"
+ "updated": "2026-10-22T04:07:18Z"
 }
