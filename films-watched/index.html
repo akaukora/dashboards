@@ -55,11 +55,8 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .filters .hint { color: var(--text-3); font-size: 12px; margin-left: 4px; }
   .sl.off { opacity: .45; }
   /* phones: the filter rows fold away behind one button; the green bar of active filters stays */
-  .filtertoggle { display: none; }
-  @media (max-width: 700px) {
-    .filtertoggle { display: inline-flex; margin: 0 0 10px; }
-    .filterbox:not(.open) { display: none; }
-  }
+  .filterbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+  .filterbox:not(.open) { display: none; }
   .filters + .filters { border-top: 1px solid var(--line); padding-top: 10px; }
   @media (max-width: 520px) { .filters .hint { display: none; } .filters .label { min-width: 100%; margin-bottom: -2px; } }
   .chip { background: var(--card); border: 1px solid var(--line-2); color: var(--text-2); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer; }
@@ -154,6 +151,9 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .mekko .col.dim rect { opacity: 0.3; }
   .mekko .col:hover rect { filter: brightness(1.15); }
   .mekko text { font-family: var(--font); pointer-events: none; }
+  .tip:has(.tbars) { max-width: 330px; }
+  .tip .tbars { display: grid; grid-template-columns: auto 120px auto; gap: 3px 8px; align-items: center; margin-top: 6px; }
+  .tip .tbars .k { color: var(--text-2); } .tip .tbars .b { height: 9px; } .tip .tbars .b i { display: block; height: 100%; border-radius: 2px; min-width: 1px; } .tip .tbars .n { font-variant-numeric: tabular-nums; }
   .tip { position: fixed; z-index: 20; background: #0b0e11; color: var(--text); padding: 6px 10px; border-radius: 6px; font-size: 12px; pointer-events: none; display: none; max-width: 260px; box-shadow: 0 4px 16px rgba(0,0,0,.4); line-height: 1.5; }
   .tip .m { color: var(--text-2); }
 
@@ -247,17 +247,22 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
 
   <div id="status"></div>
 
-  <button class="chip ghost filtertoggle" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterBox">Filters</button>
+  <div class="filterbar"><button class="chip ghost filtertoggle" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterBox">Filters</button><button class="chip ghost" id="tableToggle" type="button" aria-pressed="false">Table view</button></div>
   <div class="filterbox" id="filterBox">
   <div class="filters" id="yearFilters">
     <span class="label">Year</span>
     <!-- chips injected -->
-    <button class="chip ghost" id="tableToggle" type="button" aria-pressed="false">Table view</button>
+    <span id="yearEnd"></span>
   </div>
   <div class="filters" id="sourceFilters">
     <span class="label">Source</span>
     <!-- chips injected -->
     <span class="hint" id="sourceHint"></span>
+  </div>
+  <div class="filters" id="decadeFilters">
+    <span class="label">Released</span>
+    <!-- chips injected -->
+    <span id="decadeEnd"></span>
   </div>
   <div class="filters" id="tagFilters" hidden>
     <span class="label">Tags</span>
@@ -288,12 +293,18 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
     </div>
   </section>
 
-  <section class="grid one">
+  <section class="grid">
     <div class="card">
       <h2>Rating distribution</h2>
       <div class="note" id="noteRatings"></div>
       <div class="legend multi" id="ratingLegend"></div>
       <div class="chart clickable"><canvas id="cRatings"></canvas></div>
+    </div>
+    <div class="card">
+      <h2>Films by rating</h2>
+      <div class="note" id="noteTop"></div>
+      <div class="chips" id="ratingChips"></div>
+      <ul class="list" id="topList"></ul>
     </div>
   </section>
 
@@ -335,19 +346,6 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
     </div>
   </section>
 
-  <section class="grid">
-    <div class="card">
-      <h2>Release decade</h2>
-      <div class="note" id="noteDecades"></div>
-      <div class="chart clickable"><canvas id="cDecades"></canvas></div>
-    </div>
-    <div class="card">
-      <h2>Films by rating</h2>
-      <div class="note" id="noteTop"></div>
-      <div class="chips" id="ratingChips"></div>
-      <ul class="list" id="topList"></ul>
-    </div>
-  </section>
 
   <section class="card" id="tableCard">
     <h2>All diary entries</h2>
@@ -562,6 +560,22 @@ Chart.register({
     items.forEach(({ ds, x, y }) => {
       ctx.fillStyle = (opts.focusLabel != null ? ds.label === opts.focusLabel : +ds.label === opts.focusYear) ? css("--text") : css("--text-3");
       ctx.fillText(ds.label, x + 6, y);
+    });
+    ctx.restore();
+  },
+});
+// Writes each horizontal bar's value inside its end, or just past it when the bar is too short to hold the text.
+Chart.register({
+  id: "barValues",
+  afterDatasetsDraw(chart, args, opts) {
+    if (!opts || !opts.text) return;
+    const { ctx } = chart, meta = chart.getDatasetMeta(0);
+    ctx.save(); ctx.font = "600 11px " + css("--font"); ctx.textBaseline = "middle";
+    meta.data.forEach((bar, i) => {
+      const t = opts.text[i]; if (!t) return;
+      const w = ctx.measureText(t).width, inside = bar.x - bar.base > w + 14;
+      ctx.textAlign = inside ? "right" : "left"; ctx.fillStyle = inside ? "#fff" : css("--text-2");
+      ctx.fillText(t, inside ? bar.x - 7 : bar.x + 6, bar.y);
     });
     ctx.restore();
   },
@@ -847,18 +861,15 @@ function render() {
     })) },
     options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: rowEndWidth(svc.map(([t, fs]) => [sourceLabel(t), `${avgOf(fs).toFixed(2)}★ · ${fs.length}`])) } },
       scales: { x: { ...AXIS, stacked: true, min: 0, max: 100, ticks: { ...AXIS.ticks, stepSize: 25, maxRotation: 0, autoSkipPadding: 6, callback: (v) => v + "%" } }, y: { ...AXIS, stacked: true, grid: { display: false }, ticks: { display: false } } },
-      plugins: { tooltip: { callbacks: {
-        title: (c) => `${c[0].label} · ${svc[c[0].dataIndex][1].length} rated films`,
-        label: (c) => `${c.dataset.label} ${RATING_MEANING[+c.dataset.label[0]]}: ${c.dataset.raw[c.dataIndex]} films (${Math.round(c.parsed.x)}%)`,
-        afterBody: (c) => { const fs = svc[c[0].dataIndex][1]; const venues = {}; fs.forEach((f) => { if (f.venueName) venues[f.venueName] = (venues[f.venueName] || 0) + 1; }); const v = Object.entries(venues).sort((a, b) => b[1] - a[1]).map(([k, n]) => `${k} ${n}`).join(", "); return [`Average ${avgOf(fs).toFixed(2)}★ · click to filter`, ...(v ? [`Venues: ${v}`] : [])]; },
-      } }, rowEnd: { text: svc.map(([t, fs]) => `${sourceLabel(t)}  ${avgOf(fs).toFixed(2)}★ · ${fs.length}`), name: svc.map(([t]) => sourceLabel(t)) }, rowHighlight: {} } },
+      plugins: { tooltip: { enabled: false }, rowEnd: { text: svc.map(([t, fs]) => `${sourceLabel(t)}  ${avgOf(fs).toFixed(2)}★ · ${fs.length}`), name: svc.map(([t]) => sourceLabel(t)) }, rowHighlight: {} } },
   });
-  charts.cTags.$tags = svcTags;
+  charts.cTags.$tags = svcTags; charts.cTags.$svc = svc;
   if (!charts.cTags.$wired) {   // Chart.js only fires onHover/onClick inside the plot area, so listen on the canvas to cover the labels too
     const cv = charts.cTags.canvas, ch = charts.cTags;
     const rowFromEvent = (ev) => rowAt(ch, ev.offsetY);
-    cv.addEventListener("mousemove", (ev) => { const i = rowFromEvent(ev); if (ch.$row !== i) { ch.$row = i; ch.draw(); } cv.style.cursor = i != null ? "pointer" : "default"; });
-    cv.addEventListener("mouseleave", () => { ch.$row = null; ch.draw(); });
+    cv.addEventListener("mousemove", (ev) => { const i = rowFromEvent(ev); if (ch.$row !== i) { ch.$row = i; ch.draw(); } cv.style.cursor = i != null ? "pointer" : "default";
+      const r = i != null && ch.$svc[i]; if (r) showTip(ratingTipHTML(sourceLabel(r[0]), r[1], ch.$svc.reduce((s, [, fs]) => s + fs.length, 0)), ev); else tip.style.display = "none"; });
+    cv.addEventListener("mouseleave", () => { ch.$row = null; ch.draw(); tip.style.display = "none"; });
     cv.addEventListener("click", (ev) => { const i = rowFromEvent(ev); if (i != null && ch.$tags[i]) toggleFilter("source", ch.$tags[i]); });
     charts.cTags.$wired = true;
   }
@@ -896,11 +907,11 @@ function render() {
       upsert("cShare", {
         type: "bar",
         data: { labels: cats.map(nameOf), datasets: [barBase({ data: cats.map(countOf), backgroundColor: cats.map((t) => on(t) ? css("--green-mark") : dim), borderSkipped: "left", maxBarThickness: 18 })] },
-        options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: rowEndWidth(cats.map((t) => [nameOf(t), fig(t)])) } },
+        options: { indexAxis: "y", maintainAspectRatio: false,
           onClick: (e, els) => { if (els.length && cats[els[0].index] !== "other") toggleFilter("source", cats[els[0].index]); },
-          scales: { x: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0, maxRotation: 0 } }, y: { ...AXIS, grid: { display: false }, ticks: { display: false } } },
+          scales: { x: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0, maxRotation: 0 } }, y: { ...AXIS, grid: { display: false }, ticks: { color: css("--text"), font: { size: 12, weight: "600" } } } },
           plugins: { tooltip: { callbacks: { title: (c) => nameOf(cats[c[0].dataIndex]), label: (c) => `${c.parsed.x} films · ${Math.round(100 * c.parsed.x / all)}% of ${all} in ${scope}` } },
-            rowEnd: { text: cats.map((t) => `${nameOf(t)}  ${fig(t)}`), name: cats.map(nameOf) } } },
+            barValues: { text: cats.map(fig) } } },
       });
     } else {
       if (charts.cShare && charts.cShare.config.type !== "line") { charts.cShare.destroy(); delete charts.cShare; }
@@ -934,20 +945,6 @@ function render() {
       : (lines ? `Films watched through each service, added up month by month (${scope}). ` : `Films watched through each service or venue in ${scope}, ${all} tagged films in all. `)
         + `Click a ${lines ? "line" : "bar"} to filter to that service.${otherNames.length ? ` Other: ${otherNames.join(", ")}.` : ""}`;
   }
-
-  /* Release decade — filtered by everything but decade; the chosen decade highlighted */
-  const withYear = filtered("decade").filter((f) => f.year);
-  const decades = [...new Set(withYear.map((f) => Math.floor(f.year / 10) * 10))].sort();
-  upsert("cDecades", {
-    type: "bar",
-    data: { labels: decades.map((d) => d + "s"), datasets: [barBase({ data: decades.map((d) => withYear.filter((f) => Math.floor(f.year / 10) * 10 === d).length), backgroundColor: decades.map((d) => F.decade == null || F.decade === d ? css("--green-mark") : dim) })] },
-    options: { maintainAspectRatio: false, onClick: (e, els) => { if (els.length) toggleFilter("decade", decades[els[0].index]); },
-      scales: { x: { ...AXIS, grid: { display: false } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
-      plugins: { tooltip: { callbacks: { label: (c) => `${c.parsed.y} films · click to filter` } } } },
-  });
-  $("#cDecades").parentElement.style.display = decades.length ? "" : "none";
-  const noYr = filtered("decade").length - withYear.length;
-  $("#noteDecades").textContent = withYear.length ? `${withYear.length} films with a release year${noYr ? ` · ${noYr} without one` : ""} · median ${median(withYear.map((f) => f.year))}. Click a bar to filter.` : "No release years in this selection.";
 
   /* Films by rating — the list; its chips set the same rating filter as the chart */
   listFilms = rated.slice().reverse();
@@ -998,6 +995,19 @@ function snippet(text) {
 
 /* ---------- Marimekko view of Ratings by service: width = share of films, height = rating mix ---------- */
 const tip = document.createElement("div"); tip.className = "tip"; document.body.appendChild(tip);
+// a service's ratings as a small bar chart, for the popups of both Ratings by service views
+function ratingTipHTML(name, fs, all) {
+  const counts = [5, 4, 3, 2, 1].map((lv) => [lv, fs.filter((f) => bucket(f.rating) === lv).length]), max = Math.max(1, ...counts.map(([, c]) => c));
+  const avg = fs.reduce((s, f) => s + f.rating, 0) / fs.length;
+  return `<b>${esc(name)}</b> <span class="m">· ${fs.length} rated · avg ${avg.toFixed(2)}★${all ? ` · ${Math.round(100 * fs.length / all)}% of all` : ""}</span>`
+    + `<div class="tbars">${counts.map(([lv, c]) => `<span class="k">${lv}★</span><span class="b"><i style="width:${(100 * c / max).toFixed(1)}%;background:${RATING_COLORS[lv]}"></i></span><span class="n">${c}<span class="m"> · ${Math.round(100 * c / fs.length)}%</span></span>`).join("")}</div>`;
+}
+function showTip(html, e) {
+  tip.innerHTML = html; tip.style.display = "block";
+  const tw = tip.offsetWidth, th = tip.offsetHeight;
+  tip.style.left = Math.max(8, Math.min(window.innerWidth - tw - 8, e.clientX + 12)) + "px";
+  tip.style.top = (e.clientY - th - 12 < 0 ? e.clientY + 16 : e.clientY - th - 12) + "px";
+}
 function drawMekko() {
   const box = $("#mekko"), { svc, rowOn, avgOf } = mekkoData;
   const W = box.clientWidth || 800, H = box.clientHeight || 340;
@@ -1028,16 +1038,7 @@ function drawMekko() {
   box.querySelectorAll(".col").forEach((g) => {
     const [t, fs] = svc[+g.dataset.i];
     g.addEventListener("click", () => toggleFilter("source", t));
-    g.addEventListener("mousemove", (e) => {
-      const counts = [5, 4, 3, 2, 1].map((lv) => [lv, fs.filter((f) => bucket(f.rating) === lv).length]).filter(([, c]) => c);
-      const venues = {}; fs.forEach((f) => { if (f.venueName) venues[f.venueName] = (venues[f.venueName] || 0) + 1; });
-      const v = Object.entries(venues).sort((a, b) => b[1] - a[1]).map(([k, c]) => `${cap(k)} ${c}`).join(", ");
-      tip.innerHTML = `<b>${esc(sourceLabel(t))}</b> <span class="m">· ${fs.length} rated films · ${Math.round(100 * fs.length / total)}% of all · avg ${avgOf(fs).toFixed(2)}★</span><br>${counts.map(([lv, c]) => `<span style="color:${RATING_COLORS[lv]}">●</span> ${lv}★ ${RATING_MEANING[lv]}: ${c} (${Math.round(100 * c / fs.length)}%)`).join("<br>")}${v ? `<br><span class="m">Venues: ${esc(v)}</span>` : ""}<br><span class="m">Click to filter</span>`;
-      tip.style.display = "block";
-      const tw = tip.offsetWidth, th = tip.offsetHeight;
-      tip.style.left = Math.min(window.innerWidth - tw - 8, e.clientX + 12) + "px";
-      tip.style.top = (e.clientY - th - 12 < 0 ? e.clientY + 16 : e.clientY - th - 12) + "px";
-    });
+    g.addEventListener("mousemove", (e) => showTip(ratingTipHTML(sourceLabel(t), fs, total), e));
     g.addEventListener("mouseleave", () => { tip.style.display = "none"; });
   });
 }
@@ -1093,11 +1094,12 @@ function paintChips() {
   document.querySelectorAll("#yearFilters .chip[data-y]").forEach((c) => c.classList.toggle("active", c.dataset.y === String(F.year ?? "all")));
   document.querySelectorAll("#sourceFilters .chip[data-s]").forEach((c) => c.classList.toggle("active", c.dataset.s === (F.source ?? "all")));
   document.querySelectorAll("#tagFilters .chip[data-t]").forEach((c) => c.classList.toggle("active", c.dataset.t === (F.tag ?? "all")));
+  document.querySelectorAll("#decadeFilters .chip[data-d]").forEach((c) => c.classList.toggle("active", c.dataset.d === String(F.decade ?? "all")));
 }
 function buildFilters() {
   const mk = (attr, val, label, before, onClick) => { const b = document.createElement("button"); b.type = "button"; b.className = "chip"; b.dataset[attr] = val; b.textContent = label; b.addEventListener("click", () => onClick(val)); before.before(b); };
   document.querySelectorAll("#yearFilters .chip[data-y], #sourceFilters .chip[data-s]").forEach((c) => c.remove());
-  const yEnd = $("#tableToggle"), setY = (v) => setFilter("year", v === "all" ? null : +v), setS = (v) => setFilter("source", v === "all" ? null : v);
+  const yEnd = $("#yearEnd"), setY = (v) => setFilter("year", v === "all" ? null : +v), setS = (v) => setFilter("source", v === "all" ? null : v);
   mk("y", "all", "All years", yEnd, setY);
   YEARS.forEach((y) => mk("y", String(y), String(y), yEnd, setY));
   const sEnd = $("#sourceHint");
@@ -1106,6 +1108,12 @@ function buildFilters() {
   mk("s", "home", "Home", sEnd, setS);
   const srcCount = {}; for (const f of ALL) if (f.src) srcCount[f.src] = (srcCount[f.src] || 0) + 1;
   Object.entries(srcCount).filter(([t, n]) => n >= MIN_SOURCE_CHIP && !t.endsWith("-other") && t !== "other" && t !== "theater").sort((a, b) => b[1] - a[1]).forEach(([t]) => mk("s", t, cap(sourceLabel(t)), sEnd, setS));
+  document.querySelectorAll("#decadeFilters .chip[data-d]").forEach((c) => c.remove());
+  const decCount = {}; for (const f of ALL) if (f.year) { const d = Math.floor(f.year / 10) * 10; decCount[d] = (decCount[d] || 0) + 1; }
+  const dEnd = $("#decadeEnd"), setD = (v) => setFilter("decade", v === "all" ? null : +v);
+  $("#decadeFilters").hidden = Object.keys(decCount).length < 2;
+  mk("d", "all", "All decades", dEnd, setD);
+  Object.keys(decCount).map(Number).sort((a, b) => a - b).forEach((d) => mk("d", String(d), `${d}s · ${decCount[d]}`, dEnd, setD));
   const extraCount = {}; for (const f of ALL) for (const t of f.extra) extraCount[t] = (extraCount[t] || 0) + 1;
   const extras = Object.entries(extraCount).filter(([, n]) => n >= MIN_TAG_CHIP).sort((a, b) => b[1] - a[1]);
   const tEnd = $("#tagHint"), setT = (v) => setFilter("tag", v === "all" ? null : v);
