@@ -53,6 +53,13 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .filters { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; margin: 0 0 10px; }
   .filters .label { color: var(--text-3); font-size: 12px; text-transform: uppercase; letter-spacing: 0.06em; margin-right: 4px; min-width: 52px; }
   .filters .hint { color: var(--text-3); font-size: 12px; margin-left: 4px; }
+  .sl.off { opacity: .45; }
+  /* phones: the filter rows fold away behind one button; the green bar of active filters stays */
+  .filtertoggle { display: none; }
+  @media (max-width: 700px) {
+    .filtertoggle { display: inline-flex; margin: 0 0 10px; }
+    .filterbox:not(.open) { display: none; }
+  }
   .filters + .filters { border-top: 1px solid var(--line); padding-top: 10px; }
   @media (max-width: 520px) { .filters .hint { display: none; } .filters .label { min-width: 100%; margin-bottom: -2px; } }
   .chip { background: var(--card); border: 1px solid var(--line-2); color: var(--text-2); border-radius: 999px; padding: 5px 12px; font: inherit; font-size: 13px; cursor: pointer; }
@@ -240,6 +247,8 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
 
   <div id="status"></div>
 
+  <button class="chip ghost filtertoggle" id="filterToggle" type="button" aria-expanded="false" aria-controls="filterBox">Filters</button>
+  <div class="filterbox" id="filterBox">
   <div class="filters" id="yearFilters">
     <span class="label">Year</span>
     <!-- chips injected -->
@@ -254,6 +263,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
     <span class="label">Tags</span>
     <!-- chips injected -->
     <span class="hint" id="tagHint">documentary, festival screenings, formats — separate from the source</span>
+  </div>
   </div>
 
   <div class="active" id="activeBar" hidden>
@@ -321,6 +331,14 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
       <div class="legend multi" id="tagLegend"></div>
       <div class="chart clickable" id="cTagsWrap"><canvas id="cTags"></canvas></div>
       <div class="mekko" id="mekko" hidden></div>
+    </div>
+  </section>
+  <section class="grid one">
+    <div class="card">
+      <div class="head"><h2>Films by service</h2><div class="seg" id="shareMode"><button type="button" data-m="share">Share</button><button type="button" data-m="count">Count</button></div></div>
+      <div class="note" id="noteShare"></div>
+      <div class="legend multi" id="shareLegend"></div>
+      <div class="chart clickable" style="height:280px"><canvas id="cShare"></canvas></div>
     </div>
   </section>
 
@@ -479,20 +497,25 @@ let ALL = [], YEARS = [], charts = {}, sortKey = "date", sortAsc = false, listFi
 let yearsMode = "columns"; try { yearsMode = localStorage.getItem("yearsMode") === "lines" ? "lines" : "columns"; } catch (e) {}
 let heatMode = "months"; try { heatMode = ["months", "wkyear", "wkmonth"].includes(localStorage.getItem("heatMode")) ? localStorage.getItem("heatMode") : "months"; } catch (e) {}
 let svcMode = "mekko"; try { svcMode = localStorage.getItem("svcMode") === "bars" ? "bars" : "mekko"; } catch (e) {}   // mekko by default; bars if chosen
+let shareMode = "share"; try { shareMode = localStorage.getItem("shareMode") === "count" ? "count" : "share"; } catch (e) {}
+// colors for the services, close to each brand where that reads on the dark card; the rest fall back to the list below
+const SERVICE_COLORS = { theater: "#00a83f", netflix: "#d8323a", amazon: "#1fa4d8", "disney plus": "#4a63d8", "yle areena": "#36b3a8", mubi: "#c9ced4", "hbo max": "#8b5cf6", "blu-ray": "#e0a82e" };
+const SERVICE_FALLBACK = ["#ff8000", "#b07a5a", "#7a9a3a", "#c062a8"];
+const SERVICE_TOP = 8;   // services drawn on their own; the rest go together as "Other"
 let mekkoData = null;   // last data drawn, so a resize can redraw without a full render
 // Every filter lives here. "year"/"source" also have button rows; the rest are set by clicking charts.
 const F = { year: null, source: null, tag: null, rating: null, decade: null, month: null };
 const FILTER_LABEL = { year: "Year", source: "Source", tag: "Tag", rating: "Rating", decade: "Released", month: "Month" };
 const matchSource = (f, s) => s === "theater" ? f.venue === "theater" : s === "home" ? f.venue === "home" : f.src === s;
 // Films passing every active filter except `skip` — a chart never filters itself, it highlights instead.
-function filtered(skip) {
+function filtered(...skip) {
   return ALL.filter((f) =>
-    (skip === "year" || F.year == null || (f.date && f.date.getFullYear() === F.year)) &&
-    (skip === "month" || F.month == null || (f.date && f.date.getMonth() === F.month)) &&
-    (skip === "source" || F.source == null || matchSource(f, F.source)) &&
-    (skip === "tag" || F.tag == null || f.extra.includes(F.tag)) &&
-    (skip === "rating" || F.rating == null || (f.rating != null && bucket(f.rating) === F.rating)) &&
-    (skip === "decade" || F.decade == null || (f.year && Math.floor(f.year / 10) * 10 === F.decade)));
+    (skip.includes("year") || F.year == null || (f.date && f.date.getFullYear() === F.year)) &&
+    (skip.includes("month") || F.month == null || (f.date && f.date.getMonth() === F.month)) &&
+    (skip.includes("source") || F.source == null || matchSource(f, F.source)) &&
+    (skip.includes("tag") || F.tag == null || f.extra.includes(F.tag)) &&
+    (skip.includes("rating") || F.rating == null || (f.rating != null && bucket(f.rating) === F.rating)) &&
+    (skip.includes("decade") || F.decade == null || (f.year && Math.floor(f.year / 10) * 10 === F.decade)));
 }
 function describe(k) {
   const v = F[k];
@@ -604,6 +627,13 @@ function upsert(id, cfg) {
 const barBase = (extra = {}) => ({ backgroundColor: css("--green-mark"), hoverBackgroundColor: css("--green"), borderRadius: 4, borderSkipped: "bottom", maxBarThickness: 24, categoryPercentage: 0.8, barPercentage: 0.9, ...extra });
 const timeTicks = (single) => ({ stepSize: 1, autoSkip: false, maxRotation: 0, callback(v) { if (Math.abs(v - Math.round(v)) > 1e-6) return ""; const m = Math.round(v); if (!single) return m % 12 === 0 ? String(m / 12) : ""; const label = this.chart.width < 480 ? MONTHS[m % 12][0] : MONTHS[m % 12]; return m % 12 === 0 ? [label, String(m / 12)] : label; } });
 
+// width the rowEnd labels need ("Name  3.61★ · 42"), so the bars get the rest of the card instead of a fixed share
+function rowEndWidth(rows) {
+  const ctx = (rowEndWidth.c = rowEndWidth.c || document.createElement("canvas").getContext("2d")); let w = 0;
+  for (const [name, fig] of rows) { ctx.font = "600 12px " + css("--font"); let x = ctx.measureText(name).width + 8; ctx.font = "11px " + css("--font"); x += ctx.measureText(fig).width; w = Math.max(w, x); }
+  return Math.ceil(w) + 16;
+}
+
 /* ---------- render ---------- */
 function render() {
   const now = new Date();
@@ -616,6 +646,7 @@ function render() {
   /* Active-filter bar */
   const active = Object.keys(F).filter((k) => F[k] != null);
   $("#activeBar").hidden = !active.length;
+  $("#filterToggle").textContent = active.length ? `Filters · ${active.length}` : "Filters";
   $("#activeChips").innerHTML = active.map((k) => `<span class="f"><span class="k">${FILTER_LABEL[k]}</span>${esc(describe(k))}<button type="button" data-k="${k}" aria-label="Remove ${FILTER_LABEL[k]} filter">×</button></span>`).join("");
   document.querySelectorAll("#activeChips button").forEach((b) => b.addEventListener("click", () => setFilter(b.dataset.k, null)));
 
@@ -685,10 +716,11 @@ function render() {
     upsert("cYears", {
       type: "line",
       data: { labels: MONTHS, datasets: series },
-      options: { maintainAspectRatio: false, interaction: { mode: "nearest", intersect: false }, layout: { padding: { right: 34 } },
-        onClick: (e, els) => { if (els.length) toggleFilter("year", years[els[0].datasetIndex]); },
+      options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { right: 34 } },
+        onClick: (e, els) => { const near = e.chart.getElementsAtEventForMode(e, "nearest", { intersect: false }, false); if (near.length) toggleFilter("year", years[near[0].datasetIndex]); },
         scales: { x: { ...AXIS, grid: { display: false }, ticks: { ...AXIS.ticks, maxRotation: 0, callback(v, i) { return this.chart.width < 480 ? MONTHS[i][0] : MONTHS[i]; } } }, y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
-        plugins: { tooltip: { callbacks: { title: (c) => `${c[0].dataset.label} · through ${MONTHS[c[0].dataIndex]}`, label: (c) => `${c.parsed.y} films` } }, lineEnds: { years, focusYear } } },
+        plugins: { tooltip: { itemSort: (a, b) => b.parsed.y - a.parsed.y,   // every year at the month touched, biggest first, the chosen year in green
+          callbacks: { title: (c) => `Films by the end of ${MONTHS[c[0].dataIndex]}`, label: (c) => `${c.dataset.label}: ${c.parsed.y}`, labelTextColor: (c) => +c.dataset.label === focusYear ? css("--green") : css("--text-2") } }, lineEnds: { years, focusYear } } },
     });
     $("#noteYears").textContent = `Cumulative films by month, one line per year. ${focusYear} in green. Click a line to filter.`;
   }
@@ -852,8 +884,8 @@ function render() {
       backgroundColor: svcTags.map((t) => rowOn(t) ? RATING_COLORS[lv] : hexA(RATING_COLORS[lv], 0.25)), hoverBackgroundColor: RATING_COLORS[lv],
       borderColor: css("--card"), borderWidth: { left: lv > 1 ? 2 : 0 }, borderSkipped: false, maxBarThickness: 18, raw: svc.map(([, fs]) => fs.filter((f) => bucket(f.rating) === lv).length),
     })) },
-    options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: 240 } },
-      scales: { x: { ...AXIS, stacked: true, min: 0, max: 100, ticks: { ...AXIS.ticks, stepSize: 25, callback: (v) => v + "%" } }, y: { ...AXIS, stacked: true, grid: { display: false }, ticks: { display: false } } },
+    options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: rowEndWidth(svc.map(([t, fs]) => [sourceLabel(t), `${avgOf(fs).toFixed(2)}★ · ${fs.length}`])) } },
+      scales: { x: { ...AXIS, stacked: true, min: 0, max: 100, ticks: { ...AXIS.ticks, stepSize: 25, maxRotation: 0, autoSkipPadding: 6, callback: (v) => v + "%" } }, y: { ...AXIS, stacked: true, grid: { display: false }, ticks: { display: false } } },
       plugins: { tooltip: { callbacks: {
         title: (c) => `${c[0].label} · ${svc[c[0].dataIndex][1].length} rated films`,
         label: (c) => `${c.dataset.label} ${RATING_MEANING[+c.dataset.label[0]]}: ${c.dataset.raw[c.dataIndex]} films (${Math.round(c.parsed.x)}%)`,
@@ -880,6 +912,50 @@ function render() {
   mekkoData = { svc, rowOn, avgOf };
   if (mekko && svc.length) drawMekko();
   $("#tagLegend").style.display = svc.length ? "" : "none";
+
+  /* Films by service — each year's films split by the service or venue they were watched through; filtered by everything but year and source */
+  {
+    const base = filtered("year", "source").filter((f) => f.src && f.date);
+    const total = {}; for (const f of base) total[f.src] = (total[f.src] || 0) + 1;
+    const isOther = (t) => t === "other" || t.endsWith("-other");
+    const named = Object.entries(total).filter(([t]) => !isOther(t)).sort((a, b) => (b[0] === "theater") - (a[0] === "theater") || b[1] - a[1]).slice(0, SERVICE_TOP).map(([t]) => t);
+    const cat = (f) => named.includes(f.src) ? f.src : "other";
+    const otherN = base.filter((f) => cat(f) === "other").length;
+    const cats = [...named, ...(otherN ? ["other"] : [])];
+    let fb = 0; const colorOf = Object.fromEntries(cats.map((t) => [t, t === "other" ? "#4a5563" : SERVICE_COLORS[t] || SERVICE_FALLBACK[fb++ % SERVICE_FALLBACK.length]]));
+    const nameOf = (t) => t === "other" ? "Other" : sourceLabel(t), countOf = (t) => t === "other" ? otherN : total[t];
+    const share = shareMode === "share";
+    const cols = years.filter((y) => base.some((f) => f.date.getFullYear() === y));
+    const labels = [...cols.map(String), ...(share && cols.length > 1 ? ["All"] : [])];
+    const inCol = (f, l) => l === "All" || f.date.getFullYear() === +l;
+    const n = {}, colTotal = {};
+    for (const l of labels) { colTotal[l] = base.filter((f) => inCol(f, l)).length; for (const t of cats) n[t + "|" + l] = base.filter((f) => inCol(f, l) && cat(f) === t).length; }
+    const srcOn = (t) => F.source == null || F.source === t || (F.source === "home" && t !== "theater") || (t === "other" && F.source !== "theater" && !named.includes(F.source));
+    const colOn = (l) => F.year == null || l === String(F.year) || l === "All";
+    upsert("cShare", {
+      type: "bar",
+      data: { labels, datasets: cats.map((t) => ({
+        label: nameOf(t),
+        data: labels.map((l) => share ? (colTotal[l] ? 100 * n[t + "|" + l] / colTotal[l] : 0) : n[t + "|" + l]),
+        backgroundColor: labels.map((l) => srcOn(t) && colOn(l) ? colorOf[t] : hexA(colorOf[t], 0.22)), hoverBackgroundColor: colorOf[t],
+        borderColor: css("--card"), borderWidth: { top: 1 }, borderSkipped: false, maxBarThickness: 34, categoryPercentage: 0.8, barPercentage: 0.9,
+      })) },
+      options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
+        onClick: (e) => { const hit = e.chart.getElementsAtEventForMode(e, "nearest", { intersect: true }, false)[0]; if (!hit) return; const t = cats[hit.datasetIndex]; if (t !== "other") toggleFilter("source", t); },
+        scales: { x: { ...AXIS, stacked: true, grid: { display: false }, ticks: { ...AXIS.ticks, maxRotation: 0, autoSkip: false, callback(v, i) { const l = labels[i]; return l === "All" ? "All" : this.chart.width < 480 ? "’" + l.slice(2) : l; } } },
+          y: { ...AXIS, stacked: true, beginAtZero: true, ...(share ? { max: 100, ticks: { ...AXIS.ticks, stepSize: 25, callback: (v) => v + "%" } } : { ticks: { ...AXIS.ticks, precision: 0 } }) } },
+        plugins: { tooltip: { itemSort: (a, b) => b.parsed.y - a.parsed.y, filter: (c) => n[cats[c.datasetIndex] + "|" + labels[c.dataIndex]] > 0,
+          callbacks: { title: (c) => `${labels[c[0].dataIndex] === "All" ? "All years" : labels[c[0].dataIndex]} · ${colTotal[labels[c[0].dataIndex]]} films`,
+            label: (c) => { const l = labels[c.dataIndex], m = n[cats[c.datasetIndex] + "|" + l]; return `${c.dataset.label}: ${m} (${Math.round(100 * m / colTotal[l])}%)`; } } } } },
+    });
+    const all = base.length;
+    $("#shareLegend").innerHTML = cats.map((t) => `<span class="sl${srcOn(t) ? "" : " off"}"${t !== "other" ? ` data-s="${esc(t)}" style="cursor:pointer"` : ""}><i style="background:${colorOf[t]}"></i>${nameOf(t)} <b style="font-weight:600;color:var(--text)">${countOf(t)}</b> <span style="color:var(--text-3)">${Math.round(100 * countOf(t) / all)}%</span></span>`).join("");
+    $("#shareLegend").querySelectorAll("[data-s]").forEach((el) => el.addEventListener("click", () => toggleFilter("source", el.dataset.s)));
+    document.querySelectorAll("#shareMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === shareMode));
+    const otherNames = Object.keys(total).filter((t) => !named.includes(t)).map((t) => sourceLabel(t));
+    $("#noteShare").textContent = !all ? "No tagged entries in this selection."
+      : `Where each year's films were watched: the service or venue tagged on the diary entry${share ? ", as a share of that year's films, with all years together at the end" : ""}. The figures in the legend are all years together. Click a block or a name to filter to that service.${otherNames.length ? ` Other: ${otherNames.join(", ")}.` : ""}`;
+  }
 
   /* Release decade — filtered by everything but decade; the chosen decade highlighted */
   const withYear = filtered("decade").filter((f) => f.year);
@@ -1062,6 +1138,8 @@ function buildFilters() {
   if (taggedDates.length) { const a = taggedDates[0], b = taggedDates.at(-1); $("#sourceHint").textContent = `tagged entries: ${MONTHS[a.getMonth()]} ${a.getFullYear()} – ${MONTHS[b.getMonth()]} ${b.getFullYear()}`; $("#sourceHint").title = tagCoverage(); }
   document.querySelectorAll("#yearsMode button").forEach((b) => b.addEventListener("click", () => { yearsMode = b.dataset.m; try { localStorage.setItem("yearsMode", yearsMode); } catch (e) {} render(); }));
   document.querySelectorAll("#heatMode button").forEach((b) => b.addEventListener("click", () => { heatMode = b.dataset.m; try { localStorage.setItem("heatMode", heatMode); } catch (e) {} render(); }));
+  $("#filterToggle").addEventListener("click", () => { const open = $("#filterBox").classList.toggle("open"); $("#filterToggle").setAttribute("aria-expanded", open); $("#filterToggle").classList.toggle("active", open); });
+  document.querySelectorAll("#shareMode button").forEach((b) => b.addEventListener("click", () => { shareMode = b.dataset.m; try { localStorage.setItem("shareMode", shareMode); } catch (e) {} render(); }));
   document.querySelectorAll("#svcMode button").forEach((b) => b.addEventListener("click", () => { svcMode = b.dataset.m; try { localStorage.setItem("svcMode", svcMode); } catch (e) {} render(); }));
   document.querySelectorAll("#revMode button").forEach((b) => b.addEventListener("click", () => { revMode = b.dataset.m; try { localStorage.setItem("revMode", revMode); } catch (e) {} render(); }));
   let mekkoResize; window.addEventListener("resize", () => { clearTimeout(mekkoResize); mekkoResize = setTimeout(() => { if (svcMode === "mekko" && mekkoData) drawMekko(); }, 150); });
