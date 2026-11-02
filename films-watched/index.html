@@ -288,18 +288,12 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
     </div>
   </section>
 
-  <section class="grid">
+  <section class="grid one">
     <div class="card">
       <h2>Rating distribution</h2>
       <div class="note" id="noteRatings"></div>
       <div class="legend multi" id="ratingLegend"></div>
       <div class="chart clickable"><canvas id="cRatings"></canvas></div>
-    </div>
-    <div class="card">
-      <h2>Ratings over time</h2>
-      <div class="note" id="noteTrend">Each dot is one film; the line is that year's average rating.</div>
-      <div class="legend multi" id="trendLegend"></div>
-      <div class="chart"><canvas id="cTrend"></canvas></div>
     </div>
   </section>
 
@@ -783,37 +777,7 @@ function render() {
   $("#ratingLegend").innerHTML = ratingLegendHTML();
   $("#noteRatings").textContent = (ratedNoR.length ? `${ratedNoR.length} rated films · median ${median(ratedNoR.map((f) => f.rating))}★ · ${filtered("rating").length - ratedNoR.length} unrated. ` : "No rated films in this selection. ") + "Click a column to filter.";
 
-  /* Ratings over time: one dot per film (jittered), coloured good / ok / bad, plus each year's average as a step line */
   const datedRated = rated.filter((f) => f.date);
-  let rnd = 7; const jitter = () => { rnd = (rnd * 9301 + 49297) % 233280; return (rnd / 233280 - 0.5) * 0.28; };
-  const dots = datedRated.map((f) => ({ x: xOf(f.date), y: f.rating + jitter(), f }));
-  const xMin = F.year != null ? F.year * 12 : (dots.length ? Math.floor(Math.min(...dots.map((d) => d.x))) : monthIndex(now) - 12);
-  const xMax = F.year != null ? F.year * 12 + 12 : (dots.length ? Math.ceil(Math.max(...dots.map((d) => d.x))) + 1 : monthIndex(now) + 1);
-  const stepPts = [];
-  for (const y of years) {
-    const ys = noYear.filter((f) => f.rating != null && f.date && f.date.getFullYear() === y);
-    if (!ys.length) continue;
-    const a = { y, avg: ys.reduce((s, f) => s + f.rating, 0) / ys.length, n: ys.length };
-    const x0 = Math.max(xMin, y * 12), x1 = Math.min(xMax, y * 12 + 12);
-    if (x1 <= xMin || x0 >= xMax) continue;
-    stepPts.push({ x: x0, y: a.avg, a }, { x: x1, y: a.avg, a });
-  }
-  upsert("cTrend", {
-    type: "scatter",
-    data: { datasets: [
-      { label: "Film", data: dots, backgroundColor: dots.map((d) => hexA(CLASS_COLORS[classOf(d.f.rating)], classOf(d.f.rating) === "bad" ? 0.85 : 0.7)), borderColor: css("--card"), borderWidth: 1, pointRadius: 4, pointHoverRadius: 6, order: 2 },
-      { label: "Year average", data: stepPts, type: "line", borderColor: AVG_LINE, borderWidth: 2, pointRadius: 0, pointHitRadius: 0, pointHoverRadius: 0, tension: 0, order: 1 },
-    ] },
-    options: { maintainAspectRatio: false, interaction: { mode: "nearest", intersect: true }, layout: { padding: { top: 12 } },
-      onClick: (e, els) => { const d = els.length && els[0].datasetIndex === 0 ? dots[els[0].index] : null; if (d && d.f.url) window.open(d.f.url, "_blank", "noopener"); },
-      scales: {
-        x: { ...AXIS, type: "linear", min: xMin, max: xMax, grid: { display: false }, ticks: { ...AXIS.ticks, ...timeTicks(F.year != null) } },
-        y: { ...AXIS, min: 0.5, max: 5.5, grid: { ...GRID, color: (c) => Number.isInteger(c.tick.value) ? GRID.color : "transparent" }, ticks: { ...AXIS.ticks, stepSize: 0.5, callback: (v) => Number.isInteger(v) ? v + "★" : "" } },
-      },
-      plugins: { tooltip: { filter: (c) => c.datasetIndex === 0, callbacks: { title: (c) => c[0].raw.f.title, label: (c) => `${starStr(c.raw.f.rating)} · ${fmtDate(c.raw.f.date)}${c.raw.f.tags.length ? " · " + tagsText(c.raw.f) : ""}`, afterBody: (c) => snippet(c[0].raw.f.review) } } } },
-  });
-  $("#trendLegend").innerHTML = `<span><i style="background:${CLASS_COLORS.good}"></i>4–5★ good</span><span><i style="background:${CLASS_COLORS.ok}"></i>3★ ok</span><span><i style="background:${CLASS_COLORS.bad}"></i>1–2★ below</span><span><i class="line" style="background:${AVG_LINE}"></i>Year average</span>`;
-  $("#noteTrend").textContent = "Each dot is one film (click to open it on Letterboxd); the line is that year's average rating.";
 
   /* Recent ratings — the last N rated films as labelled dots on a time axis */
   const recentRated = datedRated.slice(-RECENT_RATED);
