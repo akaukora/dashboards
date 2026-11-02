@@ -335,10 +335,9 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   </section>
   <section class="grid one">
     <div class="card">
-      <div class="head"><h2>Films by service</h2><div class="seg" id="shareMode"><button type="button" data-m="share">Share</button><button type="button" data-m="count">Count</button></div></div>
+      <div class="head"><h2>Films by service</h2><div class="seg" id="shareMode"><button type="button" data-m="bars">Totals</button><button type="button" data-m="lines">Running total</button></div></div>
       <div class="note" id="noteShare"></div>
-      <div class="legend multi" id="shareLegend"></div>
-      <div class="chart clickable" style="height:280px"><canvas id="cShare"></canvas></div>
+      <div class="chart clickable" id="cShareWrap" style="height:280px"><canvas id="cShare"></canvas></div>
     </div>
   </section>
 
@@ -497,10 +496,7 @@ let ALL = [], YEARS = [], charts = {}, sortKey = "date", sortAsc = false, listFi
 let yearsMode = "columns"; try { yearsMode = localStorage.getItem("yearsMode") === "lines" ? "lines" : "columns"; } catch (e) {}
 let heatMode = "months"; try { heatMode = ["months", "wkyear", "wkmonth"].includes(localStorage.getItem("heatMode")) ? localStorage.getItem("heatMode") : "months"; } catch (e) {}
 let svcMode = "mekko"; try { svcMode = localStorage.getItem("svcMode") === "bars" ? "bars" : "mekko"; } catch (e) {}   // mekko by default; bars if chosen
-let shareMode = "share"; try { shareMode = localStorage.getItem("shareMode") === "count" ? "count" : "share"; } catch (e) {}
-// colors for the services, close to each brand where that reads on the dark card; the rest fall back to the list below
-const SERVICE_COLORS = { theater: "#00a83f", netflix: "#d8323a", amazon: "#1fa4d8", "disney plus": "#4a63d8", "yle areena": "#36b3a8", mubi: "#c9ced4", "hbo max": "#8b5cf6", "blu-ray": "#e0a82e" };
-const SERVICE_FALLBACK = ["#ff8000", "#b07a5a", "#7a9a3a", "#c062a8"];
+let shareMode = "bars"; try { shareMode = localStorage.getItem("svcCount") === "lines" ? "lines" : "bars"; } catch (e) {}   // films by service: totals as bars, or running totals as lines
 const SERVICE_TOP = 8;   // services drawn on their own; the rest go together as "Other"
 let mekkoData = null;   // last data drawn, so a resize can redraw without a full render
 // Every filter lives here. "year"/"source" also have button rows; the rest are set by clicking charts.
@@ -564,13 +560,14 @@ Chart.register({
     if (!opts || !opts.years) return;
     const { ctx } = chart;
     ctx.save(); ctx.font = "11px " + css("--font"); ctx.textBaseline = "middle"; ctx.textAlign = "left";
-    const placed = [];
-    chart.data.datasets.forEach((ds, i) => {
-      const meta = chart.getDatasetMeta(i); const p = meta.data[ds.data.length - 1]; if (!p) return;
-      let y = p.y; while (placed.some((q) => Math.abs(q - y) < 12)) y += 12;   // nudge stacked labels apart
-      placed.push(y);
-      ctx.fillStyle = +ds.label === opts.focusYear ? css("--text") : css("--text-3");
-      ctx.fillText(ds.label, p.x + 6, y);
+    // spread the labels 12px apart without letting them run past the bottom of the plot: push down, then back up from the floor
+    const items = chart.data.datasets.map((ds, i) => { const p = chart.getDatasetMeta(i).data[ds.data.length - 1]; return p && { ds, x: p.x, y: p.y }; }).filter(Boolean).sort((a, b) => a.y - b.y);
+    const GAP = 12, floor = chart.chartArea.bottom + 4;
+    items.forEach((it, i) => { if (i) it.y = Math.max(it.y, items[i - 1].y + GAP); });
+    for (let i = items.length - 1; i >= 0; i--) items[i].y = Math.min(items[i].y, i === items.length - 1 ? floor : items[i + 1].y - GAP);
+    items.forEach(({ ds, x, y }) => {
+      ctx.fillStyle = (opts.focusLabel != null ? ds.label === opts.focusLabel : +ds.label === opts.focusYear) ? css("--text") : css("--text-3");
+      ctx.fillText(ds.label, x + 6, y);
     });
     ctx.restore();
   },
@@ -913,48 +910,65 @@ function render() {
   if (mekko && svc.length) drawMekko();
   $("#tagLegend").style.display = svc.length ? "" : "none";
 
-  /* Films by service — each year's films split by the service or venue they were watched through; filtered by everything but year and source */
+  /* Films by service — how many films came through each service or venue. Totals: one bar per service, filtered by everything
+     but source (so a year filter gives that year's totals). Running total: one cumulative line per service over the months. */
   {
-    const base = filtered("year", "source").filter((f) => f.src && f.date);
+    const base = filtered("source").filter((f) => f.src && f.date);
     const total = {}; for (const f of base) total[f.src] = (total[f.src] || 0) + 1;
     const isOther = (t) => t === "other" || t.endsWith("-other");
-    const named = Object.entries(total).filter(([t]) => !isOther(t)).sort((a, b) => (b[0] === "theater") - (a[0] === "theater") || b[1] - a[1]).slice(0, SERVICE_TOP).map(([t]) => t);
+    const named = Object.entries(total).filter(([t]) => !isOther(t)).sort((x, y) => y[1] - x[1]).slice(0, SERVICE_TOP).map(([t]) => t);
     const cat = (f) => named.includes(f.src) ? f.src : "other";
     const otherN = base.filter((f) => cat(f) === "other").length;
     const cats = [...named, ...(otherN ? ["other"] : [])];
-    let fb = 0; const colorOf = Object.fromEntries(cats.map((t) => [t, t === "other" ? "#4a5563" : SERVICE_COLORS[t] || SERVICE_FALLBACK[fb++ % SERVICE_FALLBACK.length]]));
     const nameOf = (t) => t === "other" ? "Other" : sourceLabel(t), countOf = (t) => t === "other" ? otherN : total[t];
-    const share = shareMode === "share";
-    const cols = years.filter((y) => base.some((f) => f.date.getFullYear() === y));
-    const labels = [...cols.map(String), ...(share && cols.length > 1 ? ["All"] : [])];
-    const inCol = (f, l) => l === "All" || f.date.getFullYear() === +l;
-    const n = {}, colTotal = {};
-    for (const l of labels) { colTotal[l] = base.filter((f) => inCol(f, l)).length; for (const t of cats) n[t + "|" + l] = base.filter((f) => inCol(f, l) && cat(f) === t).length; }
-    const srcOn = (t) => F.source == null || F.source === t || (F.source === "home" && t !== "theater") || (t === "other" && F.source !== "theater" && !named.includes(F.source));
-    const colOn = (l) => F.year == null || l === String(F.year) || l === "All";
-    upsert("cShare", {
-      type: "bar",
-      data: { labels, datasets: cats.map((t) => ({
-        label: nameOf(t),
-        data: labels.map((l) => share ? (colTotal[l] ? 100 * n[t + "|" + l] / colTotal[l] : 0) : n[t + "|" + l]),
-        backgroundColor: labels.map((l) => srcOn(t) && colOn(l) ? colorOf[t] : hexA(colorOf[t], 0.22)), hoverBackgroundColor: colorOf[t],
-        borderColor: css("--card"), borderWidth: { top: 1 }, borderSkipped: false, maxBarThickness: 34, categoryPercentage: 0.8, barPercentage: 0.9,
-      })) },
-      options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false },
-        onClick: (e) => { const hit = e.chart.getElementsAtEventForMode(e, "nearest", { intersect: true }, false)[0]; if (!hit) return; const t = cats[hit.datasetIndex]; if (t !== "other") toggleFilter("source", t); },
-        scales: { x: { ...AXIS, stacked: true, grid: { display: false }, ticks: { ...AXIS.ticks, maxRotation: 0, autoSkip: false, callback(v, i) { const l = labels[i]; return l === "All" ? "All" : this.chart.width < 480 ? "’" + l.slice(2) : l; } } },
-          y: { ...AXIS, stacked: true, beginAtZero: true, ...(share ? { max: 100, ticks: { ...AXIS.ticks, stepSize: 25, callback: (v) => v + "%" } } : { ticks: { ...AXIS.ticks, precision: 0 } }) } },
-        plugins: { tooltip: { itemSort: (a, b) => b.parsed.y - a.parsed.y, filter: (c) => n[cats[c.datasetIndex] + "|" + labels[c.dataIndex]] > 0,
-          callbacks: { title: (c) => `${labels[c[0].dataIndex] === "All" ? "All years" : labels[c[0].dataIndex]} · ${colTotal[labels[c[0].dataIndex]]} films`,
-            label: (c) => { const l = labels[c.dataIndex], m = n[cats[c.datasetIndex] + "|" + l]; return `${c.dataset.label}: ${m} (${Math.round(100 * m / colTotal[l])}%)`; } } } } },
-    });
-    const all = base.length;
-    $("#shareLegend").innerHTML = cats.map((t) => `<span class="sl${srcOn(t) ? "" : " off"}"${t !== "other" ? ` data-s="${esc(t)}" style="cursor:pointer"` : ""}><i style="background:${colorOf[t]}"></i>${nameOf(t)} <b style="font-weight:600;color:var(--text)">${countOf(t)}</b> <span style="color:var(--text-3)">${Math.round(100 * countOf(t) / all)}%</span></span>`).join("");
-    $("#shareLegend").querySelectorAll("[data-s]").forEach((el) => el.addEventListener("click", () => toggleFilter("source", el.dataset.s)));
+    const on = (t) => F.source == null || F.source === t || (F.source === "home" && t !== "theater");
+    const all = base.length, scope = F.year != null ? String(F.year) : "all years";
+    const lines = shareMode === "lines";
     document.querySelectorAll("#shareMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === shareMode));
+    if (!lines) {
+      if (charts.cShare && charts.cShare.config.type !== "bar") { charts.cShare.destroy(); delete charts.cShare; }
+      $("#cShareWrap").style.height = Math.max(120, 30 * cats.length + 30) + "px";
+      const fig = (t) => `${countOf(t)} · ${Math.round(100 * countOf(t) / all)}%`;
+      upsert("cShare", {
+        type: "bar",
+        data: { labels: cats.map(nameOf), datasets: [barBase({ data: cats.map(countOf), backgroundColor: cats.map((t) => on(t) ? css("--green-mark") : dim), borderSkipped: "left", maxBarThickness: 18 })] },
+        options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: rowEndWidth(cats.map((t) => [nameOf(t), fig(t)])) } },
+          onClick: (e, els) => { if (els.length && cats[els[0].index] !== "other") toggleFilter("source", cats[els[0].index]); },
+          scales: { x: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0, maxRotation: 0 } }, y: { ...AXIS, grid: { display: false }, ticks: { display: false } } },
+          plugins: { tooltip: { callbacks: { title: (c) => nameOf(cats[c[0].dataIndex]), label: (c) => `${c.parsed.x} films · ${Math.round(100 * c.parsed.x / all)}% of ${all} in ${scope}` } },
+            rowEnd: { text: cats.map((t) => `${nameOf(t)}  ${fig(t)}`), name: cats.map(nameOf) } } },
+      });
+    } else {
+      if (charts.cShare && charts.cShare.config.type !== "line") { charts.cShare.destroy(); delete charts.cShare; }
+      $("#cShareWrap").style.height = "300px";
+      // months from the first to the last month in the selection (one year when a year is chosen)
+      const t0 = base.reduce((m, f) => Math.min(m, f.date.getFullYear() * 12 + f.date.getMonth()), Infinity);
+      const t1 = F.year != null ? Math.min(F.year * 12 + 11, now.getFullYear() * 12 + now.getMonth()) : now.getFullYear() * 12 + now.getMonth();
+      const months = []; for (let m = F.year != null ? F.year * 12 : t0; m <= t1; m++) months.push(m);
+      const grays = ["#3a4551", "#46525f", "#55616e", "#66737f", "#7a8794", "#8e9ba8", "#a3afbb", "#b8c2cc", "#cdd5dc"];   // smallest → biggest
+      const series = cats.map((t, i) => {
+        const per = {}; for (const f of base) if (cat(f) === t) { const k = f.date.getFullYear() * 12 + f.date.getMonth(); per[k] = (per[k] || 0) + 1; }
+        let acc = 0; const data = months.map((m) => (acc += per[m] || 0));
+        const focus = F.source === t;
+        return { label: nameOf(t), data, borderColor: focus ? css("--green-mark") : grays[Math.max(0, grays.length - 1 - i)], borderWidth: focus ? 2.5 : 1.5, pointRadius: 0, pointHitRadius: 6, pointHoverRadius: 3, tension: 0, stepped: false, order: focus ? 0 : 1 };
+      });
+      const lab = (m) => `${MONTHS[m % 12]} ${Math.floor(m / 12)}`;
+      upsert("cShare", {
+        type: "line",
+        data: { labels: months.map(lab), datasets: series },
+        options: { maintainAspectRatio: false, interaction: { mode: "index", intersect: false }, layout: { padding: { right: 78 } },
+          onClick: (e) => { const near = e.chart.getElementsAtEventForMode(e, "nearest", { intersect: false }, false)[0]; if (near && cats[near.datasetIndex] !== "other") toggleFilter("source", cats[near.datasetIndex]); },
+          scales: { x: { ...AXIS, grid: { display: false }, ticks: { ...AXIS.ticks, maxRotation: 0, autoSkip: false, callback(v, i) { const m = months[i]; if (F.year != null) return this.chart.width < 480 ? MONTHS[m % 12][0] : MONTHS[m % 12]; return m % 12 === 0 ? (this.chart.width < 480 ? "’" + String(Math.floor(m / 12)).slice(2) : Math.floor(m / 12)) : ""; } } },
+            y: { ...AXIS, beginAtZero: true, ticks: { ...AXIS.ticks, precision: 0 } } },
+          plugins: { tooltip: { itemSort: (x, y) => y.parsed.y - x.parsed.y, filter: (c) => c.parsed.y > 0,
+              callbacks: { title: (c) => `Films by the end of ${c[0].label}`, label: (c) => `${c.dataset.label}: ${c.parsed.y}`, labelTextColor: (c) => c.dataset.label === nameOf(F.source) ? css("--green") : css("--text-2") } },
+            lineEnds: { years: true, focusLabel: F.source != null ? nameOf(F.source) : null } } },
+      });
+    }
     const otherNames = Object.keys(total).filter((t) => !named.includes(t)).map((t) => sourceLabel(t));
     $("#noteShare").textContent = !all ? "No tagged entries in this selection."
-      : `Where each year's films were watched: the service or venue tagged on the diary entry${share ? ", as a share of that year's films, with all years together at the end" : ""}. The figures in the legend are all years together. Click a block or a name to filter to that service.${otherNames.length ? ` Other: ${otherNames.join(", ")}.` : ""}`;
+      : (lines ? `Films watched through each service, added up month by month (${scope}). ` : `Films watched through each service or venue in ${scope}, ${all} tagged films in all. `)
+        + `Click a ${lines ? "line" : "bar"} to filter to that service.${otherNames.length ? ` Other: ${otherNames.join(", ")}.` : ""}`;
   }
 
   /* Release decade — filtered by everything but decade; the chosen decade highlighted */
@@ -1139,7 +1153,7 @@ function buildFilters() {
   document.querySelectorAll("#yearsMode button").forEach((b) => b.addEventListener("click", () => { yearsMode = b.dataset.m; try { localStorage.setItem("yearsMode", yearsMode); } catch (e) {} render(); }));
   document.querySelectorAll("#heatMode button").forEach((b) => b.addEventListener("click", () => { heatMode = b.dataset.m; try { localStorage.setItem("heatMode", heatMode); } catch (e) {} render(); }));
   $("#filterToggle").addEventListener("click", () => { const open = $("#filterBox").classList.toggle("open"); $("#filterToggle").setAttribute("aria-expanded", open); $("#filterToggle").classList.toggle("active", open); });
-  document.querySelectorAll("#shareMode button").forEach((b) => b.addEventListener("click", () => { shareMode = b.dataset.m; try { localStorage.setItem("shareMode", shareMode); } catch (e) {} render(); }));
+  document.querySelectorAll("#shareMode button").forEach((b) => b.addEventListener("click", () => { shareMode = b.dataset.m; try { localStorage.setItem("svcCount", shareMode); } catch (e) {} render(); }));
   document.querySelectorAll("#svcMode button").forEach((b) => b.addEventListener("click", () => { svcMode = b.dataset.m; try { localStorage.setItem("svcMode", svcMode); } catch (e) {} render(); }));
   document.querySelectorAll("#revMode button").forEach((b) => b.addEventListener("click", () => { revMode = b.dataset.m; try { localStorage.setItem("revMode", revMode); } catch (e) {} render(); }));
   let mekkoResize; window.addEventListener("resize", () => { clearTimeout(mekkoResize); mekkoResize = setTimeout(() => { if (svcMode === "mekko" && mekkoData) drawMekko(); }, 150); });
