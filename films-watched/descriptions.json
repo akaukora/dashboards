@@ -966,6 +966,12 @@
    "tmdb_id": 391713,
    "year": 2017
   },
+  "lapland-war": {
+   "desc": "Young soldier Heikki fights on the Karelian Isthmus alongside his friend Pauli. Arvo, recently released from prison, joins the company, challenging the others' views on war and duty with his worldview. The ceasefire raises hopes of returning home, but it soon becomes clear that Finland must turn against its former German allies in Lapland. At the same time, Saara, who works as a German interpreter in Rovaniemi, must choose her future: stay in Finland or flee to Germany with her beloved, Major Duisberg.",
+   "title": "Lapland War",
+   "tmdb_id": 1450460,
+   "year": 2026
+  },
   "late-night": {
    "desc": "A legendary late-night talk show host's world is turned upside down when she hires her only female staff writer. Originally intended to smooth over diversity concerns, her decision has unexpectedly hilarious consequences as the two women separated by culture and generation are united by their love of a biting punchline.",
    "title": "Late Night",
@@ -2529,5 +2535,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-10-22T04:07:18Z"
+ "updated": "2026-11-02T05:23:02Z"
 }
