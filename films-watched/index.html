@@ -55,7 +55,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
   .filters .hint { color: var(--text-3); font-size: 12px; margin-left: 4px; }
   .sl.off { opacity: .45; }
   /* phones: the filter rows fold away behind one button; the green bar of active filters stays */
-  .filterbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; }
+  .filterbar { display: flex; flex-wrap: wrap; gap: 8px; margin: 0 0 10px; } .filterbar #filterToggle { margin-left: 0; }
   .filterbox:not(.open) { display: none; }
   .filters + .filters { border-top: 1px solid var(--line); padding-top: 10px; }
   @media (max-width: 520px) { .filters .hint { display: none; } .filters .label { min-width: 100%; margin-bottom: -2px; } }
@@ -586,9 +586,17 @@ Chart.register({
   afterDatasetsDraw(chart, args, opts) {
     if (!opts || !opts.text) return;
     const { ctx, chartArea, scales: { y } } = chart;
-    ctx.save(); ctx.textAlign = "left"; ctx.textBaseline = "middle";
+    ctx.save(); ctx.textAlign = "left"; ctx.textBaseline = opts.above ? "bottom" : "middle";
     opts.text.forEach((t, i) => {
-      const py = y.getPixelForValue(i), name = opts.name && opts.name[i];
+      const name = opts.name && opts.name[i], bar = chart.getDatasetMeta(0).data[i];
+      if (opts.above && name && bar) {   // "Service  3.61★ · 42" on the line above its bar
+        const py = bar.y - bar.height / 2 - 4;
+        ctx.font = "600 12px " + css("--font"); ctx.fillStyle = css("--text"); ctx.fillText(name, chartArea.left, py);
+        const w = ctx.measureText(name).width;
+        ctx.font = "11px " + css("--font"); ctx.fillStyle = css("--text-2"); ctx.fillText(t.slice(name.length).trim(), chartArea.left + w + 8, py);
+        return;
+      }
+      const py = y.getPixelForValue(i);
       if (name) {   // "Service  3.61★ · 42": the name in the text color, the figures dimmer
         ctx.font = "600 12px " + css("--font"); ctx.fillStyle = css("--text"); ctx.fillText(name, chartArea.right + 8, py);
         const w = ctx.measureText(name).width;
@@ -851,7 +859,8 @@ function render() {
   const levels = [1, 2, 3, 4, 5];
   const avgOf = (fs) => fs.reduce((s, f) => s + f.rating, 0) / fs.length;
   const rowOn = (t) => F.source == null || F.source === t || (F.source === "home" && t !== "theater" && t !== "other");
-  $("#cTagsWrap").style.height = Math.max(120, 30 * svc.length + 40) + "px";
+  const svcAbove = ($("#cTagsWrap").clientWidth || $("#cTagsWrap").parentElement.clientWidth) < 640;   // narrow card: each label on its own line above the bar
+  $("#cTagsWrap").style.height = Math.max(120, (svcAbove ? 46 : 30) * svc.length + 40) + "px";
   upsert("cTags", {
     type: "bar",
     data: { labels: svc.map(([t]) => sourceLabel(t)), datasets: levels.map((lv) => ({
@@ -859,11 +868,11 @@ function render() {
       backgroundColor: svcTags.map((t) => rowOn(t) ? RATING_COLORS[lv] : hexA(RATING_COLORS[lv], 0.25)), hoverBackgroundColor: RATING_COLORS[lv],
       borderColor: css("--card"), borderWidth: { left: lv > 1 ? 2 : 0 }, borderSkipped: false, maxBarThickness: 18, raw: svc.map(([, fs]) => fs.filter((f) => bucket(f.rating) === lv).length),
     })) },
-    options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: rowEndWidth(svc.map(([t, fs]) => [sourceLabel(t), `${avgOf(fs).toFixed(2)}★ · ${fs.length}`])) } },
+    options: { indexAxis: "y", maintainAspectRatio: false, layout: { padding: { right: svcAbove ? 4 : rowEndWidth(svc.map(([t, fs]) => [sourceLabel(t), `${avgOf(fs).toFixed(2)}★ · ${fs.length}`])), top: svcAbove ? 6 : 0 } },
       scales: { x: { ...AXIS, stacked: true, min: 0, max: 100, ticks: { ...AXIS.ticks, stepSize: 25, maxRotation: 0, autoSkipPadding: 6, callback: (v) => v + "%" } }, y: { ...AXIS, stacked: true, grid: { display: false }, ticks: { display: false } } },
-      plugins: { tooltip: { enabled: false }, rowEnd: { text: svc.map(([t, fs]) => `${sourceLabel(t)}  ${avgOf(fs).toFixed(2)}★ · ${fs.length}`), name: svc.map(([t]) => sourceLabel(t)) }, rowHighlight: {} } },
+      plugins: { tooltip: { enabled: false }, rowEnd: { text: svc.map(([t, fs]) => `${sourceLabel(t)}  ${avgOf(fs).toFixed(2)}★ · ${fs.length}`), name: svc.map(([t]) => sourceLabel(t)), above: svcAbove }, rowHighlight: {} } },
   });
-  charts.cTags.$tags = svcTags; charts.cTags.$svc = svc;
+  charts.cTags.$tags = svcTags; charts.cTags.$svc = svc; charts.cTags.$above = svcAbove;
   if (!charts.cTags.$wired) {   // Chart.js only fires onHover/onClick inside the plot area, so listen on the canvas to cover the labels too
     const cv = charts.cTags.canvas, ch = charts.cTags;
     const rowFromEvent = (ev) => rowAt(ch, ev.offsetY);
@@ -1128,7 +1137,7 @@ function buildFilters() {
   document.querySelectorAll("#shareMode button").forEach((b) => b.addEventListener("click", () => { shareMode = b.dataset.m; try { localStorage.setItem("svcCount", shareMode); } catch (e) {} render(); }));
   document.querySelectorAll("#svcMode button").forEach((b) => b.addEventListener("click", () => { svcMode = b.dataset.m; try { localStorage.setItem("svcMode", svcMode); } catch (e) {} render(); }));
   document.querySelectorAll("#revMode button").forEach((b) => b.addEventListener("click", () => { revMode = b.dataset.m; try { localStorage.setItem("revMode", revMode); } catch (e) {} render(); }));
-  let mekkoResize; window.addEventListener("resize", () => { clearTimeout(mekkoResize); mekkoResize = setTimeout(() => { if (svcMode === "mekko" && mekkoData) drawMekko(); }, 150); });
+  let mekkoResize; window.addEventListener("resize", () => { clearTimeout(mekkoResize); mekkoResize = setTimeout(() => { if (svcMode === "mekko" && mekkoData) drawMekko(); else if (charts.cTags && ($("#cTagsWrap").clientWidth < 640) !== charts.cTags.$above) render(); }, 150); });
   $("#clearAll").addEventListener("click", () => { Object.keys(F).forEach((k) => (F[k] = null)); syncHash(); paintChips(); render(); });
   $("#heat").addEventListener("click", (e) => { const c = e.target.closest(".c[data-m]"); if (!c) return; const y = +c.dataset.y, m = +c.dataset.m; if (F.month === m && F.year === y) { F.month = null; } else { F.year = y; F.month = m; } syncHash(); paintChips(); render(); });
 }
