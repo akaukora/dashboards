@@ -144,7 +144,7 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
 
   /* ---------- marimekko ---------- */
   .mekko { position: relative; height: 340px; }
-  .mekko[hidden] { display: none; }
+  .mekko[hidden] { display: none; } .posters[hidden], .list[hidden], .note[hidden] { display: none; }
   .mekko svg { display: block; width: 100%; height: 100%; overflow: visible; }
   .mekko .col { cursor: pointer; }
   .mekko .col rect { transition: opacity .15s; }
@@ -281,6 +281,30 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
 
   <section class="grid">
     <div class="card">
+      <div class="head"><h2>Recent watches</h2><div class="seg" id="watchMode"><button type="button" data-m="posters">Posters</button><button type="button" data-m="list">List</button></div></div>
+      <div class="note" id="noteRecent"></div>
+      <div class="note" id="noteTop" hidden></div>
+      <div class="chips" id="ratingChips"></div>
+      <div class="posters" id="posters"></div>
+      <ul class="list" id="topList" hidden></ul>
+    </div>
+    <div class="card">
+      <h2>Recent ratings</h2>
+      <div class="note" id="noteRecentRatings"></div>
+      <div class="chart"><canvas id="cRecent"></canvas></div>
+    </div>
+  </section>
+
+  <section class="grid one">
+    <div class="card">
+      <div class="head"><h2 id="reviewsHead">Latest reviews</h2><div class="seg" id="revMode" hidden><button type="button" data-m="review">Review</button><button type="button" data-m="desc">Description</button></div></div>
+      <div class="note" id="noteReviews"></div>
+      <div class="reviews" id="reviews"></div>
+    </div>
+  </section>
+
+  <section class="grid">
+    <div class="card">
       <div class="head"><h2>Films per year</h2><div class="seg" id="yearsMode"><button type="button" data-m="columns">Columns</button><button type="button" data-m="lines">Lines</button></div></div>
       <div class="note" id="noteYears"></div>
       <div class="chart clickable"><canvas id="cYears"></canvas></div>
@@ -301,31 +325,9 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
       <div class="chart clickable"><canvas id="cRatings"></canvas></div>
     </div>
     <div class="card">
-      <h2>Films by rating</h2>
-      <div class="note" id="noteTop"></div>
-      <div class="chips" id="ratingChips"></div>
-      <ul class="list" id="topList"></ul>
-    </div>
-  </section>
-
-  <section class="grid">
-    <div class="card">
-      <h2>Recent watches</h2>
-      <div class="note" id="noteRecent"></div>
-      <div class="posters" id="posters"></div>
-    </div>
-    <div class="card">
-      <h2>Recent ratings</h2>
-      <div class="note" id="noteRecentRatings"></div>
-      <div class="chart"><canvas id="cRecent"></canvas></div>
-    </div>
-  </section>
-
-  <section class="grid one">
-    <div class="card">
-      <div class="head"><h2 id="reviewsHead">Latest reviews</h2><div class="seg" id="revMode" hidden><button type="button" data-m="review">Review</button><button type="button" data-m="desc">Description</button></div></div>
-      <div class="note" id="noteReviews"></div>
-      <div class="reviews" id="reviews"></div>
+      <div class="head"><h2>Film count by service</h2><div class="seg" id="shareMode"><button type="button" data-m="bars">Totals</button><button type="button" data-m="lines">Running total</button></div></div>
+      <div class="note" id="noteShare"></div>
+      <div class="chart clickable" id="cShareWrap" style="height:280px"><canvas id="cShare"></canvas></div>
     </div>
   </section>
 
@@ -338,14 +340,6 @@ footer details { display: inline; } footer summary { display: inline; cursor: po
       <div class="mekko" id="mekko" hidden></div>
     </div>
   </section>
-  <section class="grid one">
-    <div class="card">
-      <div class="head"><h2>Films by service</h2><div class="seg" id="shareMode"><button type="button" data-m="bars">Totals</button><button type="button" data-m="lines">Running total</button></div></div>
-      <div class="note" id="noteShare"></div>
-      <div class="chart clickable" id="cShareWrap" style="height:280px"><canvas id="cShare"></canvas></div>
-    </div>
-  </section>
-
 
   <section class="card" id="tableCard">
     <h2>All diary entries</h2>
@@ -488,6 +482,7 @@ let ALL = [], YEARS = [], charts = {}, sortKey = "date", sortAsc = false, listFi
 let yearsMode = "columns"; try { yearsMode = localStorage.getItem("yearsMode") === "lines" ? "lines" : "columns"; } catch (e) {}
 let heatMode = "months"; try { heatMode = ["months", "wkyear", "wkmonth"].includes(localStorage.getItem("heatMode")) ? localStorage.getItem("heatMode") : "months"; } catch (e) {}
 let svcMode = "mekko"; try { svcMode = localStorage.getItem("svcMode") === "bars" ? "bars" : "mekko"; } catch (e) {}   // mekko by default; bars if chosen
+let watchMode = "posters"; try { watchMode = localStorage.getItem("watchMode") === "list" ? "list" : "posters"; } catch (e) {}   // recent watches: the latest posters, or every rated film as a list
 let shareMode = "bars"; try { shareMode = localStorage.getItem("svcCount") === "lines" ? "lines" : "bars"; } catch (e) {}   // films by service: totals as bars, or running totals as lines
 const SERVICE_TOP = 8;   // services drawn on their own; the rest go together as "Other"
 let mekkoData = null;   // last data drawn, so a resize can redraw without a full render
@@ -961,7 +956,10 @@ function render() {
   $("#ratingChips").innerHTML = [["all", "All"], ...present.map((lv) => [lv, `${lv}★ ${RATING_MEANING[lv]}`])].map(([v, l]) => `<button type="button" class="chip${(F.rating == null ? "all" : String(F.rating)) === String(v) ? " active" : ""}" data-r="${v}">${l}</button>`).join("");
   document.querySelectorAll("#ratingChips .chip").forEach((b) => b.addEventListener("click", () => setFilter("rating", b.dataset.r === "all" ? null : +b.dataset.r)));
   $("#topList").innerHTML = listFilms.map((f) => `<li><span>${f.url ? `<a href="${esc(f.url)}" target="_blank" rel="noopener">${esc(f.title)}</a>` : esc(f.title)}${f.year ? `<span class="yr">${f.year}</span>` : ""}${f.rewatch ? `<span class="rw">rewatch</span>` : ""}</span><span class="dt"><span class="stars" style="color:${RATING_COLORS[bucket(f.rating)]}">${starStr(f.rating)}</span> · ${fmtDate(f.date)}</span></li>`).join("") || `<li><span style="color:var(--text-3)">No rated films in this selection.</span></li>`;
-  $("#noteTop").textContent = `${listFilms.length} film${listFilms.length === 1 ? "" : "s"}, newest first.`;
+  $("#noteTop").textContent = `${listFilms.length} rated film${listFilms.length === 1 ? "" : "s"}${active.length ? " in this selection" : ""}, newest first.`;
+  const asList = watchMode === "list";
+  document.querySelectorAll("#watchMode button").forEach((b) => b.classList.toggle("active", b.dataset.m === watchMode));
+  $("#posters").hidden = asList; $("#noteRecent").hidden = asList; $("#topList").hidden = !asList; $("#noteTop").hidden = !asList;
 
   renderTable(films);
 }
@@ -1134,6 +1132,7 @@ function buildFilters() {
   document.querySelectorAll("#yearsMode button").forEach((b) => b.addEventListener("click", () => { yearsMode = b.dataset.m; try { localStorage.setItem("yearsMode", yearsMode); } catch (e) {} render(); }));
   document.querySelectorAll("#heatMode button").forEach((b) => b.addEventListener("click", () => { heatMode = b.dataset.m; try { localStorage.setItem("heatMode", heatMode); } catch (e) {} render(); }));
   $("#filterToggle").addEventListener("click", () => { const open = $("#filterBox").classList.toggle("open"); $("#filterToggle").setAttribute("aria-expanded", open); $("#filterToggle").classList.toggle("active", open); });
+  document.querySelectorAll("#watchMode button").forEach((b) => b.addEventListener("click", () => { watchMode = b.dataset.m; try { localStorage.setItem("watchMode", watchMode); } catch (e) {} render(); }));
   document.querySelectorAll("#shareMode button").forEach((b) => b.addEventListener("click", () => { shareMode = b.dataset.m; try { localStorage.setItem("svcCount", shareMode); } catch (e) {} render(); }));
   document.querySelectorAll("#svcMode button").forEach((b) => b.addEventListener("click", () => { svcMode = b.dataset.m; try { localStorage.setItem("svcMode", svcMode); } catch (e) {} render(); }));
   document.querySelectorAll("#revMode button").forEach((b) => b.addEventListener("click", () => { revMode = b.dataset.m; try { localStorage.setItem("revMode", revMode); } catch (e) {} render(); }));

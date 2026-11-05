@@ -18,8 +18,9 @@
       ".gallery-link{position:fixed;left:14px;bottom:14px;z-index:9999;display:inline-flex;align-items:center;gap:6px;" +
       "padding:5px 12px;border-radius:999px;font:600 12px/1.3 -apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,Helvetica,Arial,sans-serif;" +
       "text-decoration:none;box-shadow:0 2px 8px rgba(0,0,0,.2);opacity:.85;transition:opacity .15s,color .15s,border-color .15s;" +
-      (light ? "color:#4a5a6a;background:rgba(255,255,255,.92);border:1px solid #c9d1da}" : "color:#9ab;background:rgba(20,24,28,.92);border:1px solid #384352}") +
-      ".gallery-link:hover{opacity:1;color:" + (light ? "#00913a" : "#00e054") + ";border-color:#00a83f}" +
+      // orange, the highlight color: a darker orange on light pages so the text keeps its contrast; filled on hover
+      (light ? "color:#b35400;background:rgba(255,255,255,.92);border:1px solid #e07000}" : "color:#ff8000;background:rgba(20,24,28,.92);border:1px solid #ff8000}") +
+      ".gallery-link:hover{opacity:1;color:" + (light ? "#fff" : "#14181c") + ";background:" + (light ? "#c25d00" : "#ff8000") + ";border-color:" + (light ? "#c25d00" : "#ff8000") + "}" +
       "@media print{.gallery-link{display:none}}" +
       "@media (max-width:600px){.gallery-link{left:10px;bottom:10px;padding:4px 10px;font-size:11px}}";
   }
