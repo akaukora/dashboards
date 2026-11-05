@@ -208,6 +208,12 @@
   footer { margin-top: 40px; font-size: 12.5px; color: var(--text-muted); }
   footer a { color: inherit; }
 
+  #tip { --tip-gain: #6fd69a; --tip-loss: #ff8a8a; }
+  @media (prefers-color-scheme: dark) { :root:not([data-theme="light"]) #tip { --tip-gain: #17733f; --tip-loss: #b32e2d; } }
+  :root[data-theme="dark"] #tip { --tip-gain: #17733f; --tip-loss: #b32e2d; }
+  #tip .t { display: block; font-weight: 600; font-size: 13px; margin-bottom: 3px; }
+  #tip .m { display: block; opacity: .7; font-size: 12px; margin-bottom: 4px; }
+  #tip b { font-weight: 600; } #tip .up { color: var(--tip-gain); } #tip .dn { color: var(--tip-loss); }
   #tip {
     position: fixed; pointer-events: none; opacity: 0; transition: opacity .1s;
     background: var(--text-primary); color: var(--surface-1); font-size: 12.5px;
@@ -235,28 +241,21 @@
   <div class="tiles" id="tiles"></div>
 
   <div class="views" id="views" role="group" aria-label="View">
-    <button class="chip" data-view="tables" aria-pressed="true">Positions</button>
-    <button class="chip" data-view="bridge" aria-pressed="false">Bridge</button>
+    <button class="chip" data-view="bridge" aria-pressed="true">Bridge</button>
+    <button class="chip" data-view="tables" aria-pressed="false">Positions</button>
   </div>
 
-  <div id="view-bridge" hidden>
-  <h2>How the result was built</h2>
-  <p class="hint">Read from the bottom up. Each settled market moves the running total of realized
-    P&amp;L by its result, oldest first, up to the realized total. The open positions on top carry
-    it on with their unrealized P&amp;L (dashed in green or red); the gray dashed bar beside each is its cost, what it
-    would lose if it resolved against you.</p>
-  <div class="legend">
-    <span><i style="background:var(--gain)"></i>Settled gain</span>
-    <span><i style="background:var(--loss)"></i>Settled loss</span>
+  <div id="view-bridge">
+  <div class="legend" style="margin-top:16px">
+    <span><i style="background:var(--gain)"></i>/<i style="background:var(--loss)"></i>Settled gain / loss</span>
     <span><i class="dash" style="border-color:var(--gain)"></i>Unrealized</span>
     <span><i class="dash" style="border-color:var(--text-muted)"></i>At risk</span>
     <span><i style="background:var(--total)"></i>Total</span>
-    <span><i style="background:var(--total);opacity:.24"></i>Running net</span>
   </div>
-  <div id="bridge-card"></div>
+  <div id="bridge-card" style="margin-top:14px"></div>
   </div>
 
-  <div id="view-tables">
+  <div id="view-tables" hidden>
   <h2>Open positions</h2>
   <p class="hint" id="open-hint"></p>
   <div class="legend" id="open-legend">
@@ -306,7 +305,8 @@ const rate = r => r == null ? '—'
   : r > 20 ? '>+2,000%'
   : (r >= 0 ? '+' : '') + (r * 100).toFixed(r > 1 || r < -1 ? 0 : 1) + '%';
 const days = d => d == null ? '—' : d < 365 ? d + 'd' : (d / 365).toFixed(1) + 'y';
-const esc = s => String(s ?? '').replace(/[&<>"]/g, c =>
+// Kalshi titles carry markdown bold (**gas prices**); the asterisks are dropped wherever text is shown
+const esc = s => String(s ?? '').replace(/\*\*/g, '').replace(/[&<>"]/g, c =>
   ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;' }[c]));
 
 const rows = key => (DATA[key] || []).filter(r => filter === 'all' || r.venue === filter);
@@ -464,6 +464,8 @@ function renderClosed() {
   card.querySelectorAll('.pnl-row').forEach(r => bindTip(r, r.dataset.tip));
 }
 
+const tc = (n) => n >= 0 ? 'up' : 'dn';
+const longDate = (d) => d ? new Date(d + 'T00:00:00Z').toLocaleDateString('en-US', { day: 'numeric', month: 'short', year: 'numeric', timeZone: 'UTC' }) : '';
 function renderBridge() {
   const card = document.getElementById('bridge-card');
   const settled = rows('closed').slice().sort((a, b) =>
@@ -495,22 +497,26 @@ function renderBridge() {
       const c = s.r, v = VENUES[c.venue] || { name: c.venue };
       bar = `<div class="br-bar ${c.realized_pnl >= 0 ? 'g' : 'l'}" style="left:${x0}%;width:${w}%"></div>`;
       lab = `<b class="${cls(c.realized_pnl)}">${signed(c.realized_pnl)}</b>${esc(c.title)}<span class="when">${short(c.closed_at)}</span>`;
-      tipHtml = `${esc(c.title)}<br>${esc(v.name)} · ${esc(c.outcome)} · settled ${esc(c.closed_at || '')}<br>Cost ${esc(usd(c.cost_basis))} · ${esc(signed(c.realized_pnl))} (${esc(pct(c.pct_pnl))})` +
-        `<br>Running total ${esc(signed(s.b))}`;
+      tipHtml = `<span class="t">${esc(c.title)}</span><span class="m">${esc(v.name)} · ${esc(c.outcome)} · settled ${esc(longDate(c.closed_at))}</span>` +
+        `Cost <b>${esc(usd(c.cost_basis))}</b> · result <b class="${tc(c.realized_pnl)}">${esc(signed(c.realized_pnl))}</b> (${esc(pct(c.pct_pnl))})` +
+        `<br>Running total <b>${esc(signed(s.b))}</b>`;
     } else if (s.kind === 'open') {
       const p = s.r, v = VENUES[p.venue] || { name: p.venue };
       const rEnd = Math.min(s.a, s.b), rStart = s.a - s.risk, left = Math.max(0, rEnd - rStart);   // left: what can still be lost from today
       bar = `<div class="br-bar risk" style="left:${X(rStart)}%;width:${X(rEnd) - X(rStart)}%"></div>` +
         `<div class="br-bar ${p.unrealized_pnl >= 0 ? 'og' : 'ol'}" style="left:${x0}%;width:${w}%"></div>`;
       lab = `<b class="${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}</b>${esc(p.title)}<span class="when">at risk ${usd(left)}${p.end_date ? ' · resolves ' + short(p.end_date) : ''}</span>`;
-      tipHtml = `${esc(p.title)}<br>${esc(v.name)} · ${esc(p.outcome)} · open<br>Cost ${esc(usd(p.cost_basis))} · now ${esc(usd(p.current_value))}` +
-        `<br>Unrealized ${esc(signed(p.unrealized_pnl))} (${esc(pct(p.pct_pnl))})<br>If it resolves against you: −${esc(usd(p.current_value))} from today, −${esc(usd(s.risk))} on the stake` +
-        (p.end_date ? `<br>Resolves ${esc(p.end_date)}` : '');
+      tipHtml = `<span class="t">${esc(p.title)}</span><span class="m">${esc(v.name)} · ${esc(p.outcome)} · open${p.end_date ? ' · resolves ' + esc(longDate(p.end_date)) : ''}</span>` +
+        `Cost <b>${esc(usd(p.cost_basis))}</b> · now <b>${esc(usd(p.current_value))}</b>` +
+        `<br>Unrealized <b class="${tc(p.unrealized_pnl)}">${esc(signed(p.unrealized_pnl))}</b> (${esc(pct(p.pct_pnl))})`;
     } else {
       bar = `<div class="br-bar sum" style="left:${x0}%;width:${w}%"></div>`;
       const worst = realized - open.reduce((t, p) => t + p.cost_basis, 0);
       lab = `<b class="${cls(s.b)}">${signed(s.b)}</b>${esc(s.label)}<span class="when">${s.top ? `${esc(s.note)} · ${signed(worst)} if all open lost` : `${settled.length} settled`}</span>`;
-      tipHtml = s.top ? `Realized ${esc(signed(realized))} + unrealized ${esc(signed(s.b - realized))}<br>If every open position lost: ${esc(signed(worst))}` : `${settled.length} settled markets`;
+      tipHtml = s.top
+        ? `<span class="t">Now</span>Realized <b class="${tc(realized)}">${esc(signed(realized))}</b> + unrealized <b class="${tc(s.b - realized)}">${esc(signed(s.b - realized))}</b>` +
+          `<br>If every open position lost: <b class="${tc(worst)}">${esc(signed(worst))}</b>`
+        : `<span class="t">Realized</span><b class="${tc(s.b)}">${esc(signed(s.b))}</b> from ${settled.length} settled markets`;
     }
     // fill the stretch between zero and the step, so every row shows the net running total at that point
     {
@@ -530,7 +536,7 @@ function renderBridge() {
   card.querySelectorAll('.br-row').forEach(r => bindTip(r, r.dataset.tip));
 }
 
-let view = 'tables'; try { view = localStorage.getItem('pm-view') === 'bridge' ? 'bridge' : 'tables'; } catch (e) {}
+let view = 'bridge'; try { view = localStorage.getItem('pm-view') === 'tables' ? 'tables' : 'bridge'; } catch (e) {}   // the bridge unless Positions was picked
 function renderView() {
   document.querySelectorAll('#views .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === view));
   document.getElementById('view-bridge').hidden = view !== 'bridge';
