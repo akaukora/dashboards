@@ -29,7 +29,7 @@ from typing import Any
 
 import requests
 
-POLY_BASE = "https://data-api.polymarket.com"
+POLY_BASE = "https://data-api.polymarket.com/v2"   # Data API v1 (no /v2) was retired on 2 Nov 2026
 KALSHI_BASE = "https://external-api.kalshi.com"
 KALSHI_PREFIX = "/trade-api/v2"
 
@@ -193,29 +193,36 @@ def xirr(flows: list[tuple[str, float]]) -> float | None:
 # Polymarket - public, unauthenticated
 # --------------------------------------------------------------------------
 
-def poly_get(path: str, params: dict) -> list[dict]:
+def poly_get(path: str, params: dict) -> dict:
+    """One v2 request. Every v2 response is an envelope: {"data": ..., "pagination": {...}}."""
     url = f"{POLY_BASE}{path}"
     r = SESSION.get(url, params=params, timeout=TIMEOUT)
     r.raise_for_status()
-    payload = r.json()
-    return payload if isinstance(payload, list) else payload.get("data", [])
+    return r.json()
 
 
-def poly_paged(path: str, wallet: str, page: int = 500, cap: int = 5000) -> list[dict]:
+def poly_paged(path: str, wallet: str, extra: dict | None = None,
+               page: int = 500, max_pages: int = 50) -> list[dict]:
+    """Walk a v2 cursor: follow pagination.next_cursor until it is null. v2 has no offset
+    parameter (sending one is a 400), and the same filters go along on every page."""
+    base = {"user": wallet, **(extra or {})}
+    params = {**base, "limit": page}
     rows: list[dict] = []
-    offset = 0
-    while offset < cap:
-        batch = poly_get(path, {"user": wallet, "limit": page, "offset": offset})
-        rows.extend(batch)
-        if len(batch) < page:
+    for _ in range(max_pages):
+        payload = poly_get(path, params)
+        rows.extend(payload.get("data") or [])
+        cursor = (payload.get("pagination") or {}).get("next_cursor")
+        if not cursor:
             break
-        offset += page
+        params = {**base, "cursor": cursor}
     return rows
 
 
 def fetch_polymarket(wallet: str) -> dict:
+    # v2 serves the whole lifecycle from /positions: OPEN (the default) also holds
+    # settled-but-unredeemed winners, CLOSED is what /closed-positions used to be
     open_raw = poly_paged("/positions", wallet)
-    closed_raw = poly_paged("/closed-positions", wallet)
+    closed_raw = poly_paged("/positions", wallet, {"status": "CLOSED"})
 
     # /activity carries the dated trade history the position endpoints lack:
     # it supplies each market's entry date and the cash flows the IRR needs.
@@ -225,11 +232,11 @@ def fetch_polymarket(wallet: str) -> dict:
     flows: list[tuple[str, float]] = []
     yield_earned = 0.0
     try:
-        for a in poly_paged("/activity", wallet):
+        for a in poly_paged("/activity", wallet, {"start": 1}):   # start=1: v2 otherwise floors the feed at three years back
             kind = (a.get("type") or "").upper()
             when = iso(a.get("timestamp"))
-            usdc = num(a.get("usdcSize"))
-            cid = a.get("conditionId")
+            usdc = num(a.get("usdc_size"))
+            cid = a.get("condition_id")
             if kind == "YIELD":
                 yield_earned += usdc
                 continue
@@ -247,49 +254,49 @@ def fetch_polymarket(wallet: str) -> dict:
 
     positions = []
     for p in open_raw:
-        slug = p.get("eventSlug") or p.get("slug") or ""
-        cid = p.get("conditionId")
-        cost = num(p.get("initialValue"))
-        pnl = num(p.get("cashPnl"))
-        opened = first_buy.get(cid)
+        slug = p.get("event_slug") or p.get("slug") or ""
+        cid = p.get("condition_id")
+        cost = num(p.get("entry_cost_usdc"))
+        pnl = num(p.get("unrealized_pnl"))
+        opened = first_buy.get(cid) or iso(p.get("first_entry_at"))
         held = days_between(opened, None)
         roi = pnl / cost if cost else 0.0
         positions.append({
             "venue": "polymarket",
             "title": p.get("title"),
             "outcome": p.get("outcome"),
-            "size": num(p.get("size")),
-            "avg_price": num(p.get("avgPrice")),
-            "cur_price": num(p.get("curPrice")),
+            "size": num(p.get("current_size")),
+            "avg_price": num(p.get("avg_price")),
+            "cur_price": num(p.get("current_price")),
             "cost_basis": cost,
-            "current_value": num(p.get("currentValue")),
+            "current_value": num(p.get("current_value")),
             "unrealized_pnl": pnl,
-            "pct_pnl": num(p.get("percentPnl")),
-            "fees": num(p.get("entryFeesUsdc")),
+            "pct_pnl": num(p.get("percent_pnl")),
+            "fees": num(p.get("entry_fees_usdc")),
             "opened_at": opened,
             "days_held": held,
             "annualized": annualize(roi, held),
-            "end_date": iso(p.get("endDate")),
+            "end_date": iso(p.get("end_date")),
             "redeemable": bool(p.get("redeemable")),
             "url": f"https://polymarket.com/event/{slug}" if slug else None,
         })
 
     closed = []
     for p in closed_raw:
-        slug = p.get("eventSlug") or p.get("slug") or ""
-        cid = p.get("conditionId")
-        cost = num(p.get("totalBought")) * num(p.get("avgPrice"))
-        realized = num(p.get("realizedPnl"))
-        opened = first_buy.get(cid)
-        closed_at = iso(p.get("timestamp") or p.get("endDate"))
+        slug = p.get("event_slug") or p.get("slug") or ""
+        cid = p.get("condition_id")
+        cost = num(p.get("total_size")) * num(p.get("avg_price"))   # everything bought x average price, as v1's totalBought x avgPrice
+        realized = num(p.get("realized_pnl"))
+        opened = first_buy.get(cid) or iso(p.get("first_entry_at"))
+        closed_at = iso(p.get("last_event_at") or p.get("end_date"))
         held = days_between(opened, closed_at)
         roi = realized / cost if cost else 0.0
         closed.append({
             "venue": "polymarket",
             "title": p.get("title"),
             "outcome": p.get("outcome"),
-            "size": num(p.get("totalBought")),
-            "avg_price": num(p.get("avgPrice")),
+            "size": num(p.get("total_size")),
+            "avg_price": num(p.get("avg_price")),
             "cost_basis": round(cost, 4),
             "realized_pnl": realized,
             "pct_pnl": round(roi * 100, 4),
@@ -304,9 +311,11 @@ def fetch_polymarket(wallet: str) -> dict:
     # so the dashboard can show it beside the sum we compute and expose any drift.
     reported_value = None
     try:
-        v = poly_get("/value", {"user": wallet})
+        v = poly_get("/value", {"user": wallet}).get("data")
+        if isinstance(v, list):
+            v = v[0] if v else None
         if v:
-            reported_value = num(v[0].get("value"))
+            reported_value = num(v.get("value"))
     except requests.RequestException:
         pass
 

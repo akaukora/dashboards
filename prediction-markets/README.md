@@ -130,7 +130,14 @@ Every position and settled market now carries `opened_at`, `days_held` and
 
 **Entry dates** come from the trade history, not the position endpoints, which
 don't have them: Kalshi from the first buy fill per market, Polymarket from the
-first BUY row in `/activity` for that `conditionId`.
+first BUY row in `/activity` for that `condition_id`, falling back to the
+position's own `first_entry_at`.
+
+Polymarket is read through Data API v2 (`https://data-api.polymarket.com/v2`);
+the original routes were retired on 2 November 2026 and now answer `410 Gone`.
+v2 serves open and settled positions from one route (`/v2/positions`, with
+`status=CLOSED` for what used to be `/closed-positions`), pages with a cursor
+instead of `offset`, and names its fields in snake_case.
 
 **Per-market annualized** is `(1 + roi) ^ (365 / days) − 1`. It is suppressed
 below a 7-day holding period and for total losses. Both suppressions are
@@ -164,5 +171,5 @@ Polymarket's own numbers total **+$206.13** (+$171.94 realized, +$34.19
 unrealized). The profile page shows **+$143.22**. Position value reconciles
 exactly ($186.19 three ways — computed, the `/value` endpoint, and the profile),
 so the gap is in how the profile aggregates P&L, not in the position data. It
-may be scoped to a time window, or exclude something `/closed-positions`
-includes. Unresolved.
+may be scoped to a time window, or exclude something the closed positions
+(`/v2/positions?status=CLOSED`, formerly `/closed-positions`) include. Unresolved.
