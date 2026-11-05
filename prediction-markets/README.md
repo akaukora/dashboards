@@ -145,6 +145,11 @@ therefore moves any position that is `redeemable` with no value left to the
 settled list, as a loss of its remaining cost on the market's end date.
 Unredeemed winners stay open, since their value is a real claim.
 
+Kalshi titles come from `/markets`, but settled markets past Kalshi's cutoff
+drop out of it (the batch call silently omits them and `/markets/{ticker}`
+answers 404). `fetch_data.py` then asks `/historical/markets/{ticker}`, so
+those markets keep their names instead of showing a bare ticker.
+
 **Per-market annualized** is `(1 + roi) ^ (365 / days) − 1`. It is suppressed
 below a 7-day holding period and for total losses. Both suppressions are
 deliberate: at 3 days the exponent is 122, so rounding noise and a one-tick

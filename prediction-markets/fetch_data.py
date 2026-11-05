@@ -422,6 +422,18 @@ def kalshi_market_meta(key_id, private_key, tickers: list[str]) -> dict[str, dic
                 except requests.RequestException:
                     continue
         time.sleep(0.25)
+    # Settled markets past Kalshi's cutoff leave /markets entirely: the batch call just
+    # omits them, and /markets/{ticker} answers 404. They live on in /historical/markets.
+    for t in [t for t in tickers if t and t not in meta]:
+        for path in (f"/markets/{t}", f"/historical/markets/{t}"):
+            try:
+                m = (kalshi_get(key_id, private_key, path) or {}).get("market") or {}
+            except requests.RequestException:
+                continue
+            if m.get("ticker"):
+                meta[m["ticker"]] = m
+                break
+        time.sleep(0.25)
     return meta
 
 

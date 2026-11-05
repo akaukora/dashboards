@@ -130,6 +130,8 @@
   .br-zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--baseline); }
   .br-bar { position: absolute; top: 50%; height: 11px; margin-top: -5.5px; border-radius: 2px; box-sizing: border-box; }
   .br-bar.g { background: var(--gain); } .br-bar.l { background: var(--loss); }
+  .br-bar.upside { top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 4px; border: 1.5px dashed var(--gain); opacity: .55; }   /* potential gain: an empty outline, like at risk */
+  .legend i.dash.up { border-color: var(--gain); opacity: .55; }
   .br-bar.og { border: 1.5px dashed var(--gain); background: color-mix(in srgb, var(--gain) 22%, transparent); }
   .br-bar.ol { border: 1.5px dashed var(--loss); background: color-mix(in srgb, var(--loss) 22%, transparent); }
   /* the step bars fill the whole row, so consecutive steps touch: no gaps between the changes */
@@ -209,6 +211,7 @@
     <span><i style="background:var(--gain)"></i>/<i style="background:var(--loss)"></i>Settled gain / loss</span>
     <span><i class="dash" style="border-color:var(--gain)"></i>Unrealized</span>
     <span><i class="dash" style="border-color:var(--text-muted)"></i>At risk</span>
+    <span><i class="dash up"></i>Upside</span>
     <span><i style="background:var(--total)"></i>Total</span>
   </div>
   <div id="bridge-card" style="margin-top:14px"></div>
@@ -437,11 +440,11 @@ function renderBridge() {
   for (const c of settled) { steps.push({ kind: 'settled', r: c, a: cum, b: cum + c.realized_pnl }); cum += c.realized_pnl; }
   const realized = cum;
   steps.push({ kind: 'sum', label: 'Realized', a: 0, b: realized });
-  for (const p of open) { steps.push({ kind: 'open', r: p, a: cum, b: cum + p.unrealized_pnl, risk: p.cost_basis }); cum += p.unrealized_pnl; }
+  for (const p of open) { steps.push({ kind: 'open', r: p, a: cum, b: cum + p.unrealized_pnl, risk: p.cost_basis, up: Math.max(0, (p.size || 0) - p.cost_basis) }); cum += p.unrealized_pnl; }
   if (open.length) steps.push({ kind: 'sum', label: 'Now', note: 'with open positions marked', a: 0, b: cum, top: true });
 
   // the bars use the left part of the width; the rest is room for the labels that follow each bar
-  const xs = steps.flatMap(s => [s.a, s.b, s.risk != null ? s.a - s.risk : s.a]);
+  const xs = steps.flatMap(s => [s.a, s.b, s.risk != null ? s.a - s.risk : s.a, s.up != null ? s.a + s.up : s.a]);
   const lo = Math.min(0, ...xs), hi = Math.max(0, ...xs), span = (hi - lo) || 1;
   const PLOT = innerWidth < 640 ? 52 : 58;
   const X = v => (v - lo) / span * PLOT;
@@ -462,19 +465,26 @@ function renderBridge() {
     } else if (s.kind === 'open') {
       const p = s.r, v = VENUES[p.venue] || { name: p.venue };
       const rEnd = Math.min(s.a, s.b), rStart = s.a - s.risk, left = Math.max(0, rEnd - rStart);   // left: what can still be lost from today
+      // upside: from the far end of the colored box to the best case, so it never overlaps the red or green part
+      const uStart = Math.max(s.a, s.b), uEnd = s.a + s.up, more = Math.max(0, uEnd - uStart);   // more: what is still to gain from today
+      s.uEnd = uEnd;
       bar = `<div class="br-bar risk" style="left:${X(rStart)}%;width:${X(rEnd) - X(rStart)}%"></div>` +
+        (more > 0.005 ? `<div class="br-bar upside" style="left:${X(uStart)}%;width:${X(uEnd) - X(uStart)}%"></div>` : '') +
         `<div class="br-bar ${p.unrealized_pnl >= 0 ? 'og' : 'ol'}" style="left:${x0}%;width:${w}%"></div>`;
-      lab = `<b class="${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}</b>${esc(p.title)}<span class="when">at risk ${usd(left)}${p.end_date ? ' · resolves ' + short(p.end_date) : ''}</span>`;
+      lab = `<b class="${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}</b>${esc(p.title)}<span class="when">at risk ${usd(left)} · upside ${usd(more)}${p.end_date ? ' · resolves ' + short(p.end_date) : ''}</span>`;
       tipHtml = `<span class="t">${esc(p.title)}</span><span class="m">${esc(v.name)} · ${esc(p.outcome)} · open${p.end_date ? ' · resolves ' + esc(longDate(p.end_date)) : ''}</span>` +
         `Cost <b>${esc(usd(p.cost_basis))}</b> · now <b>${esc(usd(p.current_value))}</b>` +
-        `<br>Unrealized <b class="${tc(p.unrealized_pnl)}">${esc(signed(p.unrealized_pnl))}</b> (${esc(pct(p.pct_pnl))})`;
+        `<br>Unrealized <b class="${tc(p.unrealized_pnl)}">${esc(signed(p.unrealized_pnl))}</b> (${esc(pct(p.pct_pnl))})` +
+        `<br>If it wins: pays <b>${esc(usd(p.size))}</b>, <b class="up">${esc(signed(p.size - p.cost_basis))}</b> on the stake, <b class="up">${esc(signed(p.size - p.current_value))}</b> from today`;
     } else {
       bar = `<div class="br-bar sum" style="left:${x0}%;width:${w}%"></div>`;
       const worst = realized - open.reduce((t, p) => t + p.cost_basis, 0);
-      lab = `<b class="${cls(s.b)}">${signed(s.b)}</b>${esc(s.label)}<span class="when">${s.top ? `${esc(s.note)} · ${signed(worst)} if all open lost` : `${settled.length} settled`}</span>`;
+      const best = realized + open.reduce((t, p) => t + Math.max(0, (p.size || 0) - p.cost_basis), 0);
+      lab = `<b class="${cls(s.b)}">${signed(s.b)}</b>${esc(s.label)}<span class="when">${s.top ? `${esc(s.note)} · ${signed(worst)} if all open lost · ${signed(best)} if all won` : `${settled.length} settled`}</span>`;
       tipHtml = s.top
         ? `<span class="t">Now</span>Realized <b class="${tc(realized)}">${esc(signed(realized))}</b> + unrealized <b class="${tc(s.b - realized)}">${esc(signed(s.b - realized))}</b>` +
-          `<br>If every open position lost: <b class="${tc(worst)}">${esc(signed(worst))}</b>`
+          `<br>If every open position lost: <b class="${tc(worst)}">${esc(signed(worst))}</b>` +
+          `<br>If every open position won: <b class="${tc(best)}">${esc(signed(best))}</b>`
         : `<span class="t">Realized</span><b class="${tc(s.b)}">${esc(signed(s.b))}</b> from ${settled.length} settled markets`;
     }
     // fill the stretch between zero and the step, so every row shows the net running total at that point
@@ -486,7 +496,7 @@ function renderBridge() {
     const joinAt = s.kind === 'sum' ? s.b : s.a;
     const link = below ? `<div class="br-link" style="left:${X(joinAt)}%;top:50%;bottom:-1px"></div>` : '';
     const linkUp = i > 0 ? `<div class="br-link" style="left:${X(s.b)}%;top:-1px;bottom:50%"></div>` : '';
-    const labLeft = Math.max(x1, s.kind === 'open' ? X(s.a) : x1) + 1.2;
+    const labLeft = Math.max(x1, s.kind === 'open' ? Math.max(X(s.a), X(s.uEnd)) : x1) + 1.2;
     return `<div class="br-row${s.kind === 'sum' ? ' total' : ''}" data-tip="${tipHtml.replace(/"/g, '&quot;')}">
       <div class="br-plot"><div class="br-zero" style="left:${X(0)}%"></div>${link}${linkUp}${bar}</div>
       <div class="br-lab" style="left:${labLeft}%;right:0">${lab}</div></div>`;
