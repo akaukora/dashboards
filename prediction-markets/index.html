@@ -16,11 +16,12 @@
     --baseline:       #c3c2b7;
     --border:         rgba(11,11,11,0.10);
     --venue-poly:     #2a78d6;
-    --venue-kalshi:   #eb6834;
-    --gain:           #2a78d6;
+    --venue-kalshi:   #7c4ddb;
+    --gain:           #22a05a;
     --loss:           #e34948;
-    --gain-text:      #184f95;
+    --gain-text:      #17733f;
     --loss-text:      #b32e2d;
+    --total:          #e3a21a;
   }
   @media (prefers-color-scheme: dark) {
     :root:not([data-theme="light"]) {
@@ -34,11 +35,12 @@
       --baseline:       #383835;
       --border:         rgba(255,255,255,0.10);
       --venue-poly:     #3987e5;
-      --venue-kalshi:   #d95926;
-      --gain:           #3987e5;
+      --venue-kalshi:   #9b74ee;
+      --gain:           #2fbf6c;
       --loss:           #e66767;
-      --gain-text:      #86b6ef;
+      --gain-text:      #6fd69a;
       --loss-text:      #e66767;
+      --total:          #f2bf45;
     }
   }
   :root[data-theme="dark"] {
@@ -52,11 +54,12 @@
     --baseline:       #383835;
     --border:         rgba(255,255,255,0.10);
     --venue-poly:     #3987e5;
-    --venue-kalshi:   #d95926;
-    --gain:           #3987e5;
+    --venue-kalshi:   #9b74ee;
+    --gain:           #2fbf6c;
     --loss:           #e66767;
-    --gain-text:      #86b6ef;
+    --gain-text:      #6fd69a;
     --loss-text:      #e66767;
+    --total:          #f2bf45;
   }
 
   * { box-sizing: border-box; }
@@ -138,6 +141,12 @@
   .venue-label { font-size: 11.5px; color: var(--text-muted); }
 
   .bar-cell { width: 160px; }
+  td.withbar { width: 120px; }
+  td.withbar .cbar { height: 8px; margin: 0 0 5px auto; position: relative; }
+  td.withbar .cbar i { position: absolute; right: 0; top: 0; bottom: 0; border-radius: 3px 0 0 3px; }   /* right-anchored: each bar ends at its figure */
+  @media (max-width: 640px) { td.withbar { width: auto; min-width: 58px; padding-left: 6px; } }
+  td.withbar .cbar i.solid { background: var(--venue-poly); }
+  td.withbar .cbar i.dash { border: 1.5px dashed; box-sizing: border-box; }
   .bar-track { height: 9px; background: var(--grid); border-radius: 4px; overflow: hidden; }
   .bar-fill { height: 100%; border-radius: 0 4px 4px 0; }
   .bar-track.pl { background: none; overflow: visible; margin-top: 4px; }
@@ -150,26 +159,28 @@
 
   /* bridge: realized P&L built up from the first settled market (bottom) to today (top) */
   .br { padding: 8px 0; }
-  .br-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 46%) 104px; gap: 14px; align-items: center; padding: 0 14px; min-height: 26px; }
+  .br-row { position: relative; height: 24px; }
   .br-row:hover { background: var(--plane); }
   .br-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .br-name .when { color: var(--text-muted); font-size: 11.5px; margin-left: 8px; }
-  .br-row.total .br-name, .br-row.total .br-val { font-weight: 600; }
-  .br-plot { position: relative; align-self: stretch; min-height: 26px; }
+  .br-row.total { height: 34px; }
+  .br-plot { position: absolute; inset: 0; }
   .br-zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--baseline); }
   .br-bar { position: absolute; top: 50%; height: 11px; margin-top: -5.5px; border-radius: 2px; box-sizing: border-box; }
   .br-bar.g { background: var(--gain); } .br-bar.l { background: var(--loss); }
   .br-bar.og { border: 1.5px dashed var(--gain); } .br-bar.ol { border: 1.5px dashed var(--loss); }
   .br-bar.risk { background: repeating-linear-gradient(135deg, var(--text-muted) 0 2px, transparent 2px 5px); opacity: .55; height: 7px; margin-top: -3.5px; }
-  .br-bar.sum { background: var(--text-secondary); opacity: .55; }
+  .br-bar.sum { background: var(--total); height: 18px; margin-top: -9px; border-radius: 3px; }
+  .br-lab { position: absolute; top: 50%; transform: translateY(-50%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; color: var(--text-secondary); pointer-events: none; }
+  .br-lab b { font-weight: 600; font-variant-numeric: tabular-nums; margin-right: 6px; }
+  .br-lab .when { color: var(--text-muted); font-size: 11px; margin-left: 6px; }
+  .br-row.total .br-lab { font-size: 13.5px; color: var(--text-primary); font-weight: 600; }
+  .br-row.total .br-lab .when { font-weight: 400; }
   .br-link { position: absolute; width: 0; border-left: 1px solid var(--text-muted); opacity: .6; }
   .br-val { font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; line-height: 1.3; }
   .br-val .sub { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
   .br-sep td, .br-sep { height: 1px; background: var(--grid); margin: 6px 14px; }
-  @media (max-width: 640px) {
-    .br-row { grid-template-columns: minmax(0, 1fr) 92px; grid-template-areas: "name val" "plot plot"; row-gap: 2px; padding: 5px 14px; }
-    .br-name { grid-area: name; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } .br-val { grid-area: val; } .br-plot { grid-area: plot; }
-  }
+  @media (max-width: 640px) { .br-lab { font-size: 11.5px; } .br-lab .when { display: none; } }
 
   .pnl-row { display: grid; grid-template-columns: minmax(0,1fr) 320px 92px; gap: 14px; align-items: center; padding: 7px 14px; }
   .pnl-row:hover { background: var(--plane); }
@@ -233,8 +244,9 @@
     <span><i style="background:var(--loss)"></i>Settled loss</span>
     <span><i class="dash" style="border-color:var(--gain)"></i>Unrealized</span>
     <span><i class="hatch"></i>At risk</span>
+    <span><i style="background:var(--total)"></i>Total</span>
   </div>
-  <div class="card" id="bridge-card"></div>
+  <div id="bridge-card"></div>
   </div>
 
   <div id="view-tables">
@@ -367,12 +379,14 @@ function renderOpen() {
     card.innerHTML = '<div class="empty">No open positions.</div>';
     return;
   }
-  hint.textContent = 'Solid bar: position value. Dashed bar: unrealized gain or loss. Both on one scale, set by the largest.';
+  hint.textContent = 'The bars above the figures share one scale: solid for position value, dashed for unrealized gain or loss.';
   const max = Math.max(...list.map(p => Math.max(p.current_value, Math.abs(p.unrealized_pnl))), 0.01);
   const body = list.map(p => {
     const v = VENUES[p.venue] || { name: p.venue, color: 'var(--text-muted)' };
     const w = Math.max(2, p.current_value / max * 100);
     const wu = Math.abs(p.unrealized_pnl) / max * 100, uc = p.unrealized_pnl >= 0 ? 'var(--gain)' : 'var(--loss)';
+    const vbar = `<div class="cbar"><i class="solid" style="width:${w}%;background:${v.color}"></i></div>`;
+    const ubar = `<div class="cbar">${wu >= 0.5 ? `<i class="dash" style="width:${Math.max(3, wu)}%;border-color:${uc}"></i>` : ''}</div>`;
     const title = p.url
       ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>`
       : esc(p.title);
@@ -389,21 +403,18 @@ function renderOpen() {
       <td><span class="side">${esc(p.outcome)}</span></td>
       <td class="num col-opt">${price3(p.cur_price)}</td>
       <td class="num col-opt">${days(p.days_held)}</td>
-      <td class="num">${usd(p.current_value)}</td>
-      <td class="num ${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}<br>
+      <td class="num withbar">${vbar}${usd(p.current_value)}</td>
+      <td class="num withbar ${cls(p.unrealized_pnl)}">${ubar}${signed(p.unrealized_pnl)}<br>
         <span style="font-size:11.5px;opacity:.75">${pct(p.pct_pnl)}</span></td>
       <td class="num col-opt ${p.annualized == null ? '' : cls(p.annualized)}"
           style="opacity:${p.annualized == null ? .5 : 1}">${rate(p.annualized)}</td>
-      <td class="bar-cell"><div class="bar-track">
-        <div class="bar-fill" style="width:${w}%;background:${v.color}"></div></div>
-        <div class="bar-track pl">${wu >= 0.5 ? `<div class="bar-pl" style="width:${Math.max(3, wu)}%;border-color:${uc}"></div>` : ''}</div></td>
     </tr>`;
   }).join('');
 
   card.innerHTML = `<table><thead><tr>
     <th>Market</th><th>Side</th><th class="num col-opt">Price</th>
     <th class="num col-opt">Held</th><th class="num">Value</th>
-    <th class="num">Unrealized</th><th class="num col-opt">Ann.</th><th></th>
+    <th class="num">Unrealized</th><th class="num col-opt">Ann.</th>
   </tr></thead><tbody>${body}</tbody></table>`;
 
   card.querySelectorAll('tbody tr').forEach(tr => bindTip(tr, tr.dataset.tip));
@@ -459,50 +470,48 @@ function renderBridge() {
   const realized = cum;
   steps.push({ kind: 'sum', label: 'Realized', a: 0, b: realized });
   for (const p of open) { steps.push({ kind: 'open', r: p, a: cum, b: cum + p.unrealized_pnl, risk: p.cost_basis }); cum += p.unrealized_pnl; }
-  if (open.length) steps.push({ kind: 'sum', label: 'Now, with open positions marked', a: 0, b: cum, top: true });
+  if (open.length) steps.push({ kind: 'sum', label: 'Now', note: 'with open positions marked', a: 0, b: cum, top: true });
 
+  // the bars use the left part of the width; the rest is room for the labels that follow each bar
   const xs = steps.flatMap(s => [s.a, s.b, s.risk != null ? s.a - s.risk : s.a]);
   const lo = Math.min(0, ...xs), hi = Math.max(0, ...xs), span = (hi - lo) || 1;
-  const X = v => (v - lo) / span * 100;
+  const PLOT = innerWidth < 640 ? 52 : 58;
+  const X = v => (v - lo) / span * PLOT;
   const short = d => d ? new Date(d + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit', timeZone: 'UTC' }) : '';
 
   // rendered top-down; the thin links join each bar's start to the end of the bar below it
   const html = steps.slice().reverse().map((s, i, arr) => {
     const below = arr[i + 1];
     const x0 = X(Math.min(s.a, s.b)), x1 = X(Math.max(s.a, s.b)), w = Math.max(0.4, x1 - x0);
-    let bar = '', name = '', val = '', tipHtml = '';
+    let bar = '', lab = '', tipHtml = '';
     if (s.kind === 'settled') {
       const c = s.r, v = VENUES[c.venue] || { name: c.venue };
       bar = `<div class="br-bar ${c.realized_pnl >= 0 ? 'g' : 'l'}" style="left:${x0}%;width:${w}%"></div>`;
-      name = `${esc(c.title)}<span class="when">${short(c.closed_at)}</span>`;
-      val = `<span class="${cls(c.realized_pnl)}">${signed(c.realized_pnl)}</span><span class="sub">→ ${signed(s.b)}</span>`;
-      tipHtml = `${esc(v.name)} · ${esc(c.outcome)}<br>Cost ${esc(usd(c.cost_basis))} · ${esc(signed(c.realized_pnl))} (${esc(pct(c.pct_pnl))})` +
-        (c.opened_at ? `<br>${esc(c.opened_at)} → ${esc(c.closed_at || '')}` : '') + `<br>Running total ${esc(signed(s.b))}`;
+      lab = `<b class="${cls(c.realized_pnl)}">${signed(c.realized_pnl)}</b>${esc(c.title)}<span class="when">${short(c.closed_at)}</span>`;
+      tipHtml = `${esc(c.title)}<br>${esc(v.name)} · ${esc(c.outcome)} · settled ${esc(c.closed_at || '')}<br>Cost ${esc(usd(c.cost_basis))} · ${esc(signed(c.realized_pnl))} (${esc(pct(c.pct_pnl))})` +
+        `<br>Running total ${esc(signed(s.b))}`;
     } else if (s.kind === 'open') {
       const p = s.r, v = VENUES[p.venue] || { name: p.venue };
       bar = `<div class="br-bar risk" style="left:${X(s.a - s.risk)}%;width:${X(s.a) - X(s.a - s.risk)}%"></div>` +
         `<div class="br-bar ${p.unrealized_pnl >= 0 ? 'og' : 'ol'}" style="left:${x0}%;width:${w}%"></div>`;
-      name = `${esc(p.title)}<span class="when">open${p.end_date ? ' · resolves ' + short(p.end_date) : ''}</span>`;
-      val = `<span class="${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}</span><span class="sub">at risk ${usd(s.risk)}</span>`;
-      tipHtml = `${esc(v.name)} · ${esc(p.outcome)}<br>Cost ${esc(usd(p.cost_basis))} · now ${esc(usd(p.current_value))}` +
+      lab = `<b class="${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}</b>${esc(p.title)}<span class="when">at risk ${usd(s.risk)}${p.end_date ? ' · resolves ' + short(p.end_date) : ''}</span>`;
+      tipHtml = `${esc(p.title)}<br>${esc(v.name)} · ${esc(p.outcome)} · open<br>Cost ${esc(usd(p.cost_basis))} · now ${esc(usd(p.current_value))}` +
         `<br>Unrealized ${esc(signed(p.unrealized_pnl))} (${esc(pct(p.pct_pnl))})<br>If it resolves against you: −${esc(usd(s.risk))}` +
         (p.end_date ? `<br>Resolves ${esc(p.end_date)}` : '');
     } else {
       bar = `<div class="br-bar sum" style="left:${x0}%;width:${w}%"></div>`;
-      name = esc(s.label);
-      val = `<span class="${cls(s.b)}">${signed(s.b)}</span>` +
-        (s.top ? `<span class="sub">if all open lost ${signed(realized - open.reduce((t, p) => t + p.cost_basis, 0))}</span>` : '');
-      tipHtml = s.top ? `Realized ${esc(signed(realized))} + unrealized ${esc(signed(s.b - realized))}` : `${settled.length} settled markets`;
+      const worst = realized - open.reduce((t, p) => t + p.cost_basis, 0);
+      lab = `<b class="${cls(s.b)}">${signed(s.b)}</b>${esc(s.label)}<span class="when">${s.top ? `${esc(s.note)} · ${signed(worst)} if all open lost` : `${settled.length} settled`}</span>`;
+      tipHtml = s.top ? `Realized ${esc(signed(realized))} + unrealized ${esc(signed(s.b - realized))}<br>If every open position lost: ${esc(signed(worst))}` : `${settled.length} settled markets`;
     }
     // link down from where this step starts (sums: from their end) to the end of the step below
     const joinAt = s.kind === 'sum' ? s.b : s.a;
     const link = below ? `<div class="br-link" style="left:${X(joinAt)}%;top:50%;bottom:-1px"></div>` : '';
     const linkUp = i > 0 ? `<div class="br-link" style="left:${X(s.b)}%;top:-1px;bottom:50%"></div>` : '';
-    const sep = s.kind === 'sum' && !s.top && open.length ? '<div class="br-sep"></div>' : '';
-    return `${sep}<div class="br-row${s.kind === 'sum' ? ' total' : ''}" data-tip="${tipHtml.replace(/"/g, '&quot;')}">
-      <div class="br-name">${name}</div>
+    const labLeft = Math.max(x1, s.kind === 'open' ? X(s.a) : x1) + 1.2;
+    return `<div class="br-row${s.kind === 'sum' ? ' total' : ''}" data-tip="${tipHtml.replace(/"/g, '&quot;')}">
       <div class="br-plot"><div class="br-zero" style="left:${X(0)}%"></div>${link}${linkUp}${bar}</div>
-      <div class="br-val">${val}</div></div>`;
+      <div class="br-lab" style="left:${labLeft}%;right:0">${lab}</div></div>`;
   }).join('');
   card.innerHTML = `<div class="br">${html}</div>`;
   card.querySelectorAll('.br-row').forEach(r => bindTip(r, r.dataset.tip));
@@ -518,6 +527,8 @@ document.querySelectorAll('#views .chip').forEach(b => b.onclick = () => {
   view = b.dataset.view; try { localStorage.setItem('pm-view', view); } catch (e) {} renderView();
 });
 
+let bridgeNarrow = innerWidth < 640;
+addEventListener('resize', () => { const n = innerWidth < 640; if (DATA && n !== bridgeNarrow) { bridgeNarrow = n; renderBridge(); } });
 function renderAll() {
   renderFilters(); renderTiles(); renderOpen(); renderClosed(); renderBridge(); renderView();
 }

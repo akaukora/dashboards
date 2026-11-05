@@ -252,6 +252,16 @@ def fetch_polymarket(wallet: str) -> dict:
     except requests.RequestException:
         pass
 
+    # A resolved market whose tokens are worth nothing is a settled loss, even though
+    # Polymarket keeps listing it as open until the (worthless) tokens are redeemed,
+    # which nobody bothers to do. Those go to the settled list. Unredeemed winners
+    # stay open: their value is a real claim the IRR still needs as a closing inflow.
+    def lost(p: dict) -> bool:
+        return bool(p.get("redeemable")) and num(p.get("current_value")) <= 0.005
+
+    closed_raw = closed_raw + [{**p, "_lost": True} for p in open_raw if lost(p)]
+    open_raw = [p for p in open_raw if not lost(p)]
+
     positions = []
     for p in open_raw:
         slug = p.get("event_slug") or p.get("slug") or ""
@@ -289,6 +299,10 @@ def fetch_polymarket(wallet: str) -> dict:
         realized = num(p.get("realized_pnl"))
         opened = first_buy.get(cid) or iso(p.get("first_entry_at"))
         closed_at = iso(p.get("last_event_at") or p.get("end_date"))
+        if p.get("_lost"):   # resolved against us, tokens never redeemed: the whole remaining stake is the loss
+            realized += num(p.get("unrealized_pnl"))
+            closed_at = iso(p.get("end_date")) or closed_at
+            cost = num(p.get("entry_cost_usdc")) or cost
         held = days_between(opened, closed_at)
         roi = realized / cost if cost else 0.0
         closed.append({

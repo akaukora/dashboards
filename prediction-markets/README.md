@@ -139,6 +139,12 @@ v2 serves open and settled positions from one route (`/v2/positions`, with
 `status=CLOSED` for what used to be `/closed-positions`), pages with a cursor
 instead of `offset`, and names its fields in snake_case.
 
+A resolved market whose tokens are worth nothing stays on Polymarket's open list
+until the worthless tokens are redeemed, which nobody does. `fetch_data.py`
+therefore moves any position that is `redeemable` with no value left to the
+settled list, as a loss of its remaining cost on the market's end date.
+Unredeemed winners stay open, since their value is a real claim.
+
 **Per-market annualized** is `(1 + roi) ^ (365 / days) − 1`. It is suppressed
 below a 7-day holding period and for total losses. Both suppressions are
 deliberate: at 3 days the exponent is 122, so rounding noise and a one-tick
