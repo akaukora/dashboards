@@ -163,24 +163,25 @@
   .br-row:hover { background: var(--plane); }
   .br-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
   .br-name .when { color: var(--text-muted); font-size: 11.5px; margin-left: 8px; }
-  .br-row.total { height: 34px; }
+  .br-row.total { height: 52px; }
   .br-plot { position: absolute; inset: 0; }
   .br-zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--baseline); }
   .br-bar { position: absolute; top: 50%; height: 11px; margin-top: -5.5px; border-radius: 2px; box-sizing: border-box; }
   .br-bar.g { background: var(--gain); } .br-bar.l { background: var(--loss); }
   .br-bar.og { border: 1.5px dashed var(--gain); } .br-bar.ol { border: 1.5px dashed var(--loss); }
   .br-bar.risk { background: repeating-linear-gradient(135deg, var(--text-muted) 0 2px, transparent 2px 5px); opacity: .55; height: 7px; margin-top: -3.5px; }
-  .br-bar.sum { background: var(--total); height: 18px; margin-top: -9px; border-radius: 3px; }
+  .br-bar.sum { background: var(--total); height: 30px; margin-top: -15px; border-radius: 4px; }
   .br-lab { position: absolute; top: 50%; transform: translateY(-50%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; color: var(--text-secondary); pointer-events: none; }
   .br-lab b { font-weight: 600; font-variant-numeric: tabular-nums; margin-right: 6px; }
   .br-lab .when { color: var(--text-muted); font-size: 11px; margin-left: 6px; }
-  .br-row.total .br-lab { font-size: 13.5px; color: var(--text-primary); font-weight: 600; }
+  .br-row.total .br-lab { font-size: 18px; color: var(--text-primary); font-weight: 700; letter-spacing: -0.01em; }
+  .br-row.total .br-lab .when { font-size: 12.5px; }
   .br-row.total .br-lab .when { font-weight: 400; }
   .br-link { position: absolute; width: 0; border-left: 1px solid var(--text-muted); opacity: .6; }
   .br-val { font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; line-height: 1.3; }
   .br-val .sub { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
   .br-sep td, .br-sep { height: 1px; background: var(--grid); margin: 6px 14px; }
-  @media (max-width: 640px) { .br-lab { font-size: 11.5px; } .br-lab .when { display: none; } }
+  @media (max-width: 640px) { .br-lab { font-size: 11.5px; } .br-lab .when { display: none; } .br-row.total .br-lab { font-size: 16px; } }
 
   .pnl-row { display: grid; grid-template-columns: minmax(0,1fr) 320px 92px; gap: 14px; align-items: center; padding: 7px 14px; }
   .pnl-row:hover { background: var(--plane); }
