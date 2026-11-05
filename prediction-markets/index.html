@@ -137,9 +137,39 @@
   }
   .venue-label { font-size: 11.5px; color: var(--text-muted); }
 
-  .bar-cell { width: 128px; }
+  .bar-cell { width: 160px; }
   .bar-track { height: 9px; background: var(--grid); border-radius: 4px; overflow: hidden; }
   .bar-fill { height: 100%; border-radius: 0 4px 4px 0; }
+  .bar-track.pl { background: none; overflow: visible; margin-top: 4px; }
+  .bar-pl { height: 100%; box-sizing: border-box; border: 1.5px dashed; border-radius: 0 4px 4px 0; }   /* unrealized: an outline, not a fill */
+  .legend i.dash { background: none; border: 1.5px dashed var(--text-secondary); box-sizing: border-box; }
+  .legend i.hatch { background: repeating-linear-gradient(135deg, var(--text-muted) 0 2px, transparent 2px 5px); opacity: .7; }
+
+  /* view switch: the tables, or the bridge */
+  .views { display: flex; gap: 6px; margin: 22px 0 0; }
+
+  /* bridge: realized P&L built up from the first settled market (bottom) to today (top) */
+  .br { padding: 8px 0; }
+  .br-row { display: grid; grid-template-columns: minmax(0, 1fr) minmax(220px, 46%) 104px; gap: 14px; align-items: center; padding: 0 14px; min-height: 26px; }
+  .br-row:hover { background: var(--plane); }
+  .br-name { font-size: 13px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .br-name .when { color: var(--text-muted); font-size: 11.5px; margin-left: 8px; }
+  .br-row.total .br-name, .br-row.total .br-val { font-weight: 600; }
+  .br-plot { position: relative; align-self: stretch; min-height: 26px; }
+  .br-zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--baseline); }
+  .br-bar { position: absolute; top: 50%; height: 11px; margin-top: -5.5px; border-radius: 2px; box-sizing: border-box; }
+  .br-bar.g { background: var(--gain); } .br-bar.l { background: var(--loss); }
+  .br-bar.og { border: 1.5px dashed var(--gain); } .br-bar.ol { border: 1.5px dashed var(--loss); }
+  .br-bar.risk { background: repeating-linear-gradient(135deg, var(--text-muted) 0 2px, transparent 2px 5px); opacity: .55; height: 7px; margin-top: -3.5px; }
+  .br-bar.sum { background: var(--text-secondary); opacity: .55; }
+  .br-link { position: absolute; width: 0; border-left: 1px solid var(--text-muted); opacity: .6; }
+  .br-val { font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; line-height: 1.3; }
+  .br-val .sub { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
+  .br-sep td, .br-sep { height: 1px; background: var(--grid); margin: 6px 14px; }
+  @media (max-width: 640px) {
+    .br-row { grid-template-columns: minmax(0, 1fr) 92px; grid-template-areas: "name val" "plot plot"; row-gap: 2px; padding: 5px 14px; }
+    .br-name { grid-area: name; white-space: normal; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; } .br-val { grid-area: val; } .br-plot { grid-area: plot; }
+  }
 
   .pnl-row { display: grid; grid-template-columns: minmax(0,1fr) 320px 92px; gap: 14px; align-items: center; padding: 7px 14px; }
   .pnl-row:hover { background: var(--plane); }
@@ -187,8 +217,34 @@
 
   <div class="tiles" id="tiles"></div>
 
+  <div class="views" id="views" role="group" aria-label="View">
+    <button class="chip" data-view="tables" aria-pressed="true">Positions</button>
+    <button class="chip" data-view="bridge" aria-pressed="false">Bridge</button>
+  </div>
+
+  <div id="view-bridge" hidden>
+  <h2>How the result was built</h2>
+  <p class="hint">Read from the bottom up. Each settled market moves the running total of realized
+    P&amp;L by its result, oldest first, up to the realized total. The open positions on top carry
+    it on with their unrealized P&amp;L (dashed); the hatched bar beside each is its cost, what it
+    would lose if it resolved against you.</p>
+  <div class="legend">
+    <span><i style="background:var(--gain)"></i>Settled gain</span>
+    <span><i style="background:var(--loss)"></i>Settled loss</span>
+    <span><i class="dash" style="border-color:var(--gain)"></i>Unrealized</span>
+    <span><i class="hatch"></i>At risk</span>
+  </div>
+  <div class="card" id="bridge-card"></div>
+  </div>
+
+  <div id="view-tables">
   <h2>Open positions</h2>
   <p class="hint" id="open-hint"></p>
+  <div class="legend" id="open-legend">
+    <span><i style="background:var(--venue-poly)"></i>Value</span>
+    <span><i class="dash" style="border-color:var(--gain)"></i>Unrealized gain</span>
+    <span><i class="dash" style="border-color:var(--loss)"></i>Unrealized loss</span>
+  </div>
   <div class="card" id="open-card"></div>
 
   <h2>Settled markets</h2>
@@ -200,6 +256,7 @@
     <span><i style="background:var(--loss)"></i>Loss</span>
   </div>
   <div class="card" id="closed-card"></div>
+  </div>
 
   <footer id="footer"></footer>
 </div>
@@ -270,7 +327,7 @@ function renderFilters() {
     `<button class="chip" data-v="${k}" aria-pressed="${filter === k}">` +
     (color ? `<span class="dot" style="background:${color}"></span>` : '') +
     `${label}</button>`).join('');
-  document.querySelectorAll('.chip').forEach(b =>
+  document.querySelectorAll('#filters .chip').forEach(b =>
     b.onclick = () => { filter = b.dataset.v; renderAll(); });
 }
 
@@ -304,16 +361,18 @@ function renderOpen() {
   const list = rows('positions');
   const card = document.getElementById('open-card');
   const hint = document.getElementById('open-hint');
+  document.getElementById('open-legend').hidden = !list.length;
   if (!list.length) {
     hint.textContent = '';
     card.innerHTML = '<div class="empty">No open positions.</div>';
     return;
   }
-  hint.textContent = 'Bar length is position value relative to the largest holding.';
-  const max = Math.max(...list.map(p => p.current_value), 0.01);
+  hint.textContent = 'Solid bar: position value. Dashed bar: unrealized gain or loss. Both on one scale, set by the largest.';
+  const max = Math.max(...list.map(p => Math.max(p.current_value, Math.abs(p.unrealized_pnl))), 0.01);
   const body = list.map(p => {
     const v = VENUES[p.venue] || { name: p.venue, color: 'var(--text-muted)' };
     const w = Math.max(2, p.current_value / max * 100);
+    const wu = Math.abs(p.unrealized_pnl) / max * 100, uc = p.unrealized_pnl >= 0 ? 'var(--gain)' : 'var(--loss)';
     const title = p.url
       ? `<a href="${esc(p.url)}" target="_blank" rel="noopener">${esc(p.title)}</a>`
       : esc(p.title);
@@ -336,7 +395,8 @@ function renderOpen() {
       <td class="num col-opt ${p.annualized == null ? '' : cls(p.annualized)}"
           style="opacity:${p.annualized == null ? .5 : 1}">${rate(p.annualized)}</td>
       <td class="bar-cell"><div class="bar-track">
-        <div class="bar-fill" style="width:${w}%;background:${v.color}"></div></div></td>
+        <div class="bar-fill" style="width:${w}%;background:${v.color}"></div></div>
+        <div class="bar-track pl">${wu >= 0.5 ? `<div class="bar-pl" style="width:${Math.max(3, wu)}%;border-color:${uc}"></div>` : ''}</div></td>
     </tr>`;
   }).join('');
 
@@ -386,8 +446,80 @@ function renderClosed() {
   card.querySelectorAll('.pnl-row').forEach(r => bindTip(r, r.dataset.tip));
 }
 
+function renderBridge() {
+  const card = document.getElementById('bridge-card');
+  const settled = rows('closed').slice().sort((a, b) =>
+    (a.closed_at || '').localeCompare(b.closed_at || '') || (a.opened_at || '').localeCompare(b.opened_at || ''));
+  const open = rows('positions').slice().sort((a, b) => (a.opened_at || '').localeCompare(b.opened_at || ''));
+  if (!settled.length && !open.length) { card.innerHTML = '<div class="empty">Nothing to show.</div>'; return; }
+
+  // build bottom-up: settled markets, the realized subtotal, open positions, today's total
+  const steps = []; let cum = 0;
+  for (const c of settled) { steps.push({ kind: 'settled', r: c, a: cum, b: cum + c.realized_pnl }); cum += c.realized_pnl; }
+  const realized = cum;
+  steps.push({ kind: 'sum', label: 'Realized', a: 0, b: realized });
+  for (const p of open) { steps.push({ kind: 'open', r: p, a: cum, b: cum + p.unrealized_pnl, risk: p.cost_basis }); cum += p.unrealized_pnl; }
+  if (open.length) steps.push({ kind: 'sum', label: 'Now, with open positions marked', a: 0, b: cum, top: true });
+
+  const xs = steps.flatMap(s => [s.a, s.b, s.risk != null ? s.a - s.risk : s.a]);
+  const lo = Math.min(0, ...xs), hi = Math.max(0, ...xs), span = (hi - lo) || 1;
+  const X = v => (v - lo) / span * 100;
+  const short = d => d ? new Date(d + 'T00:00:00Z').toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: '2-digit', timeZone: 'UTC' }) : '';
+
+  // rendered top-down; the thin links join each bar's start to the end of the bar below it
+  const html = steps.slice().reverse().map((s, i, arr) => {
+    const below = arr[i + 1];
+    const x0 = X(Math.min(s.a, s.b)), x1 = X(Math.max(s.a, s.b)), w = Math.max(0.4, x1 - x0);
+    let bar = '', name = '', val = '', tipHtml = '';
+    if (s.kind === 'settled') {
+      const c = s.r, v = VENUES[c.venue] || { name: c.venue };
+      bar = `<div class="br-bar ${c.realized_pnl >= 0 ? 'g' : 'l'}" style="left:${x0}%;width:${w}%"></div>`;
+      name = `${esc(c.title)}<span class="when">${short(c.closed_at)}</span>`;
+      val = `<span class="${cls(c.realized_pnl)}">${signed(c.realized_pnl)}</span><span class="sub">→ ${signed(s.b)}</span>`;
+      tipHtml = `${esc(v.name)} · ${esc(c.outcome)}<br>Cost ${esc(usd(c.cost_basis))} · ${esc(signed(c.realized_pnl))} (${esc(pct(c.pct_pnl))})` +
+        (c.opened_at ? `<br>${esc(c.opened_at)} → ${esc(c.closed_at || '')}` : '') + `<br>Running total ${esc(signed(s.b))}`;
+    } else if (s.kind === 'open') {
+      const p = s.r, v = VENUES[p.venue] || { name: p.venue };
+      bar = `<div class="br-bar risk" style="left:${X(s.a - s.risk)}%;width:${X(s.a) - X(s.a - s.risk)}%"></div>` +
+        `<div class="br-bar ${p.unrealized_pnl >= 0 ? 'og' : 'ol'}" style="left:${x0}%;width:${w}%"></div>`;
+      name = `${esc(p.title)}<span class="when">open${p.end_date ? ' · resolves ' + short(p.end_date) : ''}</span>`;
+      val = `<span class="${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}</span><span class="sub">at risk ${usd(s.risk)}</span>`;
+      tipHtml = `${esc(v.name)} · ${esc(p.outcome)}<br>Cost ${esc(usd(p.cost_basis))} · now ${esc(usd(p.current_value))}` +
+        `<br>Unrealized ${esc(signed(p.unrealized_pnl))} (${esc(pct(p.pct_pnl))})<br>If it resolves against you: −${esc(usd(s.risk))}` +
+        (p.end_date ? `<br>Resolves ${esc(p.end_date)}` : '');
+    } else {
+      bar = `<div class="br-bar sum" style="left:${x0}%;width:${w}%"></div>`;
+      name = esc(s.label);
+      val = `<span class="${cls(s.b)}">${signed(s.b)}</span>` +
+        (s.top ? `<span class="sub">if all open lost ${signed(realized - open.reduce((t, p) => t + p.cost_basis, 0))}</span>` : '');
+      tipHtml = s.top ? `Realized ${esc(signed(realized))} + unrealized ${esc(signed(s.b - realized))}` : `${settled.length} settled markets`;
+    }
+    // link down from where this step starts (sums: from their end) to the end of the step below
+    const joinAt = s.kind === 'sum' ? s.b : s.a;
+    const link = below ? `<div class="br-link" style="left:${X(joinAt)}%;top:50%;bottom:-1px"></div>` : '';
+    const linkUp = i > 0 ? `<div class="br-link" style="left:${X(s.b)}%;top:-1px;bottom:50%"></div>` : '';
+    const sep = s.kind === 'sum' && !s.top && open.length ? '<div class="br-sep"></div>' : '';
+    return `${sep}<div class="br-row${s.kind === 'sum' ? ' total' : ''}" data-tip="${tipHtml.replace(/"/g, '&quot;')}">
+      <div class="br-name">${name}</div>
+      <div class="br-plot"><div class="br-zero" style="left:${X(0)}%"></div>${link}${linkUp}${bar}</div>
+      <div class="br-val">${val}</div></div>`;
+  }).join('');
+  card.innerHTML = `<div class="br">${html}</div>`;
+  card.querySelectorAll('.br-row').forEach(r => bindTip(r, r.dataset.tip));
+}
+
+let view = 'tables'; try { view = localStorage.getItem('pm-view') === 'bridge' ? 'bridge' : 'tables'; } catch (e) {}
+function renderView() {
+  document.querySelectorAll('#views .chip').forEach(b => b.setAttribute('aria-pressed', b.dataset.view === view));
+  document.getElementById('view-bridge').hidden = view !== 'bridge';
+  document.getElementById('view-tables').hidden = view !== 'tables';
+}
+document.querySelectorAll('#views .chip').forEach(b => b.onclick = () => {
+  view = b.dataset.view; try { localStorage.setItem('pm-view', view); } catch (e) {} renderView();
+});
+
 function renderAll() {
-  renderFilters(); renderTiles(); renderOpen(); renderClosed();
+  renderFilters(); renderTiles(); renderOpen(); renderClosed(); renderBridge(); renderView();
 }
 
 /* ---------- theme ---------- */
