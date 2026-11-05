@@ -171,9 +171,10 @@
   .br-bar.og { border: 1.5px dashed var(--gain); background: color-mix(in srgb, var(--gain) 22%, transparent); }
   .br-bar.ol { border: 1.5px dashed var(--loss); background: color-mix(in srgb, var(--loss) 22%, transparent); }
   /* the step bars fill the whole row, so consecutive steps touch: no gaps between the changes */
-  .br-bar.g, .br-bar.l, .br-bar.og, .br-bar.ol { top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 0; }
-  .br-bar.risk { top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 0; border: 1.5px dashed var(--text-muted); }   /* at risk: an empty dashed outline, full row height */
-  .br-bar.base { background: var(--total); opacity: .24; top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 0; }   /* the running net: full row height, so the rows join into one stepped area */
+  .br-bar.g, .br-bar.l, .br-bar.og, .br-bar.ol { top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 4px; }
+  .br-bar.risk { top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 4px; border: 1.5px dashed var(--text-muted); }   /* at risk: an empty dashed outline, full row height */
+  .br-bar.base { background: var(--total); opacity: .24; top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 0; }
+  .br-row.total:first-child .br-bar.base { top: calc(50% - 15px); border-radius: 4px 0 0 0; }   /* the shape starts at the top of the Now bar, not above it */   /* the running net: full row height, so the rows join into one stepped area */
   .br-bar.sum { background: var(--total); height: 30px; margin-top: -15px; border-radius: 4px; }
   .br-lab { position: absolute; top: 50%; transform: translateY(-50%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; color: var(--text-secondary); pointer-events: none; }
   .br-lab b { font-weight: 600; font-variant-numeric: tabular-nums; margin-right: 6px; }
@@ -181,7 +182,7 @@
   .br-row.total .br-lab { font-size: 18px; color: var(--text-primary); font-weight: 700; letter-spacing: -0.01em; }
   .br-row.total .br-lab .when { font-size: 12.5px; }
   .br-row.total .br-lab .when { font-weight: 400; }
-  .br-link { position: absolute; width: 0; border-left: 1px solid var(--text-muted); opacity: .6; }
+  .br-link { display: none; }   /* the filled running net already joins the steps */
   .br-val { font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; line-height: 1.3; }
   .br-val .sub { display: block; font-size: 11px; color: var(--text-muted); font-weight: 400; }
   .br-sep td, .br-sep { height: 1px; background: var(--grid); margin: 6px 14px; }
@@ -498,11 +499,12 @@ function renderBridge() {
         `<br>Running total ${esc(signed(s.b))}`;
     } else if (s.kind === 'open') {
       const p = s.r, v = VENUES[p.venue] || { name: p.venue };
-      bar = `<div class="br-bar risk" style="left:${X(s.a - s.risk)}%;width:${X(s.a) - X(s.a - s.risk)}%"></div>` +
+      const rEnd = Math.min(s.a, s.b), rStart = s.a - s.risk, left = Math.max(0, rEnd - rStart);   // left: what can still be lost from today
+      bar = `<div class="br-bar risk" style="left:${X(rStart)}%;width:${X(rEnd) - X(rStart)}%"></div>` +
         `<div class="br-bar ${p.unrealized_pnl >= 0 ? 'og' : 'ol'}" style="left:${x0}%;width:${w}%"></div>`;
-      lab = `<b class="${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}</b>${esc(p.title)}<span class="when">at risk ${usd(s.risk)}${p.end_date ? ' · resolves ' + short(p.end_date) : ''}</span>`;
+      lab = `<b class="${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}</b>${esc(p.title)}<span class="when">at risk ${usd(left)}${p.end_date ? ' · resolves ' + short(p.end_date) : ''}</span>`;
       tipHtml = `${esc(p.title)}<br>${esc(v.name)} · ${esc(p.outcome)} · open<br>Cost ${esc(usd(p.cost_basis))} · now ${esc(usd(p.current_value))}` +
-        `<br>Unrealized ${esc(signed(p.unrealized_pnl))} (${esc(pct(p.pct_pnl))})<br>If it resolves against you: −${esc(usd(s.risk))}` +
+        `<br>Unrealized ${esc(signed(p.unrealized_pnl))} (${esc(pct(p.pct_pnl))})<br>If it resolves against you: −${esc(usd(p.current_value))} from today, −${esc(usd(s.risk))} on the stake` +
         (p.end_date ? `<br>Resolves ${esc(p.end_date)}` : '');
     } else {
       bar = `<div class="br-bar sum" style="left:${x0}%;width:${w}%"></div>`;
