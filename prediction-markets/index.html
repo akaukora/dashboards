@@ -168,8 +168,12 @@
   .br-zero { position: absolute; top: 0; bottom: 0; width: 1px; background: var(--baseline); }
   .br-bar { position: absolute; top: 50%; height: 11px; margin-top: -5.5px; border-radius: 2px; box-sizing: border-box; }
   .br-bar.g { background: var(--gain); } .br-bar.l { background: var(--loss); }
-  .br-bar.og { border: 1.5px dashed var(--gain); } .br-bar.ol { border: 1.5px dashed var(--loss); }
-  .br-bar.risk { background: repeating-linear-gradient(135deg, var(--text-muted) 0 2px, transparent 2px 5px); opacity: .55; height: 7px; margin-top: -3.5px; }
+  .br-bar.og { border: 1.5px dashed var(--gain); background: color-mix(in srgb, var(--gain) 22%, transparent); }
+  .br-bar.ol { border: 1.5px dashed var(--loss); background: color-mix(in srgb, var(--loss) 22%, transparent); }
+  /* the step bars fill the whole row, so consecutive steps touch: no gaps between the changes */
+  .br-bar.g, .br-bar.l, .br-bar.og, .br-bar.ol { top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 0; }
+  .br-bar.risk { top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 0; border: 1.5px dashed var(--text-muted); }   /* at risk: an empty dashed outline, full row height */
+  .br-bar.base { background: var(--total); opacity: .24; top: 0; bottom: 0; height: auto; margin-top: 0; border-radius: 0; }   /* the running net: full row height, so the rows join into one stepped area */
   .br-bar.sum { background: var(--total); height: 30px; margin-top: -15px; border-radius: 4px; }
   .br-lab { position: absolute; top: 50%; transform: translateY(-50%); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; font-size: 12.5px; color: var(--text-secondary); pointer-events: none; }
   .br-lab b { font-weight: 600; font-variant-numeric: tabular-nums; margin-right: 6px; }
@@ -238,14 +242,15 @@
   <h2>How the result was built</h2>
   <p class="hint">Read from the bottom up. Each settled market moves the running total of realized
     P&amp;L by its result, oldest first, up to the realized total. The open positions on top carry
-    it on with their unrealized P&amp;L (dashed); the hatched bar beside each is its cost, what it
+    it on with their unrealized P&amp;L (dashed in green or red); the gray dashed bar beside each is its cost, what it
     would lose if it resolved against you.</p>
   <div class="legend">
     <span><i style="background:var(--gain)"></i>Settled gain</span>
     <span><i style="background:var(--loss)"></i>Settled loss</span>
     <span><i class="dash" style="border-color:var(--gain)"></i>Unrealized</span>
-    <span><i class="hatch"></i>At risk</span>
+    <span><i class="dash" style="border-color:var(--text-muted)"></i>At risk</span>
     <span><i style="background:var(--total)"></i>Total</span>
+    <span><i style="background:var(--total);opacity:.24"></i>Running net</span>
   </div>
   <div id="bridge-card"></div>
   </div>
@@ -504,6 +509,11 @@ function renderBridge() {
       const worst = realized - open.reduce((t, p) => t + p.cost_basis, 0);
       lab = `<b class="${cls(s.b)}">${signed(s.b)}</b>${esc(s.label)}<span class="when">${s.top ? `${esc(s.note)} · ${signed(worst)} if all open lost` : `${settled.length} settled`}</span>`;
       tipHtml = s.top ? `Realized ${esc(signed(realized))} + unrealized ${esc(signed(s.b - realized))}<br>If every open position lost: ${esc(signed(worst))}` : `${settled.length} settled markets`;
+    }
+    // fill the stretch between zero and the step, so every row shows the net running total at that point
+    {
+      const near = s.kind === 'sum' ? s.b : s.a >= 0 && s.b >= 0 ? Math.min(s.a, s.b) : s.a <= 0 && s.b <= 0 ? Math.max(s.a, s.b) : 0;
+      if (near) bar = `<div class="br-bar base" style="left:${X(Math.min(0, near))}%;width:${Math.abs(X(near) - X(0))}%"></div>` + bar;
     }
     // link down from where this step starts (sums: from their end) to the end of the step below
     const joinAt = s.kind === 'sum' ? s.b : s.a;
