@@ -106,7 +106,8 @@
   td.withbar { width: 120px; }
   td.withbar .cbar { height: 8px; margin: 0 0 5px auto; position: relative; }
   td.withbar .cbar i { position: absolute; right: 0; top: 0; bottom: 0; border-radius: 3px 0 0 3px; }   /* right-anchored: each bar ends at its figure */
-  @media (max-width: 640px) { td.withbar { width: auto; min-width: 58px; padding-left: 6px; } }
+  .side-inline { display: none; }
+  @media (max-width: 640px) { td.withbar { width: auto; min-width: 58px; padding-left: 6px; } .col-side { display: none; } .side-inline { display: inline; } }
   td.withbar .cbar i.solid { background: var(--venue-poly); }
   td.withbar .cbar i.dash { border: 1.5px dashed; box-sizing: border-box; }
   .bar-track { height: 9px; background: var(--grid); border-radius: 4px; overflow: hidden; }
@@ -160,6 +161,10 @@
   .pnl-bar { position: absolute; top: 3px; height: 9px; }
   .pnl-bar.p { border-radius: 0 4px 4px 0; background: var(--gain); }
   .pnl-bar.n { border-radius: 4px 0 0 4px; background: var(--loss); }
+  @media (max-width: 640px) {
+    .pnl-row { grid-template-columns: minmax(0, 1fr) auto; grid-template-areas: "name val" "plot plot"; row-gap: 4px; }
+    .pnl-name { grid-area: name; white-space: normal; } .pnl-val { grid-area: val; } .pnl-plot { grid-area: plot; }
+  }
   .pnl-val { font-size: 12.5px; font-variant-numeric: tabular-nums; text-align: right; line-height: 1.3; }
   .pnl-val .ann { display: block; font-size: 11px; color: var(--text-muted); }
   .pnl-name .held { color: var(--text-muted); font-size: 11.5px; margin-left: 8px; }
@@ -352,12 +357,12 @@ function renderOpen() {
     card.innerHTML = '<div class="empty">No open positions.</div>';
     return;
   }
-  hint.textContent = 'The bars above the figures share one scale: solid for position value, dashed for unrealized gain or loss.';
-  const max = Math.max(...list.map(p => Math.max(p.current_value, Math.abs(p.unrealized_pnl))), 0.01);
+  hint.textContent = 'Bars above the figures, each column on its own scale: solid for position value, dashed for unrealized gain or loss.';
+  const maxV = Math.max(...list.map(p => p.current_value), 0.01), maxU = Math.max(...list.map(p => Math.abs(p.unrealized_pnl)), 0.01);
   const body = list.map(p => {
     const v = VENUES[p.venue] || { name: p.venue, color: 'var(--text-muted)' };
-    const w = Math.max(2, p.current_value / max * 100);
-    const wu = Math.abs(p.unrealized_pnl) / max * 100, uc = p.unrealized_pnl >= 0 ? 'var(--gain)' : 'var(--loss)';
+    const w = Math.max(2, p.current_value / maxV * 100);
+    const wu = Math.abs(p.unrealized_pnl) / maxU * 100, uc = p.unrealized_pnl >= 0 ? 'var(--gain)' : 'var(--loss)';
     const vbar = `<div class="cbar"><i class="solid" style="width:${w}%;background:${v.color}"></i></div>`;
     const ubar = `<div class="cbar">${wu >= 0.5 ? `<i class="dash" style="width:${Math.max(3, wu)}%;border-color:${uc}"></i>` : ''}</div>`;
     const title = p.url
@@ -371,9 +376,9 @@ function renderOpen() {
       (p.annualized != null ? `<br>Annualized ${esc(rate(p.annualized))}` : '') +
       (p.end_date ? `<br>Resolves ${esc(p.end_date)}` : '') + `">
       <td><div class="market"><span class="dot" style="background:${v.color}"></span>
-        <div>${title}<div class="venue-label">${esc(v.name)}${p.redeemable ? ' · redeemable' : ''}</div></div>
+        <div>${title}<div class="venue-label">${esc(v.name)}<span class="side-inline"> · ${esc(p.outcome)}</span>${p.redeemable ? ' · redeemable' : ''}</div></div>
       </div></td>
-      <td><span class="side">${esc(p.outcome)}</span></td>
+      <td class="col-side"><span class="side">${esc(p.outcome)}</span></td>
       <td class="num col-opt">${price3(p.cur_price)}</td>
       <td class="num col-opt">${days(p.days_held)}</td>
       <td class="num withbar">${vbar}${usd(p.current_value)}</td>
@@ -385,7 +390,7 @@ function renderOpen() {
   }).join('');
 
   card.innerHTML = `<table><thead><tr>
-    <th>Market</th><th>Side</th><th class="num col-opt">Price</th>
+    <th>Market</th><th class="col-side">Side</th><th class="num col-opt">Price</th>
     <th class="num col-opt">Held</th><th class="num">Value</th>
     <th class="num">Unrealized</th><th class="num col-opt">Ann.</th>
   </tr></thead><tbody>${body}</tbody></table>`;
