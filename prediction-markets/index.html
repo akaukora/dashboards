@@ -195,7 +195,9 @@
   #tip { --tip-gain: #17733f; --tip-loss: #b32e2d; }
   #tip .t { display: block; font-weight: 600; font-size: 13px; margin-bottom: 3px; }
   #tip .m { display: block; opacity: .7; font-size: 12px; margin-bottom: 4px; }
-  #tip b { font-weight: 600; } #tip .up { color: var(--tip-gain); } #tip .dn { color: var(--tip-loss); }
+  #tip b { font-weight: 600; }
+  #tip .r1 { text-align: left; } #tip .r2 { text-align: right; } #tip .r3 { text-align: left; font-size: 16px; margin-top: 2px; } #tip .r3 b { font-weight: 700; }
+  #tip .r3 .pc { font-size: 12.5px; opacity: .75; } #tip .r4 { font-size: 11.5px; opacity: .7; margin-top: 3px; } #tip .up { color: var(--tip-gain); } #tip .dn { color: var(--tip-loss); }
   #tip {
     position: fixed; pointer-events: none; opacity: 0; transition: opacity .1s;
     background: var(--text-primary); color: var(--surface-1); font-size: 12.5px;
@@ -485,9 +487,9 @@ function renderBridge() {
       bar = `<div class="br-bar ${c.realized_pnl >= 0 ? 'g' : 'l'}" style="left:${x0}%;width:${w}%"></div>`;
       lab = `<b class="${cls(c.realized_pnl)}">${signed(c.realized_pnl)}</b>${esc(c.title)}<span class="when">${short(c.closed_at)}</span>`;
       tipHtml = `<span class="t">${esc(c.title)}</span><span class="m">${esc(v.name)}</span>` +
-        `I bet <b>${esc(usd(c.cost_basis))}</b> on <b>${esc(c.outcome)}</b>${cents(c.avg_price)}` +
-        `<br>Settled ${esc(longDate(c.closed_at))} for <b>${esc(usd(c.cost_basis + c.realized_pnl))}</b>, ` +
-        `${c.realized_pnl >= 0 ? 'a gain' : 'a loss'} of <b class="${tc(c.realized_pnl)}">${esc(signed(c.realized_pnl))}</b> (${esc(pct(c.pct_pnl))})`;
+        `<div class="r1">I bet <b>${esc(usd(c.cost_basis))}</b> on <b>${esc(c.outcome)}</b>${cents(c.avg_price)}</div>` +
+        `<div class="r2">Settled ${esc(longDate(c.closed_at))} for <b>${esc(usd(c.cost_basis + c.realized_pnl))}</b></div>` +
+        `<div class="r3">${c.realized_pnl >= 0 ? 'a gain' : 'a loss'} of <b class="${tc(c.realized_pnl)}">${esc(signed(c.realized_pnl))}</b> <span class="pc">(${esc(pct(c.pct_pnl))})</span></div>`;
     } else if (s.kind === 'open') {
       const p = s.r, v = VENUES[p.venue] || { name: p.venue };
       const rEnd = Math.min(s.a, s.b), rStart = s.a - s.risk, left = Math.max(0, rEnd - rStart);   // left: what can still be lost from today
@@ -499,9 +501,10 @@ function renderBridge() {
         `<div class="br-bar ${p.unrealized_pnl >= 0 ? 'og' : 'ol'}" style="left:${x0}%;width:${w}%"></div>`;
       lab = `<b class="${cls(p.unrealized_pnl)}">${signed(p.unrealized_pnl)}</b>${esc(p.title)}<span class="when">at risk ${usd(left)} · upside ${usd(more)}${p.end_date ? ' · resolves ' + short(p.end_date) : ''}</span>`;
       tipHtml = `<span class="t">${esc(p.title)}</span><span class="m">${esc(v.name)}${p.end_date ? ' · resolves ' + esc(longDate(p.end_date)) : ''}</span>` +
-        `I bet <b>${esc(usd(p.cost_basis))}</b> on <b>${esc(p.outcome)}</b>${cents(p.avg_price)}` +
-        `<br>Worth <b>${esc(usd(p.current_value))}</b> now, ${p.unrealized_pnl >= 0 ? 'up' : 'down'} <b class="${tc(p.unrealized_pnl)}">${esc(signed(p.unrealized_pnl))}</b> (${esc(pct(p.pct_pnl))})` +
-        `<br>Pays <b>${esc(usd(p.size))}</b> if it wins, nothing if it loses`;
+        `<div class="r1">I bet <b>${esc(usd(p.cost_basis))}</b> on <b>${esc(p.outcome)}</b>${cents(p.avg_price)}</div>` +
+        `<div class="r2">Worth <b>${esc(usd(p.current_value))}</b> now</div>` +
+        `<div class="r3">${p.unrealized_pnl >= 0 ? 'up' : 'down'} <b class="${tc(p.unrealized_pnl)}">${esc(signed(p.unrealized_pnl))}</b> <span class="pc">(${esc(pct(p.pct_pnl))})</span> so far</div>` +
+        `<div class="r4">Pays ${esc(usd(p.size))} if it wins, nothing if it loses</div>`;
     } else {
       bar = `<div class="br-bar sum" style="left:${x0}%;width:${w}%"></div>`;
       const worst = realized - open.reduce((t, p) => t + p.cost_basis, 0);
