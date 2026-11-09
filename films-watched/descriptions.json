@@ -2502,6 +2502,12 @@
    "tmdb_id": 891621,
    "year": 2026
   },
+  "wildwood-2026": {
+   "desc": "Prue and her classmate Curtis are drawn into a magical forest filled with enchanted creatures, loyal allies, and formidable adversaries as they embark on a desperate quest to rescue Prue's abducted baby brother from a murder of crows led by a mysterious woman named Alexandra.",
+   "title": "Wildwood",
+   "tmdb_id": 791523,
+   "year": 2026
+  },
   "winnie-the-pooh": {
    "desc": "During an ordinary day in Hundred Acre Wood, Winnie the Pooh sets out to find some honey. Misinterpreting a note from Christopher Robin, Owl convinces Pooh, Tigger, Rabbit, Piglet, Kanga, Roo, and Eeyore that their young friend has been captured by a creature named \"Backson\" and they set out to rescue him.",
    "title": "Winnie the Pooh",
@@ -2541,5 +2547,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-11-07T05:27:46Z"
+ "updated": "2026-11-09T05:38:13Z"
 }
