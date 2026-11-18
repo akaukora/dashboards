@@ -480,6 +480,12 @@
    "tmdb_id": 646380,
    "year": 2021
   },
+  "dracula-2025-1": {
+   "desc": "In modern-day Transylvania, vampire hunts and labor strikes collide with sci-fi twists, romance, and AI-crafted tales, as multiple storylines blend folklore, classic horror, and contemporary elements into a fresh take on Dracula's legend.",
+   "title": "Dracula",
+   "tmdb_id": 1323409,
+   "year": 2025
+  },
   "driving-madeleine": {
    "desc": "A seemingly simple taxi ride across Paris evolves into a profound meditation on the realities of the driver, whose personal life is in shambles, and his fare, an elderly woman whose warmth belies her shocking past.",
    "title": "Driving Madeleine",
@@ -2547,5 +2553,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-11-09T05:38:13Z"
+ "updated": "2026-11-18T06:48:58Z"
 }
