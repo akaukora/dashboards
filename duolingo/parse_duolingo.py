@@ -140,6 +140,25 @@ def week_start_from(date_range, sent_dt):
             except Exception:
                 pass
     start = sent_dt - timedelta(days=7)
+    return snap_to_grid(start)
+
+
+# Every week in the data starts on the same weekday, because Duolingo sends the
+# report on a fixed day. Some templates state no date range at all, and for
+# those the week is inferred as "sent minus seven days" -- which silently lands
+# a day off the grid whenever Duolingo sends on a different weekday than usual
+# (it sent one Friday report in October 2026). An off-grid week doesn't merge
+# with its neighbours: the dashboard's weekly grid skips it, so the week shows
+# as a gap while the row sits beside it unreachable. Snapping the inferred date
+# onto the established weekday costs at most a day of precision and keeps every
+# week addressable.
+GRID_WEEKDAY = None   # set in main() from the weeks already recorded
+
+
+def snap_to_grid(start):
+    if GRID_WEEKDAY is not None:
+        delta = (start.weekday() - GRID_WEEKDAY) % 7
+        start = start - timedelta(days=delta) if delta <= 3 else start + timedelta(days=7 - delta)
     return start.strftime("%Y-%m-%d"), (start + timedelta(days=6)).strftime("%Y-%m-%d")
 
 
@@ -165,6 +184,14 @@ def main():
 
     data = load_json(DATA_PATH, [])
     seen = set(load_json(SEEN_PATH, []))
+
+    # The grid's weekday is whatever the recorded weeks overwhelmingly use.
+    global GRID_WEEKDAY
+    if data:
+        from collections import Counter
+        counts = Counter(datetime.strptime(r["week_start"], "%Y-%m-%d").weekday() for r in data)
+        GRID_WEEKDAY = counts.most_common(1)[0][0]
+
     existing_weeks = {r["week_start"]: r for r in data}
 
     since_date = (datetime.now(timezone.utc) - timedelta(days=lookback_days)).strftime("%d-%b-%Y")

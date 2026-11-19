@@ -1447,6 +1447,27 @@ const tableRows = weeklyFull.map(w => ({
     ? Math.round((w.xp / w.minutes) * 10) / 10 : -1,
 }));
 
+// Defensive: the grid only holds weeks on its own weekday, so a row whose
+// week_start lands off it (a report Duolingo sent on an unusual day) would be
+// dropped from the table entirely -- a data row disappearing is worse than the
+// gap this table was changed to show. Append any such row rather than lose it.
+const gridKeys = new Set(tableRows.map(r => r.week_start));
+rows.filter(r => !gridKeys.has(r.week_start)).forEach(r => {
+  const mins = metricValue(r, 'minutes'), xp = metricValue(r, 'xp'), less = metricValue(r, 'lessons');
+  const off = offlineFor(r.week_start);
+  tableRows.push({
+    week_start: r.week_start, week_end: r.week_end,
+    estimated: !!r.estimated, hasData: true, offGrid: true,
+    class_minutes: off.offlineSessions ? off.offlineMinutes : -1,
+    class_sessions: off.offlineSessions,
+    minutes: mins === null ? -1 : mins,
+    xp: xp === null ? -1 : xp,
+    lessons: less === null ? -1 : less,
+    xp_per_min: (!r.estimated && mins !== null && xp !== null && mins > 0)
+      ? Math.round((xp / mins) * 10) / 10 : -1,
+  });
+});
+
 const gapWeeks = tableRows.filter(r => !r.hasData).length;
 document.getElementById('tableSub').textContent =
   `${fmt(tableRows.length)} weeks · ${fmt(fullWeeks.length)} from report emails, ` +
