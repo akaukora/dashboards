@@ -584,10 +584,10 @@ const CEFR_BANDS = [['Intro',0,10],['A1',10,69],['A2',69,129],['B1',129,629],['B
 // Measured, not modeled: read off Duolingo (data export) and duome on the
 // dates shown. These anchor the reconstruction and are what validates it.
 const NOW = {
-  score: 92, scoreMax: 129, unit: 499, units: COURSE_UNITS,
-  streak: 694, skills: '203/302', lessons: '5444/8389', lexemes: '4651/14616',
-  asOf: '2026-09-28',           // unit last read 2026-09-18
-  unitAsOf: '2026-09-18',
+  score: 94, scoreMax: 129, unit: 540, units: COURSE_UNITS,
+  streak: 747, skills: '211/302', lessons: '5454/8398', lexemes: '4870/14616',
+  asOf: '2026-11-19',
+  unitAsOf: '2026-11-19',
 };
 // Duolingo's published CEFR score bands, paired with the unit range each level
 // spans in this course. Score is interpolated linearly inside a band.
@@ -1425,23 +1425,33 @@ window.addEventListener('resize', () => {
 });
 
 // ---------- Table ----------
-const tableRows = rows.map(r => {
-  const mins = metricValue(r, 'minutes'), xp = metricValue(r, 'xp'), less = metricValue(r, 'lessons');
-  const off = offlineFor(r.week_start);
-  return {
-    ...r,
-    class_minutes: off.offlineSessions ? off.offlineMinutes : -1,
-    class_sessions: off.offlineSessions,
-    // Sort keys: unknown values sort as -1 so they group together rather than
-    // being treated as zero-value weeks.
-    minutes: mins === null ? -1 : mins,
-    xp: xp === null ? -1 : xp,
-    lessons: less === null ? -1 : less,
-    // Circular for estimated weeks (their minutes came *from* this ratio), so blank.
-    xp_per_min: (!r.estimated && mins !== null && xp !== null && mins > 0)
-      ? Math.round((xp / mins) * 10) / 10 : -1,
-  };
-});
+// Built from the full weekly grid, not just the weeks that have data. A week
+// whose report email never arrived has to appear here as a dashed row -- drop
+// it and the table silently closes the gap, so a fortnight of missing mail
+// reads as an ordinary run of weeks. The chart has always drawn these as faded
+// bars; the table was the one place a gap could hide.
+const tableRows = weeklyFull.map(w => ({
+  week_start: w.label,
+  week_end: w.weekEnd,
+  estimated: w.estimated,
+  hasData: w.hasData,
+  class_minutes: w.offlineSessions ? w.offlineMinutes : -1,
+  class_sessions: w.offlineSessions,
+  // Sort keys: unknown values sort as -1 so they group together rather than
+  // being treated as zero-value weeks.
+  minutes: w.minutes === null ? -1 : w.minutes,
+  xp: w.xp === null ? -1 : w.xp,
+  lessons: w.lessons === null ? -1 : w.lessons,
+  // Circular for estimated weeks (their minutes came *from* this ratio), so blank.
+  xp_per_min: (!w.estimated && w.minutes !== null && w.xp !== null && w.minutes > 0)
+    ? Math.round((w.xp / w.minutes) * 10) / 10 : -1,
+}));
+
+const gapWeeks = tableRows.filter(r => !r.hasData).length;
+document.getElementById('tableSub').textContent =
+  `${fmt(tableRows.length)} weeks · ${fmt(fullWeeks.length)} from report emails, ` +
+  `${fmt(estWeeks.length)} estimated` +
+  (gapWeeks ? `, ${fmt(gapWeeks)} with no report` : '') + ` · click a column to sort`;
 
 let sortKey = 'week_start', sortDir = -1;
 function renderTable() {
@@ -1455,6 +1465,7 @@ function renderTable() {
   sorted.forEach(r => {
     const tr = document.createElement('tr');
     if (r.estimated) tr.className = 'est-row';
+    else if (!r.hasData) tr.className = 'gap-row';
     const cells = [
       `${r.week_start} – ${r.week_end}`,
       r.minutes < 0 ? '—' : (r.estimated ? '≈ ' : '') + fmtDuration(r.minutes),
