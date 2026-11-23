@@ -1039,14 +1039,15 @@
     "streak": 701
   },
   {
-    "week_start": "2026-10-02",
-    "week_end": "2026-10-08",
+    "week_start": "2026-10-03",
+    "week_end": "2026-10-09",
     "minutes": 161,
     "xp": 898,
     "lessons": 25,
     "sent_date": "2026-10-09",
     "subject": "You’re crushing French ✨",
-    "streak": 708
+    "streak": 708,
+    "week_snapped": "reported 2026-10-02 to 2026-10-08; Duolingo sent this one report on a Friday"
   },
   {
     "week_start": "2026-10-10",

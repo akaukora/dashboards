@@ -7,15 +7,15 @@
   },
   {
     "date": "2026-09-08",
-    "unit": 499,
+    "unit": 498,
     "score": 91,
-    "source": "duome.eu/akaukora"
+    "source": "duome.eu/akaukora; unit shown as 499, recorded 0-based"
   },
   {
     "date": "2026-09-18",
-    "unit": 499,
+    "unit": 498,
     "score": 91,
-    "source": "duome.eu/akaukora (refreshed 13:56 GMT+3)"
+    "source": "duome.eu/akaukora (refreshed 13:56 GMT+3); unit shown as 499, recorded 0-based"
   },
   {
     "date": "2026-09-28",
@@ -25,8 +25,8 @@
   },
   {
     "date": "2026-11-19",
-    "unit": 540,
+    "unit": 539,
     "score": 94,
-    "source": "duome.eu/akaukora"
+    "source": "Duolingo data export (user-tree-backend.csv last_recorded_path_position unit_index 539, section_index 5); duome showed 540/994 and Score 94"
   }
 ]
