@@ -330,6 +330,12 @@
    "tmdb_id": 100402,
    "year": 2014
   },
+  "case-137-2025": {
+   "desc": "When Internal Affairs officer Stéphanie investigates a young man severely injured during a chaotic Paris demonstration and finds no police misconduct, the routine case hits close to home upon her discovering the victim is from her native town.",
+   "title": "Case 137",
+   "tmdb_id": 1294698,
+   "year": 2025
+  },
   "caught-stealing": {
    "desc": "Burned-out ex-baseball player Hank Thompson unexpectedly finds himself embroiled in a dangerous struggle for survival amidst the criminal underbelly of late 1990s New York City, forced to navigate a treacherous underworld he never imagined.",
    "title": "Caught Stealing",
@@ -2553,5 +2559,5 @@
  },
  "misses": {},
  "source": "tmdb",
- "updated": "2026-11-18T06:48:58Z"
+ "updated": "2026-11-25T07:52:40Z"
 }
